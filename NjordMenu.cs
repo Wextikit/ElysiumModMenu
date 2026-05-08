@@ -28,51 +28,57 @@ using BepInEx.Configuration; //конфиг
 
 namespace NjordMenu
 {
-    [BepInPlugin("com.njord.menu", "NjordMenu", "1.1.1")]
+    [BepInPlugin("com.njord.menu", "NjordMenu", "1.2.0")]
     public class Plugin : BasePlugin
     {
         public static Plugin Instance { get; private set; } = null!;
+        public static string NjordFolder = "";
         public static ConfigFile MenuConfig;
-
-        // --- ПЕРЕМЕННЫЕ ДЛЯ ТЕКСТОВОГО КОНФИГА ---
+        public static ConfigEntry<float> RpcSpoofDelayConfig;
         public static ConfigEntry<KeyCode> MenuKeybind;
         public static ConfigEntry<string> SpoofedLevel;
         public static ConfigEntry<bool> EnablePlatformSpoof;
         public static ConfigEntry<int> PlatformIndex;
         public static ConfigEntry<bool> ShowWatermarkConfig;
-        // НОВЫЕ КОНФИГИ
+        public static ConfigEntry<int> MenuColorIndexConfig;
+        public static ConfigEntry<bool> RgbMenuModeConfig;
         public static ConfigEntry<bool> UnlockCosmeticsConfig;
         public static ConfigEntry<bool> MoreLobbyInfoConfig;
 
         public override void Load()
         {
             Instance = this;
-            Log.LogInfo("NjordMenu Loaded!");
 
-            MenuConfig = new ConfigFile(System.IO.Path.Combine(Paths.ConfigPath, "NjordMenu.cfg"), true);
+            NjordFolder = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "NjordMenu");
+            if (!System.IO.Directory.Exists(NjordFolder))
+            {
+                System.IO.Directory.CreateDirectory(NjordFolder);
+            }
 
-            MenuKeybind = MenuConfig.Bind("NjordMenu.GUI", "Keybind", KeyCode.Insert, "The keyboard key used to toggle the GUI on and off.");
-            SpoofedLevel = MenuConfig.Bind("NjordMenu.Spoofing", "Level", "100", "A custom player level to display to others in online games.");
-            EnablePlatformSpoof = MenuConfig.Bind("NjordMenu.Spoofing", "EnablePlatformSpoof", true, "Enable platform spoofing.");
-            PlatformIndex = MenuConfig.Bind("NjordMenu.Spoofing", "PlatformIndex", 1, "The index of the platform to spoof (0=Epic, 1=Steam, etc).");
-            ShowWatermarkConfig = MenuConfig.Bind("NjordMenu.GUI", "ShowWatermark", true, "Show the NjordMenu watermark in the top right corner.");
+            string banFile = System.IO.Path.Combine(NjordFolder, "NjordMenuBanList.txt");
+            if (!System.IO.File.Exists(banFile))
+            {
+                System.IO.File.Create(banFile).Dispose();
+            }
 
-            // ИНИЦИАЛИЗИРУЕМ (По дефолту = true)
-            UnlockCosmeticsConfig = MenuConfig.Bind("NjordMenu.General", "UnlockCosmetics", true, "Automatically unlock all cosmetics, pets, and visors.");
-            MoreLobbyInfoConfig = MenuConfig.Bind("NjordMenu.Visuals", "MoreLobbyInfo", true, "Show host, code, and platform in the lobby browser.");
+            MenuConfig = new ConfigFile(System.IO.Path.Combine(NjordFolder, "NjordMenu.cfg"), true);
+            RpcSpoofDelayConfig = MenuConfig.Bind("NjordMenu.Spoofing", "RpcDelay", 4f, "");
+            MenuKeybind = MenuConfig.Bind("NjordMenu.GUI", "Keybind", KeyCode.Insert, "");
+            SpoofedLevel = MenuConfig.Bind("NjordMenu.Spoofing", "Level", "100", "");
+            EnablePlatformSpoof = MenuConfig.Bind("NjordMenu.Spoofing", "EnablePlatformSpoof", true, "");
+            PlatformIndex = MenuConfig.Bind("NjordMenu.Spoofing", "PlatformIndex", 1, "");
+            ShowWatermarkConfig = MenuConfig.Bind("NjordMenu.GUI", "ShowWatermark", true, "");
+            MenuColorIndexConfig = MenuConfig.Bind("NjordMenu.GUI", "MenuColorIndex", 10, "");
+            RgbMenuModeConfig = MenuConfig.Bind("NjordMenu.GUI", "RgbMenuMode", false, "");
+            UnlockCosmeticsConfig = MenuConfig.Bind("NjordMenu.General", "UnlockCosmetics", true, "");
+            MoreLobbyInfoConfig = MenuConfig.Bind("NjordMenu.Visuals", "MoreLobbyInfo", true, "");
 
             ClassInjector.RegisterTypeInIl2Cpp<NjordMenuGUI>();
-            ClassInjector.RegisterTypeInIl2Cpp<OverloadUI>();
 
             var guiObject = new GameObject("NjordMenu_Object");
             UnityEngine.Object.DontDestroyOnLoad(guiObject);
             guiObject.hideFlags = HideFlags.HideAndDontSave;
             guiObject.AddComponent<NjordMenuGUI>();
-
-            var OverloadUI = new GameObject("OverloadUI_Object");
-            UnityEngine.Object.DontDestroyOnLoad(OverloadUI);
-            OverloadUI.hideFlags = HideFlags.HideAndDontSave;
-            OverloadUI.AddComponent<OverloadUI>();
 
             var harmony = new Harmony("com.njord.harmony");
             harmony.PatchAll();
@@ -83,15 +89,38 @@ namespace NjordMenu
         // === МАССИВЫ ДЛЯ СПУФЕРА (ОБНОВЛЕННЫЕ С GNC И KILLNETWORK) ===
         public static string[] spoofMenuNames = { "NjordMenu", "HostGuard/TOH", "Polar", "BanMod", "Better Among Us", "Sicko Menu", "GNC", "KillNetwork (V1)", "KillNetwork (V2)", "KillNetwork (V3)" };
         public static byte[] spoofMenuRPCs = { 89, 176, 204, 212, 151, 164, 154, 85, 150, 162 };
+        public static float rpcSpoofDelay = 4f;
 
-       
         public static byte selectedMorphTargetId = 255;
         public static bool unlockCosmetics = true;
         public static bool moreLobbyInfo = true;
         // === ПЕРЕМЕННЫЕ ДЛЯ БИНДОВ ===
         public static Dictionary<string, KeyCode> keyBinds = new Dictionary<string, KeyCode>();
         public static string bindingAction = "";
+        private int currentGeneralSubTab = 0;
+        private string[] generalSubTabs = { "INFORMATION", "KEYBINDS" };
+        //бля кому не похуй на бинды 
+        public static KeyCode menuToggleKey = KeyCode.Insert;
+        public static KeyCode bindMassMorph = KeyCode.None;
+        public static KeyCode bindSpawnLobby = KeyCode.None;
+        public static KeyCode bindDespawnLobby = KeyCode.None;
+        public static KeyCode bindCloseMeeting = KeyCode.None;
+        public static KeyCode bindInstaStart = KeyCode.None;
+        public static KeyCode bindEndCrew = KeyCode.None;
+        public static KeyCode bindEndImp = KeyCode.None;
+        public static KeyCode bindEndImpDC = KeyCode.None;
+        public static KeyCode bindEndHnsDC = KeyCode.None;
 
+        public static bool isWaitingForBind = false;
+        public static bool isWaitBindMassMorph = false;
+        public static bool isWaitBindSpawnLobby = false;
+        public static bool isWaitBindDespawnLobby = false;
+        public static bool isWaitBindCloseMeeting = false;
+        public static bool isWaitBindInstaStart = false;
+        public static bool isWaitBindEndCrew = false;
+        public static bool isWaitBindEndImp = false;
+        public static bool isWaitBindEndImpDC = false;
+        public static bool isWaitBindEndHnsDC = false;
         public static bool SpoofMenuEnabled = false;
         public static int selectedSpoofMenuIndex = 0;
         private float uiSpoofTimer = 0f;
@@ -99,24 +128,6 @@ namespace NjordMenu
         public static bool tpToCursor = false;
         public static bool dragToCursor = false;
         public static float walkSpeed = 1f;
-
-        // Оставлю туглы на фризы тута
-        // Также туглы на логи в консоли окошка с перегрузами были вырезаны из за бесполезности
-        public static bool runOverload;
-        public static bool overloadReset;
-        public static bool showOverload;
-        public static bool overloadAll;
-        public static bool overloadHost;
-        public static bool overloadCrew;
-        public static bool overloadImps;
-        
-        // Нереализованные переключалки (надо будет сделать вручную их изменение)
-        public static bool olLockTargets; // хз чета не разобрался
-        public static bool olAutoAdapt; // автонастройка фриза под текущий пинг, чтобы не вылетало
-        public static bool olAutoStop; // выкл фриза когда нет игроков (мб даже когда выходишь из игры)
-        public static bool olKillSwitch; // выкл фриза когда слишком большой пинг
-        public static bool olAutoStart; // фриз сам включится как только игрок прогрузится (надо переработать мб тк если кидать оверлоад сразу после захода, то будет бан античитом)
-
         // === ПЕРЕМЕННЫЕ ДЛЯ ОТСЛЕЖИВАНИЯ ИГРОКОВ (ВХОД/ВЫХОД) ===
         public static bool DetailedJoinInfo = true;
         private static List<byte> lastPlayerIds = new List<byte>();
@@ -192,7 +203,6 @@ namespace NjordMenu
         private int currentSelfSubTab = 0;
         private string[] selfSubTabs = { "SPOOF", "MOVEMENT" };
         private int currentHostOnlySubTab = 0;
-        private string[] hostOnlySubTabs = { "LOBBY CONTROLS", "ROLE MANAGER" };
         // === ПЕРЕМЕННЫЕ ДЛЯ СТАРТА ===
         public static bool fakeStartCounterTroll = false;
         public static bool fakeStartCounterCustom = false;
@@ -258,7 +268,66 @@ namespace NjordMenu
                 this.lifetime = 0f;
             }
         }
+        public static List<string> bannedEntries = new List<string>();
+        public static string banListPath = "";
+        private Vector2 banListScroll = Vector2.zero;
+        public static bool autoBanEnabled = true;
+        public static string banInput = "";
+        public static bool isEditingBan = false;
 
+        public static void LoadBanList()
+        {
+            try
+            {
+                banListPath = System.IO.Path.Combine(Plugin.NjordFolder, "NjordMenuBanList.txt");
+                if (!System.IO.File.Exists(banListPath))
+                {
+                    System.IO.File.Create(banListPath).Dispose();
+                }
+                bannedEntries = new List<string>(System.IO.File.ReadAllLines(banListPath));
+            }
+            catch { }
+        }
+
+        public static void AddToBanList(string friendCode, string puid, string name, string reason)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(friendCode)) return;
+
+                bool alreadyBanned = false;
+                string fcLower = friendCode.Trim().ToLower();
+
+                foreach (var e in bannedEntries)
+                {
+                    string[] parts = e.Split('|');
+                    if (parts.Length > 0 && parts[0].Trim().ToLower() == fcLower)
+                    {
+                        alreadyBanned = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyBanned)
+                {
+                    string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    string entry = $"{friendCode}|{puid}|{name}|{date}|{reason}";
+                    bannedEntries.Add(entry);
+                    System.IO.File.AppendAllText(banListPath, entry + Environment.NewLine);
+                }
+            }
+            catch { }
+        }
+
+        public static void RemoveFromBanList(string entry)
+        {
+            try
+            {
+                bannedEntries.Remove(entry);
+                System.IO.File.WriteAllLines(banListPath, bannedEntries.ToArray());
+            }
+            catch { }
+        }
 
         // === ПЕРЕМЕННЫЕ РОЛЕЙ И САБОТАЖЕЙ ===
         public static bool killReach = false, killAnyone = false;
@@ -330,19 +399,105 @@ namespace NjordMenu
         public static List<NjordNotification> screenNotifications = new List<NjordNotification>();
 
         // === ПЕРЕМЕННЫЕ ДЛЯ ОТСЛЕЖИВАНИЯ ИГРОКОВ (ВХОД/ВЫХОД) ===
-
+      
+        //нуну те самые блять
 
         // === СТИЛИ ===
         private bool stylesInited = false;
         private GUIStyle windowStyle, btnStyle, activeTabStyle, headerStyle, boxStyle;
         private GUIStyle sidebarStyle, sidebarBtnStyle, activeSidebarBtnStyle, titleStyle;
-        private GUIStyle toggleOnStyle, toggleOffStyle, toggleLabelStyle;
-        public static GUIStyle safeLineStyle;
+        private GUIStyle toggleOnStyle, toggleOffStyle, toggleLabelStyle, safeLineStyle;
         private GUIStyle sliderStyle, sliderThumbStyle, subTabStyle, activeSubTabStyle;
         public GUIStyle inputBlockStyle;
         private Texture2D texWindowBg, texBoxBg, texBtnBg, texAccent, texSidebarBg;
         private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn; // <-- Добавлено texColorBtn
+        private string[] hostOnlySubTabs = { "LOBBY CONTROLS", "ROLE MANAGER", "ANTI CHEAT" };
 
+        private void DrawHostOnlyTab()
+        {
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < hostOnlySubTabs.Length; i++)
+            {
+                if (GUILayout.Button(hostOnlySubTabs[i], currentHostOnlySubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
+                {
+                    currentHostOnlySubTab = i;
+                    scrollPosition = Vector2.zero;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8);
+
+            if (currentHostOnlySubTab == 0) DrawLobbyControls();
+            else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
+            else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
+        }
+
+        private void DrawAntiCheatTab()
+        {
+            GUILayout.BeginVertical(boxStyle);
+            GUILayout.Label("ANTI CHEAT", headerStyle);
+            GUILayout.Space(5);
+
+            GUILayout.Label("<color=#FF0000>Функции в процессе...</color>", new GUIStyle(GUI.skin.label) { richText = true, fontStyle = FontStyle.Bold });
+            GUILayout.Space(15);
+
+            GUILayout.Label("BAN LIST", headerStyle);
+            autoBanEnabled = DrawToggle(autoBanEnabled, "Auto-Ban Blacklisted Players", 250);
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            string banDisp = isEditingBan ? banInput + "_" : (string.IsNullOrEmpty(banInput) ? "Enter Friend Code" : banInput);
+            if (GUILayout.Button(banDisp, isEditingBan ? activeTabStyle : inputBlockStyle, GUILayout.Width(200f), GUILayout.Height(25f)))
+            {
+                isEditingBan = !isEditingBan;
+                ResetAllBindWaits();
+            }
+            if (GUILayout.Button("ADD", btnStyle, GUILayout.Width(50f), GUILayout.Height(25f)))
+            {
+                if (!string.IsNullOrWhiteSpace(banInput))
+                {
+                    AddToBanList(banInput.Trim(), "Manual", "Unknown", "Manual ban");
+                    banInput = "";
+                    isEditingBan = false;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            banListScroll = GUILayout.BeginScrollView(banListScroll, GUILayout.Height(270));
+
+            if (bannedEntries.Count == 0)
+            {
+                GUILayout.Label("<color=#777777>Бан лист пуст.</color>", new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+            }
+            else
+            {
+                for (int i = 0; i < bannedEntries.Count; i++)
+                {
+                    string entry = bannedEntries[i];
+                    if (string.IsNullOrWhiteSpace(entry)) continue;
+
+                    string[] parts = entry.Split('|');
+                    string disp = parts.Length >= 3 ? $"{parts[2]} ({parts[0]})" : entry;
+
+                    GUILayout.BeginHorizontal(boxStyle);
+                    GUILayout.Label(disp, new GUIStyle(GUI.skin.label) { fontSize = 12 }, GUILayout.Width(220));
+                    GUILayout.FlexibleSpace();
+
+                    GUIStyle redCrossStyle = new GUIStyle(btnStyle);
+                    redCrossStyle.normal.textColor = new Color(1f, 0.3f, 0.3f);
+
+                    if (GUILayout.Button("X", redCrossStyle, GUILayout.Width(25), GUILayout.Height(22)))
+                    {
+                        RemoveFromBanList(entry);
+                        break;
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+            GUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
         // ==========================================
         // === МЕТОДЫ ДЛЯ КОМАНД /w И /color ===
         // ==========================================
@@ -377,18 +532,20 @@ namespace NjordMenu
             ShowNotification($"<color=#ca08ff>[MORPH]</color> <b>{target.Data.PlayerName}</b> превращен в <b>{morphInto.Data.PlayerName}</b>!");
         }
 
-        private IEnumerator FrameAllCoroutine()
+        private IEnumerator MassMorphCoroutine()
         {
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.AllPlayerControls == null) yield break;
+
             bool hasAnticheat = AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame && !Constants.IsVersionModded();
 
             Dictionary<byte, RoleTypes> originalRoles = new Dictionary<byte, RoleTypes>();
 
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc != null && !pc.Data.IsDead)
+                if (pc != null && pc.Data != null && !pc.Data.Disconnected)
                 {
                     originalRoles[pc.PlayerId] = pc.Data.RoleType;
+
                     if (hasAnticheat && pc.Data.RoleType != RoleTypes.Shapeshifter)
                     {
                         pc.RpcSetRole(RoleTypes.Shapeshifter, true);
@@ -396,14 +553,21 @@ namespace NjordMenu
                 }
             }
 
-            if (hasAnticheat) yield return new WaitForSeconds(0.5f);
+            if (hasAnticheat) yield return new UnityEngine.WaitForSeconds(0.5f);
+
+            PlayerControl targetToMorphInto = null;
+            if (selectedMorphTargetId != 255)
+            {
+                targetToMorphInto = GameData.Instance.GetPlayerById(selectedMorphTargetId)?.Object;
+            }
 
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc != null && !pc.Data.IsDead)
+                if (pc != null && pc.Data != null && !pc.Data.Disconnected)
                 {
-                    // МОРФАЕМ САМИ В СЕБЯ (Как в Meowch)
-                    pc.RpcShapeshift(pc, true);
+                    PlayerControl morphTarget = targetToMorphInto != null ? targetToMorphInto : pc;
+
+                    pc.RpcShapeshift(morphTarget, true);
 
                     if (hasAnticheat && originalRoles.ContainsKey(pc.PlayerId))
                     {
@@ -411,9 +575,29 @@ namespace NjordMenu
                     }
                 }
             }
-            ShowNotification("<color=#FF00FF>[EGG]</color> Все превратились в себя (яйцо)!");
+
+            if (targetToMorphInto == null || targetToMorphInto == PlayerControl.LocalPlayer)
+            {
+                this.StartCoroutine(FixLocalEggVisual().WrapToIl2Cpp());
+            }
+
+            string notifText = targetToMorphInto != null ? targetToMorphInto.Data.PlayerName : "Egg";
+            ShowNotification($"<color=#FF00FF>[MASS MORPH]</color> {notifText}");
         }
 
+        private IEnumerator FixLocalEggVisual()
+        {
+            yield return new UnityEngine.WaitForSeconds(0.3f);
+            if (PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.MyPhysics != null)
+            {
+                PlayerControl.LocalPlayer.MyPhysics.transform.localScale = UnityEngine.Vector3.one;
+                PlayerControl.LocalPlayer.Visible = true;
+                if (PlayerControl.LocalPlayer.cosmetics != null)
+                {
+                    PlayerControl.LocalPlayer.cosmetics.transform.localScale = UnityEngine.Vector3.one;
+                }
+            }
+        }
 
         // ==========================================
         // === НОВЫЙ МЕТОД FORCE MEETING AS PLAYER ===
@@ -537,6 +721,19 @@ namespace NjordMenu
                 Plugin.ShowWatermarkConfig.Value = showWatermark;
                 Plugin.UnlockCosmeticsConfig.Value = unlockCosmetics;
                 Plugin.MoreLobbyInfoConfig.Value = moreLobbyInfo;
+                Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
+                Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
+                Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
+                PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
+                PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
+                PlayerPrefs.SetInt("M_BndSpawn", (int)bindSpawnLobby);
+                PlayerPrefs.SetInt("M_BndDespawn", (int)bindDespawnLobby);
+                PlayerPrefs.SetInt("M_BndCloseMtg", (int)bindCloseMeeting);
+                PlayerPrefs.SetInt("M_BndInstaStart", (int)bindInstaStart);
+                PlayerPrefs.SetInt("M_BndEndCrew", (int)bindEndCrew);
+                PlayerPrefs.SetInt("M_BndEndImp", (int)bindEndImp);
+                PlayerPrefs.SetInt("M_BndEndImpDC", (int)bindEndImpDC);
+                PlayerPrefs.SetInt("M_BndEndHnsDC", (int)bindEndHnsDC);
 
                 if (keyBinds.ContainsKey("Toggle Menu"))
                     Plugin.MenuKeybind.Value = keyBinds["Toggle Menu"];
@@ -548,7 +745,7 @@ namespace NjordMenu
             }
             catch { }
         }
-
+        //トラック「状況は笑い事ではない、終わりだ!」は、2026年4月7日にアルバム「Denki no iryoku」（レーベルRory in early 20s）からリリースされました。状況は笑い事ではない、終わりだ! - シングル
         private void LoadConfig()
         {
             try
@@ -559,6 +756,24 @@ namespace NjordMenu
                 showWatermark = Plugin.ShowWatermarkConfig.Value;
                 unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
                 moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;
+                rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
+                currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
+                rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
+                if (PlayerPrefs.HasKey("M_MenuToggleKey")) menuToggleKey = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKey");
+                if (PlayerPrefs.HasKey("M_BndMMorph")) bindMassMorph = (KeyCode)PlayerPrefs.GetInt("M_BndMMorph");
+                if (PlayerPrefs.HasKey("M_BndSpawn")) bindSpawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndSpawn");
+                if (PlayerPrefs.HasKey("M_BndDespawn")) bindDespawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndDespawn");
+                if (PlayerPrefs.HasKey("M_BndCloseMtg")) bindCloseMeeting = (KeyCode)PlayerPrefs.GetInt("M_BndCloseMtg");
+                if (PlayerPrefs.HasKey("M_BndInstaStart")) bindInstaStart = (KeyCode)PlayerPrefs.GetInt("M_BndInstaStart");
+                if (PlayerPrefs.HasKey("M_BndEndCrew")) bindEndCrew = (KeyCode)PlayerPrefs.GetInt("M_BndEndCrew");
+                if (PlayerPrefs.HasKey("M_BndEndImp")) bindEndImp = (KeyCode)PlayerPrefs.GetInt("M_BndEndImp");
+                if (PlayerPrefs.HasKey("M_BndEndImpDC")) bindEndImpDC = (KeyCode)PlayerPrefs.GetInt("M_BndEndImpDC");
+                if (PlayerPrefs.HasKey("M_BndEndHnsDC")) bindEndHnsDC = (KeyCode)PlayerPrefs.GetInt("M_BndEndHnsDC");
+
+                if (!rgbMenuMode && currentMenuColorIndex >= 0 && currentMenuColorIndex < menuColors.Length)
+                {
+                    currentAccentColor = menuColors[currentMenuColorIndex];
+                }
 
                 keyBinds["Toggle Menu"] = Plugin.MenuKeybind.Value;
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
@@ -687,6 +902,7 @@ namespace NjordMenu
 
         private void InitStyles()
         {
+            Color accent = currentAccentColor;
             Color darkBg = new Color(0.12f, 0.12f, 0.12f, 0.90f);
             Color sidebarBg = new Color(0.0f, 0.0f, 0.0f, 0.0f);
             Color boxBg = new Color(0f, 0f, 0f, 0f);
@@ -697,21 +913,25 @@ namespace NjordMenu
             texSidebarBg = MakeRoundedTex(64, sidebarBg, 0f);
             texBoxBg = MakeRoundedTex(64, boxBg, 0f);
             texBtnBg = MakeRoundedTex(64, btnCol, 6f);
-            texAccent = MakeRoundedTex(64, currentAccentColor, 6f);
+            texAccent = MakeRoundedTex(64, accent, 6f);
             texSliderBg = MakeRoundedTex(64, sliderBgCol, 4f);
-            texSliderThumb = MakeRoundedTex(20, currentAccentColor, 10f);
+            texSliderThumb = MakeRoundedTex(20, accent, 10f);
             texInputBg = MakeRoundedTex(64, new Color(0.08f, 0.08f, 0.08f, 0.85f), 6f);
             texColorBtn = MakeRoundedTex(64, Color.white, 12f);
-            texToggleOff = new Texture2D(30, 16, TextureFormat.RGBA32, false); texToggleOff.hideFlags = HideFlags.HideAndDontSave;
-            texToggleOn = new Texture2D(30, 16, TextureFormat.RGBA32, false); texToggleOn.hideFlags = HideFlags.HideAndDontSave;
-            UpdateSwitchTex(texToggleOff, false, Color.white);
-            UpdateSwitchTex(texToggleOn, true, currentAccentColor);
 
-            safeLineStyle = new GUIStyle(); safeLineStyle.normal.background = Texture2D.whiteTexture;
+            texToggleOff = new Texture2D(30, 16, TextureFormat.RGBA32, false);
+            texToggleOff.hideFlags = HideFlags.HideAndDontSave;
+            texToggleOn = new Texture2D(30, 16, TextureFormat.RGBA32, false);
+            texToggleOn.hideFlags = HideFlags.HideAndDontSave;
+            UpdateSwitchTex(texToggleOff, false, Color.white);
+            UpdateSwitchTex(texToggleOn, true, accent);
+
+            safeLineStyle = new GUIStyle();
+            safeLineStyle.normal.background = Texture2D.whiteTexture;
 
             windowStyle = new GUIStyle();
             windowStyle.normal.background = texWindowBg;
-            windowStyle.normal.textColor = currentAccentColor;
+            windowStyle.normal.textColor = accent;
             windowStyle.fontStyle = FontStyle.Bold;
             windowStyle.fontSize = 14;
             windowStyle.padding = CreateRectOffset(0, 0, 0, 0);
@@ -745,13 +965,13 @@ namespace NjordMenu
             inputBlockStyle.normal.background = texInputBg;
             inputBlockStyle.hover.background = texInputBg;
             inputBlockStyle.active.background = texAccent;
-            inputBlockStyle.normal.textColor = currentAccentColor;
+            inputBlockStyle.normal.textColor = accent;
             inputBlockStyle.alignment = TextAnchor.MiddleCenter;
             inputBlockStyle.fontStyle = FontStyle.Bold;
 
             headerStyle = new GUIStyle();
             headerStyle.normal.background = texBtnBg;
-            headerStyle.normal.textColor = currentAccentColor;
+            headerStyle.normal.textColor = accent;
             headerStyle.fontStyle = FontStyle.Bold;
             headerStyle.alignment = TextAnchor.MiddleLeft;
             headerStyle.padding = CreateRectOffset(6, 6, 4, 4);
@@ -771,11 +991,13 @@ namespace NjordMenu
             sidebarBtnStyle.fontStyle = FontStyle.Bold;
 
             activeSidebarBtnStyle = new GUIStyle(sidebarBtnStyle);
-            activeSidebarBtnStyle.normal.textColor = currentAccentColor;
-            activeSidebarBtnStyle.hover.textColor = currentAccentColor;
+            activeSidebarBtnStyle.normal.textColor = accent;
+            activeSidebarBtnStyle.hover.textColor = accent;
 
-            toggleOffStyle = new GUIStyle(); toggleOffStyle.normal.background = texToggleOff;
-            toggleOnStyle = new GUIStyle(); toggleOnStyle.normal.background = texToggleOn;
+            toggleOffStyle = new GUIStyle();
+            toggleOffStyle.normal.background = texToggleOff;
+            toggleOnStyle = new GUIStyle();
+            toggleOnStyle.normal.background = texToggleOn;
 
             toggleLabelStyle = new GUIStyle();
             toggleLabelStyle.normal.textColor = new Color(0.78f, 0.78f, 0.78f);
@@ -797,22 +1019,29 @@ namespace NjordMenu
             sliderThumbStyle.margin = CreateRectOffset(0, 0, -4, 0);
 
             titleStyle = new GUIStyle();
-            titleStyle.normal.textColor = currentAccentColor;
+            titleStyle.normal.textColor = accent;
             titleStyle.fontStyle = FontStyle.Bold;
             titleStyle.fontSize = 14;
             titleStyle.padding = CreateRectOffset(10, 0, 8, 0);
 
-            stylesInited = true;
-            // === MEOWCH CUSTOM SCROLLBARS ===
-            GUI.skin.verticalScrollbar.normal.background = MakeRoundedTex(16, new Color(0.10f, 0.10f, 0.10f, 0.8f), 6f);
-            GUI.skin.verticalScrollbar.fixedWidth = 6f;
-            GUI.skin.verticalScrollbar.margin = CreateRectOffset(2, 2, 0, 0);
+            Texture2D texScrollBg = MakeRoundedTex(8, new Color(0.1f, 0.1f, 0.1f, 0.2f), 4f);
+            Texture2D texScrollThumb = MakeRoundedTex(8, accent, 4f);
 
-            // Используем texAccent, чтобы ползунок скролла автоматически менял цвет вместе с меню!
-            GUI.skin.verticalScrollbarThumb.normal.background = texAccent;
-            GUI.skin.verticalScrollbarThumb.fixedWidth = 6f;
+            GUIStyle scrollBarStyle = new GUIStyle(GUI.skin.verticalScrollbar);
+            scrollBarStyle.normal.background = texScrollBg;
+            scrollBarStyle.fixedWidth = 8f;
+            scrollBarStyle.border = CreateRectOffset(0, 0, 4, 4);
+            scrollBarStyle.margin = CreateRectOffset(2, 2, 2, 2);
 
-            // Прячем горизонтальный скролл (он нам не нужен)
+            GUIStyle scrollBarThumbStyle = new GUIStyle(GUI.skin.verticalScrollbarThumb);
+            scrollBarThumbStyle.normal.background = texScrollThumb;
+            scrollBarThumbStyle.hover.background = texScrollThumb;
+            scrollBarThumbStyle.active.background = texScrollThumb;
+            scrollBarThumbStyle.fixedWidth = 8f;
+            scrollBarThumbStyle.border = CreateRectOffset(0, 0, 4, 4);
+
+            GUI.skin.verticalScrollbar = scrollBarStyle;
+            GUI.skin.verticalScrollbarThumb = scrollBarThumbStyle;
             GUI.skin.horizontalScrollbar.normal.background = null;
             GUI.skin.horizontalScrollbarThumb.normal.background = null;
 
@@ -823,8 +1052,8 @@ namespace NjordMenu
         {
             try
             {
-                string bgPath = System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "MenuBG.png");
-                if (!System.IO.File.Exists(bgPath)) bgPath = System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "MenuBG.jpg");
+                string bgPath = System.IO.Path.Combine(Plugin.NjordFolder, "MenuBG.png");
+                if (!System.IO.File.Exists(bgPath)) bgPath = System.IO.Path.Combine(Plugin.NjordFolder, "MenuBG.jpg");
                 if (System.IO.File.Exists(bgPath))
                 {
                     byte[] fileData = System.IO.File.ReadAllBytes(bgPath);
@@ -918,20 +1147,96 @@ namespace NjordMenu
             GUILayout.EndHorizontal();
             return (clickedBox || clickedText) ? !value : value;
         }
+        private void DrawBindsTab()
+        {
+            GUILayout.BeginVertical(boxStyle);
+            try
+            {
+                GUILayout.Label("⌨️ CUSTOM KEYBINDS", headerStyle);
+                GUILayout.Space(10);
 
+                DrawKeybindRow("Menu Toggle Key:", ref menuToggleKey, ref isWaitingForBind);
+                DrawKeybindRow("Mass Morph:", ref bindMassMorph, ref isWaitBindMassMorph);
+                DrawKeybindRow("Spawn Lobby:", ref bindSpawnLobby, ref isWaitBindSpawnLobby);
+                DrawKeybindRow("Despawn Lobby:", ref bindDespawnLobby, ref isWaitBindDespawnLobby);
+                DrawKeybindRow("Close Meeting:", ref bindCloseMeeting, ref isWaitBindCloseMeeting);
+                DrawKeybindRow("Insta Start:", ref bindInstaStart, ref isWaitBindInstaStart);
+                DrawKeybindRow("End: Crewmate Win:", ref bindEndCrew, ref isWaitBindEndCrew);
+                DrawKeybindRow("End: Impostor Win:", ref bindEndImp, ref isWaitBindEndImp);
+                DrawKeybindRow("End: Imp Disconnect:", ref bindEndImpDC, ref isWaitBindEndImpDC);
+                DrawKeybindRow("End: H&S Disconnect:", ref bindEndHnsDC, ref isWaitBindEndHnsDC);
+            }
+            finally { GUILayout.EndVertical(); }
+        }
+
+        private void DrawKeybindRow(string label, ref KeyCode currentKey, ref bool isWaiting)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUIStyle alignedLabel = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, margin = CreateRectOffset(0, 0, 4, 0) };
+            GUILayout.Label(label, alignedLabel, GUILayout.Width(220), GUILayout.Height(25));
+
+            string bindText = isWaiting ? "Press any key..." : (currentKey == KeyCode.None ? "NONE" : currentKey.ToString());
+            if (GUILayout.Button(bindText, isWaiting ? activeTabStyle : btnStyle, GUILayout.Width(120), GUILayout.Height(25)))
+            {
+                ResetAllBindWaits();
+                isWaiting = true;
+            }
+
+            if (GUILayout.Button("Clear", btnStyle, GUILayout.Width(50), GUILayout.Height(25)))
+            {
+                currentKey = KeyCode.None;
+                isWaiting = false;
+                SaveConfig();
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+        }
+
+        private void ResetAllBindWaits()
+        {
+            isWaitingForBind = false;
+            isWaitBindMassMorph = false;
+            isWaitBindSpawnLobby = false;
+            isWaitBindDespawnLobby = false;
+            isWaitBindCloseMeeting = false;
+            isWaitBindInstaStart = false;
+            isWaitBindEndCrew = false;
+            isWaitBindEndImp = false;
+            isWaitBindEndImpDC = false;
+            isWaitBindEndHnsDC = false;
+        }
         private void DrawGeneralTab()
+        {
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < generalSubTabs.Length; i++)
+            {
+                if (GUILayout.Button(generalSubTabs[i], currentGeneralSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(22)))
+                {
+                    currentGeneralSubTab = i;
+                    scrollPosition = Vector2.zero;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+
+            if (currentGeneralSubTab == 0) DrawGeneralInfoTab();
+            else if (currentGeneralSubTab == 1) DrawBindsTab();
+        }
+
+        private void DrawGeneralInfoTab()
         {
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("INFORMATION & HOTKEYS", headerStyle);
             GUILayout.Space(10);
 
-            
             GUIStyle textStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
 
-            string title = ApplyMenuShimmer("Welcome to NjordMenu v1.1.1!");
-            string subtitle = "<color=#aaaaaa><b>(Meowch Logic Edition)</b></color>";
+            string title = ApplyMenuShimmer("Welcome to NjordMenu v1.2.0!");
+            string subtitle = "<color=#aaaaaa><b>(The start timer editing was patched by innersloth)</b></color>";
 
-            // ору я убрал нахуй упоминание бинда морфа , я хз че оно тут забыло 
             string infoText = $"<size=16><b>{title}</b></size>\n{subtitle}\n\n" +
                  $"<b><color=#FFAC1C>📌 HOTKEYS:</color></b>\n" +
                  $"• <b>[Insert]</b> or <b>[Right Shift]</b> — Open / Close Menu\n" +
@@ -1760,7 +2065,6 @@ namespace NjordMenu
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            showOverload = DrawToggle(showOverload, "Show Overload UI");
             GUILayout.EndVertical();
         }
         private Vector2 outfitsScrollPos = Vector2.zero;
@@ -1876,11 +2180,10 @@ namespace NjordMenu
                 wasShowMenu = showMenu;
 
 
-                // Spoof RPC
                 if (SpoofMenuEnabled && PlayerControl.LocalPlayer != null)
                 {
                     uiSpoofTimer += Time.deltaTime;
-                    if (uiSpoofTimer >= 2f)
+                    if (uiSpoofTimer >= rpcSpoofDelay)
                     {
                         uiSpoofTimer = 0f;
                         byte rpc = spoofMenuRPCs[selectedSpoofMenuIndex];
@@ -1892,7 +2195,31 @@ namespace NjordMenu
                         catch { }
                     }
                 }
+                try
+                {
+                    if (autoBanEnabled && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && PlayerControl.AllPlayerControls != null)
+                    {
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == null || pc.Data == null || pc.Data.Disconnected || pc == PlayerControl.LocalPlayer) continue;
 
+                            string fc = pc.Data.FriendCode;
+                            if (!string.IsNullOrEmpty(fc))
+                            {
+                                foreach (var entry in bannedEntries)
+                                {
+                                    string[] parts = entry.Split('|');
+                                    if (parts.Length > 0 && parts[0].Trim().ToLower() == fc.Trim().ToLower())
+                                    {
+                                        AmongUsClient.Instance.KickPlayer(pc.OwnerId, true);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
                 // Freecam
                 if (freecam)
                 {
@@ -2021,35 +2348,45 @@ namespace NjordMenu
 
         public void OnGUI()
         {
-            // === ФИКС ВВОДА ТЕКСТА (Буквы больше не пропадают) ===
-            if (isEditingName || isEditingLevel || isEditingFakeStart)
+            if (isEditingName || isEditingLevel || isEditingBan)
             {
                 Event e = Event.current;
-                if (e.type == EventType.KeyDown)
+                if (e != null && e.isKey && e.type == EventType.KeyDown && e.keyCode != KeyCode.None && e.keyCode != KeyCode.Escape)
                 {
-                    if (e.keyCode == KeyCode.Backspace)
+                    if (isWaitingForBind) { menuToggleKey = e.keyCode; isWaitingForBind = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindMassMorph) { bindMassMorph = e.keyCode; isWaitBindMassMorph = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindSpawnLobby) { bindSpawnLobby = e.keyCode; isWaitBindSpawnLobby = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindDespawnLobby) { bindDespawnLobby = e.keyCode; isWaitBindDespawnLobby = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindCloseMeeting) { bindCloseMeeting = e.keyCode; isWaitBindCloseMeeting = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindInstaStart) { bindInstaStart = e.keyCode; isWaitBindInstaStart = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindEndCrew) { bindEndCrew = e.keyCode; isWaitBindEndCrew = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindEndImp) { bindEndImp = e.keyCode; isWaitBindEndImp = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindEndImpDC) { bindEndImpDC = e.keyCode; isWaitBindEndImpDC = false; SaveConfig(); e.Use(); return; }
+                    if (isWaitBindEndHnsDC) { bindEndHnsDC = e.keyCode; isWaitBindEndHnsDC = false; SaveConfig(); e.Use(); return; }
+
+                    if (e.keyCode == menuToggleKey)
                     {
-                        if (isEditingName && customNameInput.Length > 0) customNameInput = customNameInput.Substring(0, customNameInput.Length - 1);
-                        if (isEditingLevel && spoofLevelString.Length > 0) spoofLevelString = spoofLevelString.Substring(0, spoofLevelString.Length - 1);
-                        if (isEditingFakeStart && fakeStartInput.Length > 0) fakeStartInput = fakeStartInput.Substring(0, fakeStartInput.Length - 1);
-                        e.Use();
+                        bool isTyping = isEditingName || isEditingLevel || isEditingBan;
+                        if (!isTyping)
+                        {
+                            showMenu = !showMenu;
+                            if (!showMenu) SaveConfig();
+                            e.Use();
+                        }
                     }
-                    else if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter || e.keyCode == KeyCode.Escape)
+                    else
                     {
-                        isEditingName = false; isEditingLevel = false; isEditingFakeStart = false;
-                        e.Use();
-                    }
-                    else if (e.character != 0)
-                    {
-                        char c = e.character;
-                        if (isEditingName && customNameInput.Length < 15) customNameInput += c;
-                        if (isEditingLevel && char.IsDigit(c) && spoofLevelString.Length < 6) spoofLevelString += c;
-                        if (isEditingFakeStart && (char.IsDigit(c) || (c == '-' && fakeStartInput.Length == 0)) && fakeStartInput.Length < 8) fakeStartInput += c;
-                        e.Use();
+                        if (e.keyCode == KeyCode.Backspace)
+                        {
+                            if (isEditingBan && banInput.Length > 0) { banInput = banInput.Substring(0, banInput.Length - 1); e.Use(); }
+                        }
+                        else if (e.character != 0)
+                        {
+                            if (isEditingBan) { banInput += e.character; e.Use(); }
+                        }
                     }
                 }
             }
-
             if (Event.current.type == EventType.Layout)
             {
                 lockedPlayersList.Clear();
@@ -2217,7 +2554,7 @@ namespace NjordMenu
             }
 
           GUILayout.BeginHorizontal();
-            GUILayout.Label(ApplyMenuShimmer("NjordMenu v1.1.1"), titleStyle);
+            GUILayout.Label(ApplyMenuShimmer("NjordMenu Meowchelo & Carrot"), titleStyle);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("-", new GUIStyle(btnStyle) { fixedWidth = 20, fixedHeight = 18, margin = CreateRectOffset(0, 8, 6, 0) })) showMenu = false;
             GUILayout.EndHorizontal();
@@ -2359,17 +2696,7 @@ namespace NjordMenu
             }
             catch { }
         }
-        private void DrawHostOnlyTab()
-        {
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < hostOnlySubTabs.Length; i++)
-                if (GUILayout.Button(hostOnlySubTabs[i], currentHostOnlySubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                { currentHostOnlySubTab = i; scrollPosition = Vector2.zero; }
-            GUILayout.EndHorizontal();
-            GUILayout.Space(8);
-            if (currentHostOnlySubTab == 0) DrawLobbyControls();
-            else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
-        }
+
 
         private void DrawLobbyControls()
         {
@@ -2378,7 +2705,6 @@ namespace NjordMenu
 
             GUILayout.BeginHorizontal();
 
-            // --- Левая колонка (Настройки Лобби) ---
             GUILayout.BeginVertical(GUILayout.Width(280));
             neverEndGame = DrawToggle(neverEndGame, "Unlimited Game", 250);
             GUILayout.Space(5);
@@ -2395,42 +2721,20 @@ namespace NjordMenu
 
             GUILayout.Space(10);
 
-            // --- Правая колонка (Сниффер и Фейк Старт) ---
             GUILayout.BeginVertical(GUILayout.Width(280));
             LogAllRPCs = DrawToggle(LogAllRPCs, "Sniff All RPCs (On-Screen)", 250);
             GUILayout.Space(5);
             EnableCustomNotifs = DrawToggle(EnableCustomNotifs, "Enable Custom UI Notifications", 250);
-
-            GUILayout.Space(5);
-            bool prevTroll = fakeStartCounterTroll;
-            fakeStartCounterTroll = DrawToggle(fakeStartCounterTroll, "Fuck start (Random)", 250);
-            if (fakeStartCounterTroll && !prevTroll) fakeStartCounterCustom = false;
-
-            GUILayout.Space(5);
-            bool prevCustom = fakeStartCounterCustom;
-            fakeStartCounterCustom = DrawToggle(fakeStartCounterCustom, "Fuck start (Custom)", 250);
-            if (fakeStartCounterCustom && !prevCustom) fakeStartCounterTroll = false;
-
-            GUILayout.Space(5);
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(36);
-            string fsDisp = isEditingFakeStart ? fakeStartInput + "_" : fakeStartInput;
-            if (GUILayout.Button(fsDisp, isEditingFakeStart ? activeTabStyle : inputBlockStyle, GUILayout.Width(130), GUILayout.Height(22))) { isEditingFakeStart = !isEditingFakeStart; isEditingName = false; isEditingLevel = false; }
-            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            // ==========================================
-            // === HOST ACTIONS (РАЗДЕЛЕНО 50/50) ===
-            // ==========================================
             GUILayout.Space(15);
             GUILayout.Label("HOST ACTIONS", headerStyle);
 
             GUILayout.BeginHorizontal();
 
-            // --- ЛЕВАЯ КОЛОНКА (Лобби и Убийства) ---
             GUILayout.BeginVertical(GUILayout.Width(280));
             if (GUILayout.Button("Insta Start", btnStyle, GUILayout.Height(25)))
             { GameStartManager.Instance.startState = GameStartManager.StartingStates.Countdown; GameStartManager.Instance.countDownTimer = 0f; }
@@ -2450,13 +2754,12 @@ namespace NjordMenu
             GUILayout.Space(5);
             if (GUILayout.Button("Kick All", btnStyle, GUILayout.Height(25))) KickAll();
             GUILayout.Space(5);
-            if (GUILayout.Button("Frame All", btnStyle, GUILayout.Height(25))) this.StartCoroutine(FrameAllCoroutine().WrapToIl2Cpp());
+            if (GUILayout.Button("Mass Morph", btnStyle, GUILayout.Height(25))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.Space(10);
 
-            // --- ПРАВАЯ КОЛОНКА (Smart End Game) ---
             GUILayout.BeginVertical(GUILayout.Width(280));
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Crewmate Win", btnStyle, GUILayout.Height(25))) SmartEndGame("CrewWin");
@@ -2479,7 +2782,7 @@ namespace NjordMenu
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.EndVertical(); // Закрываем главный boxStyle
+            GUILayout.EndVertical();
         }
         public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName)
         {
@@ -2525,7 +2828,7 @@ namespace NjordMenu
         [HarmonyPatch(typeof(VersionShower), nameof(VersionShower.Start))]
     public static class VersionShower_Start_Patch
     {
-        public static void Postfix(VersionShower __instance) { if (__instance != null && __instance.text != null) __instance.text.text = NjordMenuGUI.ApplyMenuShimmer("NjordMenu By Meowchelo"); }
+        public static void Postfix(VersionShower __instance) { if (__instance != null && __instance.text != null) __instance.text.text = NjordMenuGUI.ApplyMenuShimmer("NjordMenu Meowchelo & Carrot"); }
     }
 
         [HarmonyPatch(typeof(PingTracker), nameof(PingTracker.Update))]
@@ -2549,7 +2852,7 @@ namespace NjordMenu
                     // ДОБАВЛЯЕМ ЛОГИКУ ВОТЕРМАРКИ
                     if (NjordMenuGUI.showWatermark)
                     {
-                        string shimmerTitle = NjordMenuGUI.ApplyMenuShimmer("NjordMenu By Meowchelo ");
+                        string shimmerTitle = NjordMenuGUI.ApplyMenuShimmer("NjordMenu v1.2.0");
                         finalString = $"{shimmerTitle} • " + finalString;
                     }
 
@@ -2762,7 +3065,6 @@ namespace NjordMenu
     {
         public static void Postfix(PlayerPhysics __instance)
         {
-            if(__instance.AmOwner) OverloadHandler.Run();
             if (__instance == null || __instance.myPlayer == null || __instance.myPlayer.Data == null) return;
             try
             {
@@ -3543,6 +3845,7 @@ public static class InvertControls_Patch
 {
     private static void SeePlayerVent(PlayerPhysics player)
     {
+#pragma warning disable CS8632
         if (GameManager.Instance.IsHideAndSeek() && player.myPlayer.Data.RoleType == RoleTypes.Impostor || player == null ||
             AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
             return;
@@ -3550,7 +3853,7 @@ public static class InvertControls_Patch
         {
             if (player.myPlayer.invisibilityAlpha == 0.3f)
             {
-                PhantomRole role = player.myPlayer.Data.Role as PhantomRole;
+                PhantomRole? role = player.myPlayer.Data.Role as PhantomRole;
                 if (role != null)
                 {
                     player.myPlayer.SetInvisibility(role.isInvisible);
@@ -3577,7 +3880,7 @@ public static class InvertControls_Patch
         }
         else
         {
-            PhantomRole role = player.myPlayer.Data.Role as PhantomRole;
+            PhantomRole? role = player.myPlayer.Data.Role as PhantomRole;
             if (role != null)
             {
                 player.myPlayer.SetInvisibility(role.isInvisible);
@@ -3596,7 +3899,7 @@ public static class InvertControls_Patch
             __instance.body.velocity = -__instance.body.velocity;
         }
 
-           SeePlayerVent(__instance);
+        SeePlayerVent(__instance);
         }
     }
     [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
@@ -3774,7 +4077,59 @@ public static class MoreLobbyInfo_FindAGameManager_HandleList_Postfix
     public static void Postfix(HttpMatchmakerManager.FindGamesListFilteredResponse response, FindAGameManager __instance)
     {
         if (!NjordMenuGUI.moreLobbyInfo) return;
-        
+
         __instance.TotalText.text = response.Metadata.AllGamesCount.ToString();
+    }
+}
+// это жеский пяр гит хаба через платформу, типо как в гей мод меню
+[HarmonyPatch(typeof(PlatformSpecificData), nameof(PlatformSpecificData.Serialize))]
+public static class PlatformSpooferPatch
+{
+    public static void Prefix(PlatformSpecificData __instance)
+    {
+        try
+        {
+            if (__instance != null)
+            {
+                if (NjordMenuGUI.enablePlatformSpoof)
+                {
+                    __instance.Platform = NjordMenuGUI.platformValues[NjordMenuGUI.currentPlatformIndex];
+                }
+                __instance.PlatformName = "NjordMenu by Meowchelo https://github.com/meowchelo/NjordMenu";
+            }
+        }
+        catch { }
+    }
+}
+// я короче вот эту хуйню у кавасаки спиздил еще и нейронкой ну типо вообще ебанат ок
+[HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.KickPlayer))]
+public static class AmongUsClient_KickPlayer_BanList_Patch
+{
+    public static void Prefix(InnerNetClient __instance, int clientId, bool ban)
+    {
+        if (ban && PlayerControl.AllPlayerControls != null && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        {
+            try
+            {
+                var pc = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(p => p.OwnerId == clientId);
+                if (pc != null && pc.Data != null)
+                {
+                    string fc = string.IsNullOrEmpty(pc.Data.FriendCode) ? "Unknown" : pc.Data.FriendCode;
+                    string name = pc.Data.PlayerName ?? "Unknown";
+                    string puid = "Unknown";
+
+                    try
+                    {
+                        var client = AmongUsClient.Instance.GetClientFromCharacter(pc);
+                        if (client != null) puid = client.Id.ToString();
+                    }
+                    catch { }
+
+                    NjordMenuGUI.AddToBanList(fc, puid, name, "Host ban");
+                    NjordMenuGUI.ShowNotification($"<color=#FF0000>[BAN]</color> {name} занесен в черный список!");
+                }
+            }
+            catch { }
+        }
     }
 }
