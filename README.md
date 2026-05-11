@@ -1,7 +1,6 @@
 # NjordMenu🌊 - Among Us
 
 **NjordMenu** - multi-functional [BepInEx](https://github.com/BepInEx/BepInEx) mod for Among Us, developed by **Meowchelo**. Built with the intention of providing ultimate control over your game, it features deep quality-of-life improvements, extensive host privileges, hilarious trolling utilities.
-<img width="1422" height="670" alt="изображение" src="https://github.com/user-attachments/assets/db56f869-e721-4096-bf99-bb230670a65c" />
 
 ## 📋 Features
 
@@ -18,7 +17,8 @@
 * **Anti-Cheat & Ban List:** Maintain a persistent, local blacklist (`NjordMenuBanList.txt`). Add specific FriendCodes to automatically ban and kick malicious players or rule-breakers the exact moment they join your lobby.
 * **Trolling & Fun:**  Rainbow Colors, custom Chat Commands (`/color`, `/w`), and fake animations.
 * **UI Customization:** Fully modular GUI with RGB mode, custom image backgrounds (`MenuBG.png`), and smooth animations.
-<img width="1357" height="703" alt="Снимок экрана 2026-05-11 221042" src="https://github.com/user-attachments/assets/1ae65184-1a65-4484-9785-001d16ddb6e2" />
+<img width="1422" height="670" alt="изображение" src="https://github.com/user-attachments/assets/1f4ef367-e3de-4112-8b11-0f4e0f90cd54" />
+
 
 
 ## 🛡️ RPC Sniffer
