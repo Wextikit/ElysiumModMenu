@@ -17,7 +17,8 @@
 * **Anti-Cheat & Ban List:** Maintain a persistent, local blacklist (`NjordMenuBanList.txt`). Add specific FriendCodes to automatically ban and kick malicious players or rule-breakers the exact moment they join your lobby.
 * **Trolling & Fun:**  Rainbow Colors, custom Chat Commands (`/color`, `/w`), and fake animations.
 * **UI Customization:** Fully modular GUI with RGB mode, custom image backgrounds (`MenuBG.png`), and smooth animations.
-<img width="1277" height="717" alt="Снимок экрана 2026-04-24 233814" src="https://github.com/user-attachments/assets/83996161-7953-4294-a876-a2c36522527d" />
+<img width="1357" height="703" alt="Снимок экрана 2026-05-11 221042" src="https://github.com/user-attachments/assets/1ae65184-1a65-4484-9785-001d16ddb6e2" />
+
 
 ## 🛡️ RPC Sniffer
 
@@ -43,7 +44,9 @@ As NjordMenu is a [BepInEx](https://github.com/BepInEx/BepInEx) mod, you will ne
 
 * Place a file named `MenuBG.png` or `MenuBG.jpg` inside the `BepInEx/config` folder to use a custom background for your mod menu.
 * To change the menu toggle key, click "Bind Key" in the Menu tab and press your desired key.
-<img width="1356" height="796" alt="изображение" src="https://github.com/user-attachments/assets/3ec4d3dc-ee77-40cc-97af-e3ae6e9e9614" />
+
+
+<img width="858" height="626" alt="Снимок экрана 2026-05-11 185741" src="https://github.com/user-attachments/assets/03cba555-9428-4003-9b65-59b9663dda72" />
 
 ## ⚠️ Disclaimer & Caution
 
