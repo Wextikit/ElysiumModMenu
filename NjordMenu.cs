@@ -31,7 +31,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 namespace NjordMenu
 {
-    [BepInPlugin("com.njord.menu", "NjordMenu", "1.2.1")]
+    [BepInPlugin("com.njord.menu", "NjordMenu", "1.2.3")]
     public class Plugin : BasePlugin
     {
         public static Plugin Instance { get; private set; } = null!;
@@ -1177,6 +1177,8 @@ namespace NjordMenu
         public static Vector2 notificationBoxSize = new Vector2(260f, 65f);
         public static List<NjordNotification> screenNotifications = new List<NjordNotification>();
 
+      
+      
         private bool stylesInited = false;
         private GUIStyle windowStyle, btnStyle, activeTabStyle, headerStyle, boxStyle;
         private GUIStyle sidebarStyle, sidebarBtnStyle, activeSidebarBtnStyle, titleStyle;
@@ -1184,8 +1186,7 @@ namespace NjordMenu
         private GUIStyle sliderStyle, sliderThumbStyle, subTabStyle, activeSubTabStyle;
         public GUIStyle inputBlockStyle;
         private Texture2D texWindowBg, texBoxBg, texBtnBg, texAccent, texSidebarBg;
-        private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn;
-
+        private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn, texScrollThumb;
         private void DrawHostOnlyTab()
         {
             GUILayout.BeginHorizontal();
@@ -1205,14 +1206,15 @@ namespace NjordMenu
             else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
             else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
         }
-
         private void DrawAntiCheatTab()
         {
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("ANTI CHEAT", headerStyle);
             GUILayout.Space(5);
 
-            GUILayout.Label("<color=#FF0000>Функции в процессе...</color>", new GUIStyle(GUI.skin.label) { richText = true, fontStyle = FontStyle.Bold });
+            enableLocalPetSpamDrop = DrawToggle(enableLocalPetSpamDrop, "Block Pet Spam (Local Drop)", 250);
+            GUILayout.Space(5);
+            enableHostPetSpamBan = DrawToggle(enableHostPetSpamBan, "Auto-Ban Pet Spammers (Host)", 250);
             GUILayout.Space(15);
 
             GUILayout.Label("BAN LIST", headerStyle);
@@ -1271,6 +1273,85 @@ namespace NjordMenu
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
+        }
+        public static bool enableLocalPetSpamDrop = true;
+        public static bool enableHostPetSpamBan = false;
+        [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
+        public static class Shield_PetSpam_Patch
+        {
+            public static System.Collections.Generic.HashSet<byte> petSpamBlockedPlayers = new System.Collections.Generic.HashSet<byte>();
+
+            public static System.Collections.Generic.Dictionary<byte, System.Collections.Generic.Queue<float>> petSpamTrackers = new System.Collections.Generic.Dictionary<byte, System.Collections.Generic.Queue<float>>();
+
+            public static bool Prefix(PlayerPhysics __instance, byte callId, Hazel.MessageReader reader)
+            {
+                if (!NjordMenuGUI.enableLocalPetSpamDrop && !NjordMenuGUI.enableHostPetSpamBan) return true;
+
+                if (callId == 49 || callId == 50)
+                {
+                    try
+                    {
+                        if (__instance == null || __instance.myPlayer == null) return true;
+
+                        if (__instance.myPlayer == PlayerControl.LocalPlayer) return true;
+
+                        byte pId = __instance.myPlayer.PlayerId;
+
+                        if (petSpamBlockedPlayers.Contains(pId))
+                        {
+                            if (NjordMenuGUI.enableLocalPetSpamDrop) return false;
+                        }
+
+                        float now = UnityEngine.Time.time;
+
+                        if (!petSpamTrackers.ContainsKey(pId))
+                            petSpamTrackers[pId] = new System.Collections.Generic.Queue<float>();
+
+                        var q = petSpamTrackers[pId];
+
+                        while (q.Count > 0 && q.Peek() < now - 0.75f)
+                            q.Dequeue();
+
+                        q.Enqueue(now);
+
+                        if (q.Count > 160)
+                        {
+                            petSpamBlockedPlayers.Add(pId);
+
+                            string pName = __instance.myPlayer.Data?.PlayerName ?? "Unknown";
+
+                            if (NjordMenuGUI.enableLocalPetSpamDrop)
+                            {
+                                NjordMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> Игрок <b>{pName}</b> заблокирован за Pet Spam (Локально)!");
+                            }
+
+                            if (NjordMenuGUI.enableHostPetSpamBan && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                            {
+                                string fc = string.IsNullOrEmpty(__instance.myPlayer.Data?.FriendCode) ? "Unknown" : __instance.myPlayer.Data.FriendCode;
+                                string puid = "Unknown";
+
+                                try
+                                {
+                                    var client = AmongUsClient.Instance.GetClientFromCharacter(__instance.myPlayer);
+                                    if (client != null) puid = client.Id.ToString();
+                                }
+                                catch { }
+
+                                NjordMenuGUI.AddToBanList(fc, puid, pName, "Auto-banned for Pet Spam");
+
+                                AmongUsClient.Instance.KickPlayer(__instance.myPlayer.OwnerId, true);
+
+                                NjordMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> Игрок <b>{pName}</b> АВТОМАТИЧЕСКИ ЗАБАНЕН за спам петом!");
+                            }
+
+                            return false;
+                        }
+                    }
+                    catch { }
+                }
+
+                return true;
+            }
         }
         public static int GetColorIdByName(string name)
         {
@@ -1361,6 +1442,7 @@ namespace NjordMenu
             ShowNotification($"<color=#FF00FF>[MASS MORPH]</color> {notifText}");
         }
 
+
         private void ForceMeetingAsPlayer(PlayerControl target)
         {
             if (target == null || AmongUsClient.Instance == null) return;
@@ -1425,6 +1507,8 @@ namespace NjordMenu
             }
             catch { }
         }
+
+
 
         public static void UnlockCosmetics()
         {
@@ -1632,6 +1716,26 @@ namespace NjordMenu
                 }
                 texSliderThumb.SetPixels(pix); texSliderThumb.Apply();
             }
+            if (texScrollThumb != null)
+            {
+                int size = texScrollThumb.width;
+                Color[] pix = new Color[size * size];
+                float center = size / 2f;
+                float radius = 4f;
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
+                        float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
+                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                        float alpha = Mathf.Clamp01(radius - dist + 0.5f);
+                        Color c = color; c.a = alpha;
+                        pix[y * size + x] = c;
+                    }
+                }
+                texScrollThumb.SetPixels(pix); texScrollThumb.Apply();
+            }
             if (texToggleOn != null) UpdateSwitchTex(texToggleOn, true, color);
             if (windowStyle != null) windowStyle.normal.textColor = color;
             if (headerStyle != null) headerStyle.normal.textColor = color;
@@ -1767,7 +1871,7 @@ namespace NjordMenu
             titleStyle.padding = CreateRectOffset(10, 0, 8, 0);
 
             Texture2D texScrollBg = MakeRoundedTex(8, new Color(0.1f, 0.1f, 0.1f, 0.2f), 4f);
-            Texture2D texScrollThumb = MakeRoundedTex(8, accent, 4f);
+            texScrollThumb = MakeRoundedTex(8, accent, 4f); 
 
             GUIStyle scrollBarStyle = new GUIStyle(GUI.skin.verticalScrollbar);
             scrollBarStyle.normal.background = texScrollBg;
@@ -1974,7 +2078,7 @@ namespace NjordMenu
 
             GUIStyle textStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
 
-            string title = ApplyMenuShimmer("Welcome to NjordMenu v1.2.1!");
+            string title = ApplyMenuShimmer("Welcome to NjordMenu v1.2.3!");
             string subtitle = "<color=#aaaaaa><b>(The start timer editing was patched by innersloth)</b></color>";
 
             string infoText = $"<size=16><b>{title}</b></size>\n{subtitle}\n\n" +
@@ -2446,7 +2550,15 @@ namespace NjordMenu
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("CRITICAL SABOTAGES", headerStyle);
 
-            if (GUILayout.Button("FIX ALL SABOTAGES & DOORS", activeTabStyle, GUILayout.Height(35))) FixAllSabotages();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("FIX ALL SABOTAGES", activeTabStyle, GUILayout.Height(35))) FixAllSabotages();
+            GUI.backgroundColor = new Color(1f, 0.3f, 0.3f, 1f);
+            if (GUILayout.Button("TRIGGER ALL", btnStyle, GUILayout.Height(35))) TriggerAllSabotages();
+            GUI.backgroundColor = Color.white;
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            if (GUILayout.Button("CALL MEETING (LEGIT / PUBLIC)", btnStyle, GUILayout.Height(35))) callMeetingPublic();
             GUILayout.Space(10);
 
             GUILayout.BeginHorizontal();
@@ -2529,7 +2641,48 @@ namespace NjordMenu
             }
             GUILayout.EndVertical();
         }
+        private void callMeetingPublic()
+        {
+            if (PlayerControl.LocalPlayer == null || PlayerControl.AllPlayerControls == null) return;
+            try
+            {
+                foreach (var pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc != null && pc.Data != null && pc.Data.IsDead && !pc.Data.Disconnected)
+                    {
+                        PlayerControl.LocalPlayer.CmdReportDeadBody(pc.Data);
+                        ShowNotification($"<color=#00FF00>[MEETING]</color> Найден и зарепорчен труп: <b>{pc.Data.PlayerName}</b>!");
+                        return;
+                    }
+                }
 
+                PlayerControl.LocalPlayer.CmdReportDeadBody(null);
+                ShowNotification("<color=#00FF00>[MEETING]</color> Легально нажата кнопка собрания!");
+            }
+            catch (Exception ex)
+            {
+                Debug.Log("Public Meeting Error: " + ex.Message);
+            }
+        }
+        private void TriggerAllSabotages()
+        {
+            if (ShipStatus.Instance == null) return;
+            try
+            {
+                reactorSab = true;
+                oxygenSab = true;
+                commsSab = true;
+                elecSab = true;
+
+                ToggleReactor(true);
+                ToggleO2(true);
+                ToggleComms(true);
+                ToggleLights(true);
+
+                ShowNotification("<color=#FF0000>[SABOTAGE]</color> Все системы саботированы!");
+            }
+            catch (Exception ex) { Debug.Log("Trigger All Sabotages Error: " + ex.Message); }
+        }
         private void FixAllSabotages()
         {
             if (ShipStatus.Instance == null) return;
@@ -3611,7 +3764,7 @@ if (PlayerControl.LocalPlayer != null)
 
                     if (NjordMenuGUI.showWatermark)
                     {
-                        string shimmerTitle = NjordMenuGUI.ApplyMenuShimmer("NjordMenu v1.2.1");
+                        string shimmerTitle = NjordMenuGUI.ApplyMenuShimmer("NjordMenu v1.2.3");
                         finalString = $"{shimmerTitle} • " + finalString;
                     }
 
@@ -4554,6 +4707,7 @@ public static class InvertControls_Patch
 {
     private static void SeePlayerVent(PlayerPhysics player)
     {
+#pragma warning disable CS8632
         if (GameManager.Instance.IsHideAndSeek() && player.myPlayer.Data.RoleType == RoleTypes.Impostor || player == null ||
             AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
             return;
@@ -4680,9 +4834,11 @@ public static class RPCSniffer_Patch
 
         if (NjordMenuGUI.LogAllRPCs)
         {
+            
             if (!VanillaRPCs.Contains(callId))
             {
                 string pNameSniff = (__instance.Data != null && !string.IsNullOrEmpty(__instance.Data.PlayerName)) ? __instance.Data.PlayerName : $"Player_{__instance.PlayerId}";
+
                 
                 if (KnownMods.TryGetValue(callId, out var modInfo))
                 {
@@ -4697,6 +4853,7 @@ public static class RPCSniffer_Patch
         return true;
     }
 }
+
 
 [HarmonyPatch(typeof(HatManager), nameof(HatManager.Initialize))]
 public static class UnlockCosmetics_HatManager_Initialize_Postfix
@@ -4738,6 +4895,7 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
         var age = __instance.gameListing.Age;
         var lobbyTime = $"Age: {age / 60}:{(age % 60 < 10 ? "0" : "")}{age % 60}";
 
+        
         int platId = (int)__instance.gameListing.Platform;
         string platformStr = platId switch
         {
