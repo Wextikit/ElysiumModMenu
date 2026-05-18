@@ -19,7 +19,7 @@
 > [!NOTE]  
 > NjordMenu contains highly advanced network manipulation tools. Forced bans and global network manipulation are exceptionally powerful. Please use them responsibly.
 
-### 🛡️ Anti-Cheat & Third-Party Client Detection
+### 🛡️ Anti-Cheat & Client Detection
 NjordMenu acts as a powerful shield against malicious players, crashers, and other modders:
 * **Advanced RPC Radar (Sniffer):** The menu silently analyzes all incoming network traffic. Vanilla Among Us only uses RPC IDs `0-65`. If a player sends non-vanilla packets, NjordMenu cross-references the ID with a massive built-in database of known third-party cheats (including *RockStar, Hydra, Sicko, HostGuard, Polar, GNC, KillNetwork, BanMod, Eclipse, and more*). You will receive an instant on-screen notification identifying exactly who is cheating and what menu they are using.
 * **Menu Identity Spoofer:** Want to hide your NjordMenu from other modders? You can spoof your outgoing RPCs to mimic *other* cheat clients, tricking their radars into thinking you are using something else.
