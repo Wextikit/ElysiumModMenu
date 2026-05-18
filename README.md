@@ -27,7 +27,8 @@ NjordMenu acts as a powerful shield against malicious players, crashers, and oth
 * **Anti Vote-Kick:** Completely disable the lobby vote-kick system, preventing trolls from kicking you out of your own lobby.
 * **Fortegreen Auto-Kick:** Automatically detects and kicks bugged/glitched "Fortegreen" (Color ID 18) players that cause lobby crashes.
 * **Persistent Ban List:** Maintain a local blacklist (`NjordMenuBanList.txt`). Add griefers by their FriendCode or PUID, and the mod will kick them the exact millisecond they try to join.
-<img width="1423" height="939" alt="Снимок экрана 2026-05-18 225635" src="https://github.com/user-attachments/assets/aff8a2ee-6dcf-4fbe-a38a-47f4bbd08adf" />
+<img width="1884" height="1020" alt="изображение" src="https://github.com/user-attachments/assets/c4a2a364-bd2f-44e4-a27c-8d299ddd8415" />
+
 
 ### 💬 Ultimate Chat System
 Experience the best chat enhancements available:
