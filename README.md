@@ -8,9 +8,9 @@
 
 | Version | Description | Download |
 | :--- | :--- | :--- |
-| **v1.2.5** ✨ | Latest update (New UI, Force Eject, TP to Player) | [📥 Download Zip](https://github.com/meowchelo/NjordMenu/releases/latest) |
-| **v1.2.4** | Previous stable build | [📥 Download Zip](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.4) |
-| **v1.2.3** | Legacy build | [📥 Download Zip](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.3) |
+| **v1.2.5** ✨ | Latest update (New UI, Force Eject, TP to Player) | [📥 Download dll](https://github.com/meowchelo/NjordMenu/releases/latest) |
+| **v1.2.4** | Previous stable build | [📥 Download dll](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.4) |
+| **v1.2.3** | Legacy build | [📥 Download dll](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.3) |
 
 ---
 
