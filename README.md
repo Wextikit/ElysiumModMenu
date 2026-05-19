@@ -10,7 +10,7 @@
 | :--- | :--- | :--- |
 | **v1.2.5** ✨ | Latest update (Force Eject, TP to Player, New Chat & Sniffer UI) | [📥 Download .dll](https://github.com/meowchelo/NjordMenu/releases/latest) |
 | **v1.2.4** | Previous stable build | [📥 Download .dll](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.4) |
-| **v1.2.3** | Legacy build | [📥 Download .dll](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.3) |
+| **v1.2.3** | | [📥 Download .dll](https://github.com/meowchelo/NjordMenu/releases/tag/v1.2.3) |
 
 ---
 
