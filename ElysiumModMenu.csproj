@@ -1,15 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
-
+		<AssemblyName>ElysiumModMenu</AssemblyName>
+		<RootNamespace>ElysiumModMenu</RootNamespace>
 		<AmongUsDir>C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsDir>
 	</PropertyGroup>
-
 	<ItemGroup>
 		<Reference Include="BepInEx.Core">
 			<HintPath>$(AmongUsDir)\BepInEx\core\BepInEx.Core.dll</HintPath>
@@ -21,38 +20,43 @@
 			<HintPath>$(AmongUsDir)\BepInEx\core\0Harmony.dll</HintPath>
 		</Reference>
 		<Reference Include="Hazel">
-		  <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Hazel.dll</HintPath>
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Hazel.dll</HintPath>
 		</Reference>
 		<Reference Include="Il2CppInterop.Runtime">
 			<HintPath>$(AmongUsDir)\BepInEx\core\Il2CppInterop.Runtime.dll</HintPath>
 		</Reference>
-
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\Assembly-CSharp.dll</HintPath>
 		</Reference>
 		<Reference Include="Il2Cppmscorlib">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\Il2Cppmscorlib.dll</HintPath>
 		</Reference>
+		<Reference Include="Unity.Addressables">
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Unity.Addressables.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.ResourceManager">
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Unity.ResourceManager.dll</HintPath>
+		</Reference>
 		<Reference Include="Unity.TextMeshPro">
-		  <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Unity.TextMeshPro.dll</HintPath>
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\Unity.TextMeshPro.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.AudioModule">
-		  <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.AudioModule.dll</HintPath>
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.AudioModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.CoreModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.ImageConversionModule">
-		  <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.ImageConversionModule.dll</HintPath>
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.ImageConversionModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.IMGUIModule">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.IMGUIModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.Physics2DModule">
-		  <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.Physics2DModule.dll</HintPath>
+			<HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Among Us\BepInEx\interop\UnityEngine.Physics2DModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.TextRenderingModule">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.TextRenderingModule.dll</HintPath>
@@ -60,10 +64,8 @@
 		<Reference Include="UnityEngine.InputLegacyModule">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.InputLegacyModule.dll</HintPath>
 		</Reference>
-
 		<Reference Include="UnityEngine.UI">
 			<HintPath>$(AmongUsDir)\BepInEx\interop\UnityEngine.UI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-
 </Project>
