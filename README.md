@@ -13,7 +13,7 @@ Not just another menu. It is built for people who want more lobby control, clean
 
 | Version | Status | Link |
 | :--- | :--- | :--- |
-| **v1.3.0** | Latest | [⬇️ Download ElysiumModMenu.dll](https://github.com/meowchelo/ElysiumModMenu/releases/latest) |
+| **v1.3.1** | Latest | [⬇️ Download ElysiumModMenu.dll](https://github.com/meowchelo/ElysiumModMenu/releases/latest) |
 
 ---
 
