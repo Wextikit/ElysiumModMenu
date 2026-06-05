@@ -2492,18 +2492,32 @@ namespace ElysiumModMenu
 
             public static void Postfix(MessageReader __result)
             {
-                if (!ElysiumModMenuGUI.enablePasosLimit || __result == null) return;
+                DropEmptyRpcMessage(__result);
+            }
+
+            public static void DropEmptyRpcMessage(MessageReader reader)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit || reader == null) return;
 
                 try
                 {
-                    if (__result.Tag != RpcGameDataTag || __result.BytesRemaining > 0) return;
+                    if (reader.Tag != RpcGameDataTag || reader.BytesRemaining > 0 || reader.Length > 0) return;
 
-                    __result.Tag = DroppedGameDataTag;
-                    __result.Position = __result.Length;
+                    reader.Tag = DroppedGameDataTag;
+                    reader.Position = reader.Length;
 
                     RecordDrop();
                 }
                 catch { }
+            }
+        }
+
+        [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadMessageAsNewBuffer))]
+        public static class Shield_PasosLimit_ReadMessageAsNewBuffer_Patch
+        {
+            public static void Postfix(MessageReader __result)
+            {
+                Shield_PasosLimit_Patch.DropEmptyRpcMessage(__result);
             }
         }
 
@@ -2637,6 +2651,23 @@ namespace ElysiumModMenu
 
                 __result = 0;
                 return false;
+            }
+
+            public static Exception Finalizer(MessageReader __instance, Exception __exception, ref int __result)
+            {
+                if (__exception == null || !ElysiumModMenuGUI.enablePasosLimit) return __exception;
+
+                try
+                {
+                    if (__instance == null || __instance.Length > 0 || __instance.BytesRemaining > 0) return __exception;
+
+                    Shield_PasosLimit_Patch.RecordDrop();
+                    __result = 0;
+                    return null;
+                }
+                catch { }
+
+                return __exception;
             }
         }
 
