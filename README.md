@@ -9,7 +9,7 @@ Advanced BepInEx IL2CPP mod menu for Among Us with host tools, anti-cheat utilit
 
 | Version | Status | Download |
 | :--- | :--- | :--- |
-| v1.3.1 | Latest | [Download ElysiumModMenu.dll](https://github.com/meowchelo/ElysiumModMenu/releases/latest) |
+| v1.3.2 | Latest | [Download ElysiumModMenu.dll](https://github.com/meowchelo/ElysiumModMenu/releases/latest) |
 
 ## Highlights
 
