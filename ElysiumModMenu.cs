@@ -1065,7 +1065,7 @@ namespace ElysiumModMenu
             GUILayout.Space(5);
             enablePasosLimit = DrawToggle(enablePasosLimit, "Pasos Limit", 250);
             GUILayout.Space(5);
-            enableHostPasosBan = DrawToggle(enableHostPasosBan, L("Auto-Ban Pasos Spam", "Авто-бан за Pasos Spam"), 250);
+            enableHostPasosBan = DrawToggle(enableHostPasosBan, L("Anti-Pasos Ban (3m)", "Анти-Pasos бан (3 мин)"), 250);
 
             GUILayout.Space(15);
             GUILayout.Label(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"), headerStyle);
@@ -2473,11 +2473,22 @@ namespace ElysiumModMenu
             private const byte DroppedGameDataTag = 0;
             private const int PasosDropNotifyLimit = 1;
             private const float PasosWindow = 0.75f;
+            private const float PasosBanSeconds = 180f;
             private const float PasosNotifyCooldown = 2f;
             private static readonly Queue<float> emptyRpcDrops = new Queue<float>();
-            private static readonly HashSet<int> pasosBlockedClientIds = new HashSet<int>();
+            private static readonly Dictionary<int, float> pasosBlockedClientIds = new Dictionary<int, float>();
+            private static readonly List<PasosTempBanEntry> pasosTempHostBans = new List<PasosTempBanEntry>();
             private static float lastPasosNotify;
             private static int currentPasosClientId = -1;
+
+            private class PasosTempBanEntry
+            {
+                public int ClientId;
+                public string FriendCode;
+                public string Puid;
+                public string Name;
+                public float ExpiresAt;
+            }
 
             public static void SetCurrentClientId(int clientId)
             {
@@ -2487,7 +2498,14 @@ namespace ElysiumModMenu
 
             public static bool IsClientBlocked(int clientId)
             {
-                return clientId >= 0 && pasosBlockedClientIds.Contains(clientId);
+                if (clientId < 0) return false;
+
+                float now = UnityEngine.Time.realtimeSinceStartup;
+                if (!pasosBlockedClientIds.TryGetValue(clientId, out float expiresAt)) return false;
+                if (expiresAt > now) return true;
+
+                pasosBlockedClientIds.Remove(clientId);
+                return false;
             }
 
             public static void RecordDrop(int clientId = -1)
@@ -2499,7 +2517,7 @@ namespace ElysiumModMenu
                 emptyRpcDrops.Enqueue(now);
 
                 int resolvedClientId = clientId >= 0 ? clientId : currentPasosClientId;
-                if (resolvedClientId >= 0 && !pasosBlockedClientIds.Contains(resolvedClientId))
+                if (resolvedClientId >= 0 && !IsClientBlocked(resolvedClientId))
                     BlockPasosClient(resolvedClientId);
 
                 if (emptyRpcDrops.Count >= PasosDropNotifyLimit && now - lastPasosNotify > PasosNotifyCooldown)
@@ -2515,11 +2533,12 @@ namespace ElysiumModMenu
                 {
                     if (clientId < 0 || (AmongUsClient.Instance != null && clientId == AmongUsClient.Instance.ClientId)) return;
 
-                    pasosBlockedClientIds.Add(clientId);
+                    float expiresAt = UnityEngine.Time.realtimeSinceStartup + PasosBanSeconds;
+                    pasosBlockedClientIds[clientId] = expiresAt;
 
                     PlayerControl player = FindPlayerByClientId(clientId);
                     string pName = player?.Data?.PlayerName ?? $"Client {clientId}";
-                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> blocked by Pasos Limit (Local)!");
+                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> Anti-Pasos blocked for 3m (Local)!");
 
                     if (!ElysiumModMenuGUI.enableHostPasosBan || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
 
@@ -2536,9 +2555,74 @@ namespace ElysiumModMenu
                     }
                     catch { }
 
-                    ElysiumModMenuGUI.AddToBanList(fc, puid, pName, "Auto-banned for Pasos empty RPC spam");
-                    AmongUsClient.Instance.KickPlayer(clientId, true);
-                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> auto-banned for Pasos Spam!");
+                    AddPasosTempHostBan(clientId, fc, puid, pName, expiresAt);
+                    AmongUsClient.Instance.KickPlayer(clientId, false);
+                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> Anti-Pasos host ban for 3m!");
+                }
+                catch { }
+            }
+
+            private static void AddPasosTempHostBan(int clientId, string friendCode, string puid, string name, float expiresAt)
+            {
+                try
+                {
+                    pasosTempHostBans.RemoveAll(x => IsSamePasosBanTarget(x, clientId, friendCode, puid));
+                    pasosTempHostBans.Add(new PasosTempBanEntry
+                    {
+                        ClientId = clientId,
+                        FriendCode = string.IsNullOrWhiteSpace(friendCode) ? "Unknown" : friendCode,
+                        Puid = string.IsNullOrWhiteSpace(puid) ? clientId.ToString() : puid,
+                        Name = string.IsNullOrWhiteSpace(name) ? $"Client {clientId}" : name,
+                        ExpiresAt = expiresAt
+                    });
+                }
+                catch { }
+            }
+
+            private static bool IsSamePasosBanTarget(PasosTempBanEntry entry, int clientId, string friendCode, string puid)
+            {
+                if (entry == null) return false;
+                if (entry.ClientId == clientId) return true;
+
+                if (!string.IsNullOrWhiteSpace(friendCode) && friendCode != "Unknown" &&
+                    string.Equals(entry.FriendCode, friendCode, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (!string.IsNullOrWhiteSpace(puid) && puid != "Unknown" &&
+                    string.Equals(entry.Puid, puid, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                return false;
+            }
+
+            public static void EnforceTempHostBans()
+            {
+                if (!ElysiumModMenuGUI.enableHostPasosBan || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+
+                try
+                {
+                    float now = UnityEngine.Time.realtimeSinceStartup;
+                    pasosTempHostBans.RemoveAll(x => x == null || x.ExpiresAt <= now);
+                    if (pasosTempHostBans.Count == 0 || PlayerControl.AllPlayerControls == null) return;
+
+                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
+
+                        int clientId = (int)pc.OwnerId;
+                        string fc = string.IsNullOrEmpty(pc.Data.FriendCode) ? "Unknown" : pc.Data.FriendCode;
+                        string puid = clientId.ToString();
+
+                        try
+                        {
+                            var client = AmongUsClient.Instance.GetClientFromCharacter(pc);
+                            if (client != null) puid = client.Id.ToString();
+                        }
+                        catch { }
+
+                        if (pasosTempHostBans.Any(x => IsSamePasosBanTarget(x, clientId, fc, puid)))
+                            AmongUsClient.Instance.KickPlayer(clientId, false);
+                    }
                 }
                 catch { }
             }
@@ -2618,9 +2702,6 @@ namespace ElysiumModMenu
                 {
                     int clientId = ExtractClientId(__args);
                     Shield_PasosLimit_Patch.SetCurrentClientId(clientId);
-
-                    if (Shield_PasosLimit_Patch.IsClientBlocked(clientId))
-                        return false;
                 }
                 catch { }
 
@@ -2709,11 +2790,6 @@ namespace ElysiumModMenu
                 {
                     int clientId = ExtractClientId(__args);
                     Shield_PasosLimit_Patch.SetCurrentClientId(clientId);
-                    if (Shield_PasosLimit_Patch.IsClientBlocked(clientId))
-                    {
-                        __result = EmptyPasosRoutine().WrapToIl2Cpp();
-                        return false;
-                    }
 
                     MessageReader parentReader = __args != null && __args.Length > 0 ? __args[0] as MessageReader : null;
                     if (parentReader == null) return true;
@@ -2766,11 +2842,6 @@ namespace ElysiumModMenu
                 {
                     int clientId = ExtractClientId(__instance);
                     Shield_PasosLimit_Patch.SetCurrentClientId(clientId);
-                    if (Shield_PasosLimit_Patch.IsClientBlocked(clientId))
-                    {
-                        __result = false;
-                        return false;
-                    }
 
                     if (!HasEmptyGameDataReader(__instance)) return true;
 
@@ -6623,6 +6694,11 @@ namespace ElysiumModMenu
                         catch { }
                     }
                 }
+                try
+                {
+                    Shield_PasosLimit_Patch.EnforceTempHostBans();
+                }
+                catch { }
                 try
                 {
                     if (autoBanEnabled && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && PlayerControl.AllPlayerControls != null)
