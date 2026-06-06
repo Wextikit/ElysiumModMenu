@@ -73,7 +73,7 @@ namespace ElysiumModMenu
             }
 
             MenuConfig = new ConfigFile(System.IO.Path.Combine(ElysiumFolder, "ElysiumModMenu.cfg"), true);
-            RpcSpoofDelayConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "RpcDelay", 4f, "");
+            RpcSpoofDelayConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "RpcDelay", 7f, "");
             MenuKeybind = MenuConfig.Bind("ElysiumModMenu.GUI", "Keybind", KeyCode.Insert, "");
             SpoofedLevel = MenuConfig.Bind("ElysiumModMenu.Spoofing", "Level", "100", "");
             EnableFriendCodeSpoofConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "EnableFriendCodeSpoof", false, "");
@@ -103,7 +103,8 @@ namespace ElysiumModMenu
     {
         public static string[] spoofMenuNames = { "ElysiumModMenu", "HostGuard/TOH", "Polar", "BanMod", "Better Among Us", "Sicko Menu", "GNC", "KillNetwork (V1)", "KillNetwork (V2)", "KNM" };
         public static byte[] spoofMenuRPCs = { 89, 176, 204, 212, 151, 164, 154, 85, 150, 162 };
-        public static float rpcSpoofDelay = 4f;
+        private const float MinRpcSpoofDelay = 7f;
+        public static float rpcSpoofDelay = MinRpcSpoofDelay;
 
         public static byte selectedMorphTargetId = 255;
         public static bool unlockCosmetics = true;
@@ -3204,6 +3205,7 @@ namespace ElysiumModMenu
                 Plugin.UnlockCosmeticsConfig.Value = unlockCosmetics;
                 Plugin.MoreLobbyInfoConfig.Value = moreLobbyInfo;
                 Plugin.EnableChatDarkModeConfig.Value = enableChatDarkMode;
+                rpcSpoofDelay = Mathf.Max(MinRpcSpoofDelay, rpcSpoofDelay);
                 Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
                 Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
                 Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
@@ -3358,7 +3360,7 @@ namespace ElysiumModMenu
                 unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
                 moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;
                 enableChatDarkMode = Plugin.EnableChatDarkModeConfig.Value;
-                rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
+                rpcSpoofDelay = Mathf.Max(MinRpcSpoofDelay, Plugin.RpcSpoofDelayConfig.Value);
                 currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
                 rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
                 whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
@@ -6473,7 +6475,8 @@ namespace ElysiumModMenu
                 if (SpoofMenuEnabled && PlayerControl.LocalPlayer != null)
                 {
                     uiSpoofTimer += Time.deltaTime;
-                    if (uiSpoofTimer >= rpcSpoofDelay)
+                    float effectiveRpcSpoofDelay = Mathf.Max(MinRpcSpoofDelay, rpcSpoofDelay);
+                    if (uiSpoofTimer >= effectiveRpcSpoofDelay)
                     {
                         uiSpoofTimer = 0f;
                         byte rpc = spoofMenuRPCs[selectedSpoofMenuIndex];
