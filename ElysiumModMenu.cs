@@ -2879,54 +2879,124 @@ namespace ElysiumModMenu
                 if (names[i] == name.ToLower().Trim()) return i;
             return -1;
         }
+
+        private sealed class ShapeshiftBatch : IDisposable
+        {
+            private readonly MessageWriter writer;
+            private bool finished;
+
+            public ShapeshiftBatch()
+            {
+                writer = MessageWriter.Get(SendOption.Reliable);
+                writer.StartMessage(InnerNet.Tags.GameData);
+                writer.Write(AmongUsClient.Instance.GameId);
+            }
+
+            public void QueueSetRole(PlayerControl source, RoleTypes role, bool canOverride = true)
+            {
+                source.StartCoroutine(source.CoSetRole(role, canOverride));
+
+                writer.StartMessage((byte)GameDataTypes.RpcFlag);
+                writer.WritePacked(source.NetId);
+                writer.Write((byte)RpcCalls.SetRole);
+                writer.Write((ushort)role);
+                writer.Write(canOverride);
+                writer.EndMessage();
+            }
+
+            public void QueueShapeshift(PlayerControl source, PlayerControl target, bool shouldAnimate)
+            {
+                source.Shapeshift(target, shouldAnimate);
+
+                writer.StartMessage((byte)GameDataTypes.RpcFlag);
+                writer.WritePacked(source.NetId);
+                writer.Write((byte)RpcCalls.Shapeshift);
+                writer.WriteNetObject(target);
+                writer.Write(shouldAnimate);
+                writer.EndMessage();
+            }
+
+            public void Finish()
+            {
+                writer.EndMessage();
+                AmongUsClient.Instance.SendOrDisconnect(writer);
+                writer.Recycle();
+                finished = true;
+            }
+
+            public void Dispose()
+            {
+                if (!finished)
+                {
+                    try { writer.Recycle(); } catch { }
+                }
+            }
+        }
+
+        private static bool IsVanillaAnticheatPresent()
+        {
+            if (AmongUsClient.Instance == null || Constants.IsVersionModded() || PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null)
+                return false;
+
+            return PlayerControl.LocalPlayer.Data.OwnerId == -4;
+        }
+
+        private static bool TrySendBatchedShapeshift(PlayerControl victim, PlayerControl target, bool shouldAnimate)
+        {
+            if (victim == null || target == null || victim.Data == null || AmongUsClient.Instance == null)
+                return false;
+
+            bool hasAnticheat = IsVanillaAnticheatPresent();
+
+            if (hasAnticheat && !AmongUsClient.Instance.AmHost)
+            {
+                ShowNotification("<color=#FF0000>[MORPH]</color> Требуются права хоста!");
+                return false;
+            }
+
+            if (hasAnticheat && ShipStatus.Instance == null)
+            {
+                ShowNotification("<color=#FF0000>[MORPH]</color> Игра должна быть начата!");
+                return false;
+            }
+
+            try
+            {
+                using (var batch = new ShapeshiftBatch())
+                {
+                    if (hasAnticheat && victim.Data.RoleType != RoleTypes.Shapeshifter)
+                    {
+                        RoleTypes currentRole = victim.Data.RoleType;
+                        batch.QueueSetRole(victim, RoleTypes.Shapeshifter, true);
+                        batch.QueueShapeshift(victim, target, shouldAnimate);
+                        batch.QueueSetRole(victim, currentRole, true);
+                    }
+                    else
+                    {
+                        batch.QueueShapeshift(victim, target, shouldAnimate);
+                    }
+
+                    batch.Finish();
+                }
+
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
+
         private IEnumerator AttemptShapeshiftFrame(PlayerControl target, PlayerControl morphInto)
         {
             if (target == null || morphInto == null || PlayerControl.LocalPlayer == null || AmongUsClient.Instance == null) yield break;
 
-            bool hasAnticheat = AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame && !Constants.IsVersionModded();
-
-            if (target.Data.RoleType != RoleTypes.Shapeshifter && hasAnticheat)
-            {
-                RoleTypes currentRole = target.Data.RoleType;
-                target.RpcSetRole(RoleTypes.Shapeshifter, true);
-
-                yield return new WaitForSeconds(0.5f);
-
-                target.RpcShapeshift(morphInto, true);
-
-                yield return new WaitForSeconds(0.5f);
-
-                target.RpcSetRole(currentRole, true);
-            }
-            else
-            {
-                target.RpcShapeshift(morphInto, true);
-            }
-            ShowNotification($"<color=#ca08ff>[MORPH]</color> <b>{target.Data.PlayerName}</b> превращен в <b>{morphInto.Data.PlayerName}</b>!");
+            if (TrySendBatchedShapeshift(target, morphInto, true))
+                ShowNotification($"<color=#ca08ff>[MORPH]</color> <b>{target.Data.PlayerName}</b> превращен в <b>{morphInto.Data.PlayerName}</b>!");
         }
 
         private IEnumerator MassMorphCoroutine()
         {
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.AllPlayerControls == null) yield break;
-
-            bool hasAnticheat = AmongUsClient.Instance.NetworkMode == NetworkModes.OnlineGame && !Constants.IsVersionModded();
-
-            Dictionary<byte, RoleTypes> originalRoles = new Dictionary<byte, RoleTypes>();
-
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc != null && pc.Data != null && !pc.Data.Disconnected)
-                {
-                    originalRoles[pc.PlayerId] = pc.Data.RoleType;
-
-                    if (hasAnticheat && pc.Data.RoleType != RoleTypes.Shapeshifter)
-                    {
-                        pc.RpcSetRole(RoleTypes.Shapeshifter, true);
-                    }
-                }
-            }
-
-            if (hasAnticheat) yield return new UnityEngine.WaitForSeconds(0.5f);
 
             PlayerControl targetToMorphInto = null;
             if (selectedMorphTargetId != 255)
@@ -2939,21 +3009,7 @@ namespace ElysiumModMenu
                 if (pc != null && pc.Data != null && !pc.Data.Disconnected)
                 {
                     PlayerControl morphTarget = targetToMorphInto != null ? targetToMorphInto : pc;
-                    pc.RpcShapeshift(morphTarget, true);
-                }
-            }
-
-
-            if (hasAnticheat) yield return new UnityEngine.WaitForSeconds(0.5f);
-
-            foreach (var pc in PlayerControl.AllPlayerControls)
-            {
-                if (pc != null && pc.Data != null && !pc.Data.Disconnected)
-                {
-                    if (hasAnticheat && originalRoles.ContainsKey(pc.PlayerId))
-                    {
-                        pc.RpcSetRole(originalRoles[pc.PlayerId], true);
-                    }
+                    TrySendBatchedShapeshift(pc, morphTarget, true);
                 }
             }
 
