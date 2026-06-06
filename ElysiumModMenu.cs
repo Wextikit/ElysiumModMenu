@@ -1059,8 +1059,6 @@ namespace ElysiumModMenu
             GUILayout.Space(5);
             blockGameRpcInLobby = DrawToggle(blockGameRpcInLobby, "Block Game RPC in Lobby", 250);
             GUILayout.Space(5);
-            blockMeetingFloodRpc = DrawToggle(blockMeetingFloodRpc, "Block Meeting RPC Flood", 250);
-            GUILayout.Space(5);
             blockChatFloodRpc = DrawToggle(blockChatFloodRpc, "Block Chat RPC Flood", 250);
             GUILayout.Space(5);
 
@@ -1198,7 +1196,6 @@ namespace ElysiumModMenu
         public static class Anticheat_PlayerControl_RPC
         {
             private static readonly Dictionary<byte, Queue<float>> chatRpcTimes = new Dictionary<byte, Queue<float>>();
-            private static readonly Dictionary<byte, Queue<float>> meetingRpcTimes = new Dictionary<byte, Queue<float>>();
             private static readonly HashSet<byte> lobbyGameRpcs = new HashSet<byte>
             {
                 (byte)RpcCalls.MurderPlayer,
@@ -1231,8 +1228,7 @@ namespace ElysiumModMenu
                 if (!ElysiumModMenuGUI.blockSpoofRPC &&
                     !ElysiumModMenuGUI.blockSabotageRPC &&
                     !ElysiumModMenuGUI.blockGameRpcInLobby &&
-                    !ElysiumModMenuGUI.blockChatFloodRpc &&
-                    !ElysiumModMenuGUI.blockMeetingFloodRpc) return true;
+                    !ElysiumModMenuGUI.blockChatFloodRpc) return true;
                 if (__instance == null || __instance == PlayerControl.LocalPlayer || __instance.Data == null) return true;
 
                 int oldPos = reader.Position;
@@ -1257,16 +1253,6 @@ namespace ElysiumModMenu
                         {
                             isCheat = true;
                             cheatReason = "Chat RPC flood";
-                        }
-                    }
-
-                    if (!isCheat && ElysiumModMenuGUI.blockMeetingFloodRpc &&
-                        (callId == (byte)RpcCalls.StartMeeting || callId == (byte)RpcCalls.ReportDeadBody))
-                    {
-                        if (IsFlooded(meetingRpcTimes, __instance.PlayerId, ElysiumModMenuGUI.meetingRpcLimit, ElysiumModMenuGUI.meetingRpcWindow))
-                        {
-                            isCheat = true;
-                            cheatReason = "Meeting RPC flood";
                         }
                     }
 
@@ -2934,7 +2920,7 @@ namespace ElysiumModMenu
                 SaveBool("M_BlockSabotageRPC", blockSabotageRPC);
                 SaveBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 SaveBool("M_BlockChatFloodRpc", blockChatFloodRpc);
-                SaveBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);                SaveBool("M_AutoHostEnabled", AutoHostEnabled);
+                SaveBool("M_AutoHostEnabled", AutoHostEnabled);
                 SaveBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 SaveBool("M_AutoHostNotifications", AutoHostNotifications);
                 SaveBool("M_AutoHostForceLastMinute", AutoHostForceLastMinute);
@@ -3090,7 +3076,7 @@ namespace ElysiumModMenu
                 blockSabotageRPC = LoadBool("M_BlockSabotageRPC", blockSabotageRPC);
                 blockGameRpcInLobby = LoadBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 blockChatFloodRpc = LoadBool("M_BlockChatFloodRpc", blockChatFloodRpc);
-                blockMeetingFloodRpc = LoadBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);                AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
+                AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
                 AutoReturnLobbyAfterMatch = LoadBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 AutoHostNotifications = LoadBool("M_AutoHostNotifications", AutoHostNotifications);
                 AutoHostForceLastMinute = LoadBool("M_AutoHostForceLastMinute", AutoHostForceLastMinute);
@@ -6790,11 +6776,9 @@ namespace ElysiumModMenu
         public static bool blockSabotageRPC = true;
         public static bool blockGameRpcInLobby = true;
         public static bool blockChatFloodRpc = true;
-        public static bool blockMeetingFloodRpc = true;        public static bool autoBanBrokenFriendCode = false;
+        public static bool autoBanBrokenFriendCode = false;
         public static int chatRpcLimit = 1;
         public static float chatRpcWindow = 1f;
-        public static int meetingRpcLimit = 2;
-        public static float meetingRpcWindow = 9999f;
 
         [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleAnimation))]
         public static class PlayerPhysics_HandleAnimation
