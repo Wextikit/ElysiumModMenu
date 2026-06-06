@@ -1063,11 +1063,6 @@ namespace ElysiumModMenu
             GUILayout.Space(5);
             blockChatFloodRpc = DrawToggle(blockChatFloodRpc, "Block Chat RPC Flood", 250);
             GUILayout.Space(5);
-            enablePasosLimit = DrawToggle(enablePasosLimit, "Pasos Limit", 250);
-            GUILayout.Space(5);
-            enableLocalPasosBan = DrawToggle(enableLocalPasosBan, L("Anti-Pasos Local Ban", "Анти-Pasos локал бан"), 250);
-            GUILayout.Space(5);
-            enableHostPasosBan = DrawToggle(enableHostPasosBan, L("Anti-Pasos Host Ban", "Анти-Pasos бан хоста"), 250);
 
             GUILayout.Space(15);
             GUILayout.Label(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"), headerStyle);
@@ -2468,333 +2463,6 @@ namespace ElysiumModMenu
         public static bool enableLocalPetSpamDrop = true;
         public static bool enableHostPetSpamBan = false;
 
-        [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadMessage))]
-        public static class Shield_PasosLimit_Patch
-        {
-            private const byte RpcGameDataTag = 2;
-            private const byte DroppedGameDataTag = 0;
-            private const int PasosDropNotifyLimit = 1;
-            private const float PasosWindow = 0.01f;
-            private const float PasosNotifyCooldown = 2f;
-            private static readonly Queue<float> emptyRpcDrops = new Queue<float>();
-            private static readonly HashSet<int> pasosBlockedClientIds = new HashSet<int>();
-            private static readonly HashSet<int> pasosHostBannedClientIds = new HashSet<int>();
-            private static float lastPasosNotify;
-            private static int currentPasosClientId = -1;
-
-            public static void BeginMessageContext(int clientId)
-            {
-                currentPasosClientId = IsValidClientId(clientId) ? clientId : -1;
-            }
-
-            public static bool IsClientBlocked(int clientId)
-            {
-                return ElysiumModMenuGUI.enableLocalPasosBan && IsValidClientId(clientId) && pasosBlockedClientIds.Contains(clientId);
-            }
-
-            public static bool IsValidClientId(int clientId)
-            {
-                return clientId >= 0 && clientId < 256;
-            }
-
-            public static void RecordDrop(int clientId = -1)
-            {
-                float now = UnityEngine.Time.time;
-                while (emptyRpcDrops.Count > 0 && emptyRpcDrops.Peek() < now - PasosWindow)
-                    emptyRpcDrops.Dequeue();
-
-                emptyRpcDrops.Enqueue(now);
-
-                int resolvedClientId = IsValidClientId(clientId) ? clientId : currentPasosClientId;
-                if (!IsValidClientId(resolvedClientId))
-                    resolvedClientId = ResolveSingleRemoteClientId();
-                if (IsValidClientId(resolvedClientId))
-                    BlockPasosClient(resolvedClientId);
-
-                if (emptyRpcDrops.Count >= PasosDropNotifyLimit && now - lastPasosNotify > PasosNotifyCooldown)
-                {
-                    lastPasosNotify = now;
-                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> Pasos Limit: dropped empty RPC spam ({emptyRpcDrops.Count}/{PasosWindow:0.00}s)");
-                }
-            }
-
-            private static void BlockPasosClient(int clientId)
-            {
-                try
-                {
-                    if (!IsValidClientId(clientId) || (AmongUsClient.Instance != null && clientId == AmongUsClient.Instance.ClientId)) return;
-
-                    PlayerControl player = FindPlayerByClientId(clientId);
-                    string pName = player?.Data?.PlayerName ?? $"Client {clientId}";
-
-                    if (ElysiumModMenuGUI.enableLocalPasosBan && pasosBlockedClientIds.Add(clientId))
-                    {
-                        ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> Anti-Pasos blocked (Local)!");
-                    }
-
-                    if (!ElysiumModMenuGUI.enableHostPasosBan || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
-                    if (!pasosHostBannedClientIds.Add(clientId)) return;
-
-                    int banClientId = GetKickClientId(player, clientId);
-                    if (!IsValidClientId(banClientId)) return;
-
-                    string fc = string.IsNullOrEmpty(player?.Data?.FriendCode) ? "Unknown" : player.Data.FriendCode;
-                    string puid = banClientId.ToString();
-
-                    try
-                    {
-                        if (player != null)
-                        {
-                            var client = AmongUsClient.Instance.GetClientFromCharacter(player);
-                            if (client != null) puid = client.Id.ToString();
-                        }
-                    }
-                    catch { }
-
-                    ElysiumModMenuGUI.AddToBanList(fc, puid, pName, "Auto-banned for Pasos empty RPC spam");
-                    AmongUsClient.Instance.KickPlayer(banClientId, true);
-                    ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> <b>{pName}</b> Anti-Pasos room banned!");
-                }
-                catch { }
-            }
-
-            public static int GetKickClientId(PlayerControl player, int fallbackClientId)
-            {
-                try
-                {
-                    if (player != null)
-                    {
-                        int ownerId = (int)player.OwnerId;
-                        if (IsValidClientId(ownerId)) return ownerId;
-
-                        if (player.Data != null && IsValidClientId(player.Data.ClientId))
-                            return player.Data.ClientId;
-                    }
-                }
-                catch { }
-
-                return IsValidClientId(fallbackClientId) ? fallbackClientId : -1;
-            }
-
-            public static PlayerControl FindPlayerByClientId(int clientId)
-            {
-                try
-                {
-                    if (PlayerControl.AllPlayerControls == null) return null;
-
-                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc == null) continue;
-                        if ((int)pc.OwnerId == clientId) return pc;
-
-                        try
-                        {
-                            if (pc.Data != null && pc.Data.ClientId == clientId) return pc;
-                        }
-                        catch { }
-                    }
-                }
-                catch { }
-
-                return null;
-            }
-
-            public static int ResolveClientId(object source)
-            {
-                return ResolveClientId(source, 0);
-            }
-
-            private static int ResolveClientId(object source, int depth)
-            {
-                if (source == null || depth > 2 || source is MessageReader || source is SendOption) return -1;
-
-                try
-                {
-                    if (source is PlayerControl pc)
-                        return GetKickClientId(pc, -1);
-
-                    int direct = ConvertNumericClientId(source);
-                    if (direct >= 0) return direct;
-
-                    Type type = source.GetType();
-                    foreach (string name in new[] { "ClientId", "OwnerId", "Id", "clientId", "ownerId", "id" })
-                    {
-                        PropertyInfo property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        direct = ConvertNumericClientId(property?.GetValue(source));
-                        if (direct >= 0) return direct;
-
-                        FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        direct = ConvertNumericClientId(field?.GetValue(source));
-                        if (direct >= 0) return direct;
-                    }
-
-                    foreach (string name in new[] { "Character", "Object", "Player", "Data", "character", "player" })
-                    {
-                        PropertyInfo property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        direct = ResolveClientId(property?.GetValue(source), depth + 1);
-                        if (direct >= 0) return direct;
-
-                        FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                        direct = ResolveClientId(field?.GetValue(source), depth + 1);
-                        if (direct >= 0) return direct;
-                    }
-
-                    string typeName = type.FullName ?? type.Name;
-                    if (typeName.IndexOf("Player", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        typeName.IndexOf("Client", StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                        {
-                            if (property.GetIndexParameters().Length > 0) continue;
-
-                            try
-                            {
-                                direct = ConvertNumericClientId(property.GetValue(source));
-                                if (direct >= 0) return direct;
-                            }
-                            catch { }
-                        }
-
-                        foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                        {
-                            try
-                            {
-                                direct = ConvertNumericClientId(field.GetValue(source));
-                                if (direct >= 0) return direct;
-                            }
-                            catch { }
-                        }
-                    }
-                }
-                catch { }
-
-                return -1;
-            }
-
-            private static int ResolveSingleRemoteClientId()
-            {
-                try
-                {
-                    if (PlayerControl.AllPlayerControls == null) return -1;
-
-                    int found = -1;
-                    int count = 0;
-                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                    {
-                        if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
-
-                        int ownerId = (int)pc.OwnerId;
-                        if (!IsValidClientId(ownerId)) continue;
-
-                        found = ownerId;
-                        count++;
-                        if (count > 1) return -1;
-                    }
-
-                    return count == 1 ? found : -1;
-                }
-                catch { }
-
-                return -1;
-            }
-
-            private static int ConvertNumericClientId(object value)
-            {
-                if (value == null) return -1;
-
-                try
-                {
-                    TypeCode code = Type.GetTypeCode(value.GetType());
-                    switch (code)
-                    {
-                        case TypeCode.Byte:
-                        case TypeCode.SByte:
-                        case TypeCode.Int16:
-                        case TypeCode.UInt16:
-                        case TypeCode.Int32:
-                        case TypeCode.UInt32:
-                        case TypeCode.Int64:
-                        case TypeCode.UInt64:
-                            long id = Convert.ToInt64(value);
-                            return id >= 0 && id < 256 ? (int)id : -1;
-                    }
-                }
-                catch { }
-
-                return -1;
-            }
-
-            public static void Postfix(MessageReader __result)
-            {
-                DropEmptyRpcMessage(__result);
-            }
-
-            public static void DropEmptyRpcMessage(MessageReader reader)
-            {
-                if (!ElysiumModMenuGUI.enablePasosLimit || reader == null) return;
-
-                try
-                {
-                    if (reader.Tag != RpcGameDataTag || reader.BytesRemaining > 0 || reader.Length > 0) return;
-
-                    reader.Tag = DroppedGameDataTag;
-                    reader.Position = reader.Length;
-
-                    RecordDrop();
-                }
-                catch { }
-            }
-        }
-
-        [HarmonyPatch]
-        public static class Shield_PasosLimit_HandleMessageContext_Patch
-        {
-            public static IEnumerable<MethodBase> TargetMethods()
-            {
-                foreach (MethodInfo method in typeof(InnerNetClient).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                {
-                    if (method.Name != "HandleMessage") continue;
-                    if (method.GetParameters().Any(p => p.ParameterType == typeof(MessageReader)))
-                        yield return method;
-                }
-            }
-
-            public static bool Prefix(object[] __args)
-            {
-                if (!ElysiumModMenuGUI.enablePasosLimit) return true;
-
-                try
-                {
-                    int clientId = ExtractClientId(__args);
-                    Shield_PasosLimit_Patch.BeginMessageContext(clientId);
-
-                    if (Shield_PasosLimit_Patch.IsClientBlocked(clientId))
-                        return false;
-                }
-                catch { }
-
-                return true;
-            }
-
-            public static int ExtractClientId(object[] args)
-            {
-                if (args == null) return -1;
-
-                foreach (object arg in args)
-                {
-                    int clientId = ExtractClientId(arg);
-                    if (clientId >= 0) return clientId;
-                }
-
-                return -1;
-            }
-
-            private static int ExtractClientId(object source)
-            {
-                return Shield_PasosLimit_Patch.ResolveClientId(source);
-            }
-        }
-
         [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
         public static class Shield_PetSpam_Patch
         {
@@ -3266,11 +2934,7 @@ namespace ElysiumModMenu
                 SaveBool("M_BlockSabotageRPC", blockSabotageRPC);
                 SaveBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 SaveBool("M_BlockChatFloodRpc", blockChatFloodRpc);
-                SaveBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
-                SaveBool("M_PasosLimit", enablePasosLimit);
-                SaveBool("M_AntiPasosLocalBan", enableLocalPasosBan);
-                SaveBool("M_AntiPasosHostBan", enableHostPasosBan);
-                SaveBool("M_AutoHostEnabled", AutoHostEnabled);
+                SaveBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);                SaveBool("M_AutoHostEnabled", AutoHostEnabled);
                 SaveBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 SaveBool("M_AutoHostNotifications", AutoHostNotifications);
                 SaveBool("M_AutoHostForceLastMinute", AutoHostForceLastMinute);
@@ -3426,11 +3090,7 @@ namespace ElysiumModMenu
                 blockSabotageRPC = LoadBool("M_BlockSabotageRPC", blockSabotageRPC);
                 blockGameRpcInLobby = LoadBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 blockChatFloodRpc = LoadBool("M_BlockChatFloodRpc", blockChatFloodRpc);
-                blockMeetingFloodRpc = LoadBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
-                enablePasosLimit = LoadBool("M_PasosLimit", enablePasosLimit);
-                enableLocalPasosBan = LoadBool("M_AntiPasosLocalBan", enableLocalPasosBan);
-                enableHostPasosBan = LoadBool("M_AntiPasosHostBan", enableHostPasosBan);
-                AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
+                blockMeetingFloodRpc = LoadBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);                AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
                 AutoReturnLobbyAfterMatch = LoadBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 AutoHostNotifications = LoadBool("M_AutoHostNotifications", AutoHostNotifications);
                 AutoHostForceLastMinute = LoadBool("M_AutoHostForceLastMinute", AutoHostForceLastMinute);
@@ -5152,7 +4812,7 @@ namespace ElysiumModMenu
                 {
                     GUILayout.BeginVertical(boxStyle);
                     GUILayout.Label($"{e.Name}  <color=#aaaaaa>({e.Platform})</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
-                    GUILayout.Label($"FC: {e.FriendCode} | PUID: {e.Puid}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+                    GUILayout.Label($"FC: {e.FriendCode}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
                     GUILayout.Label($"Lv: {e.Level} | Last: {e.LastSeenUtc:HH:mm:ss}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
                     GUILayout.EndVertical();
                     GUILayout.Space(2);
@@ -7130,11 +6790,7 @@ namespace ElysiumModMenu
         public static bool blockSabotageRPC = true;
         public static bool blockGameRpcInLobby = true;
         public static bool blockChatFloodRpc = true;
-        public static bool blockMeetingFloodRpc = true;
-        public static bool enablePasosLimit = true;
-        public static bool enableLocalPasosBan = true;
-        public static bool enableHostPasosBan = true;
-        public static bool autoBanBrokenFriendCode = false;
+        public static bool blockMeetingFloodRpc = true;        public static bool autoBanBrokenFriendCode = false;
         public static int chatRpcLimit = 1;
         public static float chatRpcWindow = 1f;
         public static int meetingRpcLimit = 2;
@@ -7431,6 +7087,37 @@ namespace ElysiumModMenu
             return value;
         }
 
+        private static int? GetClientPing(ClientData client)
+        {
+            try
+            {
+                if (client == null) return null;
+
+                string[] names = { "Ping", "ping", "Latency", "latency", "RoundTripTime", "roundTripTime", "Rtt", "RTT" };
+                Type type = client.GetType();
+
+                foreach (string name in names)
+                {
+                    PropertyInfo prop = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (prop != null)
+                    {
+                        object value = prop.GetValue(client);
+                        if (value != null) return Mathf.RoundToInt(Convert.ToSingle(value));
+                    }
+
+                    FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (field != null)
+                    {
+                        object value = field.GetValue(client);
+                        if (value != null) return Mathf.RoundToInt(Convert.ToSingle(value));
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
         public static string BuildESPInfoLine(NetworkedPlayerInfo info)
         {
             if (info == null) return string.Empty;
@@ -7438,6 +7125,7 @@ namespace ElysiumModMenu
             int level = 0;
             string platform = "Unknown";
             bool isHost = false;
+            int? ping = null;
 
             try { level = (int)info.PlayerLevel + 1; } catch { }
 
@@ -7448,6 +7136,7 @@ namespace ElysiumModMenu
                 {
                     platform = GetPlatform(client);
                     isHost = AmongUsClient.Instance.GetHost() == client;
+                    ping = GetClientPing(client);
                 }
             }
             catch { }
@@ -7459,13 +7148,20 @@ namespace ElysiumModMenu
                 platform = $"{platform} spf";
             }
 
-            string fc = CompactEspValue(GetDisplayedFriendCode(info));
             List<string> parts = new List<string>();
             if (isHost) parts.Add("Host");
             parts.Add($"Lv:{level}");
             parts.Add(platform);
-            parts.Add(fc);
+            if (ping.HasValue) parts.Add($"Ping:{ping.Value}ms");
             return string.Join(" - ", parts);
+        }
+
+        public static string BuildESPInfoBlock(NetworkedPlayerInfo info)
+        {
+            if (info == null) return string.Empty;
+
+            string fc = CompactEspValue(GetDisplayedFriendCode(info, "No Friend Code"), 18);
+            return $"{BuildESPInfoLine(info)}\n<size=75%>FC: {fc}</size>";
         }
 
         public static Color GetRoleColor(int roleId, Color fallbackColor)
@@ -7649,7 +7345,7 @@ namespace ElysiumModMenu
             if (showPlayerInfo)
             {
                 string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
-                newName = $"<size=80%><color=#{accentHex}>{BuildESPInfoLine(info)}</color></size>\n{newName}";
+                newName = $"<size=80%><color=#{accentHex}>{BuildESPInfoBlock(info)}</color></size>\n{newName}";
             }
             if (seeKillCooldown && info.Role != null && info.PlayerId != PlayerControl.LocalPlayer?.PlayerId)
             {
