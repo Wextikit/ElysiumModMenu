@@ -19,7 +19,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -35,7 +37,7 @@ using Vector3 = UnityEngine.Vector3;
 using System.Runtime.CompilerServices;
 namespace ElysiumModMenu
 {
-    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.3.2")]
+    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.2.7")]
     public class Plugin : BasePlugin
     {
         public static Plugin Instance { get; private set; } = null!;
@@ -55,6 +57,9 @@ namespace ElysiumModMenu
         public static ConfigEntry<bool> UnlockCosmeticsConfig;
         public static ConfigEntry<bool> MoreLobbyInfoConfig;
         public static ConfigEntry<bool> EnableChatDarkModeConfig;
+        public static ConfigEntry<string> GhostChatColorConfig;
+        public static ConfigEntry<bool> EnableAnomalyLogReportsConfig;
+        public static ConfigEntry<bool> ShowEspFriendCodeConfig;
 
         public override void Load()
         {
@@ -72,7 +77,15 @@ namespace ElysiumModMenu
                 System.IO.File.Create(banFile).Dispose();
             }
 
-            MenuConfig = new ConfigFile(System.IO.Path.Combine(ElysiumFolder, "ElysiumModMenu.cfg"), true);
+            string friendEspFile = System.IO.Path.Combine(ElysiumFolder, "ElysiumFriendEspIgnore.txt");
+            if (!System.IO.File.Exists(friendEspFile))
+            {
+                System.IO.File.WriteAllText(friendEspFile, "# One nickname, Friend Code, or PUID per line. Matching players will not show ESP info.\n");
+            }
+
+            string configPath = System.IO.Path.Combine(ElysiumFolder, "ElysiumModMenu.cfg");
+            RemoveLegacyPlaintextWebhookConfig(configPath);
+            MenuConfig = new ConfigFile(configPath, true);
             RpcSpoofDelayConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "RpcDelay", 4f, "");
             MenuKeybind = MenuConfig.Bind("ElysiumModMenu.GUI", "Keybind", KeyCode.Insert, "");
             SpoofedLevel = MenuConfig.Bind("ElysiumModMenu.Spoofing", "Level", "100", "");
@@ -87,7 +100,9 @@ namespace ElysiumModMenu
             UnlockCosmeticsConfig = MenuConfig.Bind("ElysiumModMenu.General", "UnlockCosmetics", true, "");
             MoreLobbyInfoConfig = MenuConfig.Bind("ElysiumModMenu.Visuals", "MoreLobbyInfo", true, "");
             EnableChatDarkModeConfig = MenuConfig.Bind("ElysiumModMenu.Chat", "EnableChatDarkMode", true, "Turns the custom dark chat input and bubble colors on/off.");
-
+            GhostChatColorConfig = MenuConfig.Bind("ElysiumModMenu.Chat", "GhostChatColor", "#D7B8FF", "Hex color for visible ghost chat messages.");
+            EnableAnomalyLogReportsConfig = MenuConfig.Bind("ElysiumModMenu.Diagnostics", "EnableAnomalyLogReports", true, "Yes/No: sending freeze/overload logs to the mod author. Note: this does not affect your performance, nor does it steal your data or anything like that. It is strictly needed for quick anti-cheat fixes.");
+            ShowEspFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Visuals", "ShowEspFriendCode", true, "Show Friend Code in ESP player info.");
             ClassInjector.RegisterTypeInIl2Cpp<ElysiumModMenuGUI>();
 
             var guiObject = new GameObject("ElysiumModMenu_Object");
@@ -98,7 +113,44 @@ namespace ElysiumModMenu
             var harmony = new Harmony("com.elysiummodmenu.harmony");
             harmony.PatchAll();
         }
+
+        private static void RemoveLegacyPlaintextWebhookConfig(string configPath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(configPath) || !System.IO.File.Exists(configPath)) return;
+
+                List<string> lines = System.IO.File.ReadAllLines(configPath).ToList();
+                string[] legacyKeys = { "AnomalyLogWebhookUrl", "EnableDiagnostics", "EndpointUrl", "AuthKey", "IncludePuid" };
+                bool changed = false;
+
+                for (int i = lines.Count - 1; i >= 0; i--)
+                {
+                    string trimmed = lines[i].TrimStart();
+                    if (!legacyKeys.Any(key => trimmed.StartsWith(key, StringComparison.OrdinalIgnoreCase))) continue;
+
+                    int start = i;
+                    while (start > 0)
+                    {
+                        string previous = lines[start - 1].TrimStart();
+                        if (!previous.StartsWith("#") && previous.Length != 0) break;
+                        start--;
+                        if (previous.Length == 0) break;
+                    }
+
+                    lines.RemoveRange(start, i - start + 1);
+                    changed = true;
+                }
+
+                if (!changed) return;
+                System.IO.File.WriteAllLines(configPath, lines.ToArray());
+            }
+            catch { }
+        }
     }
+
+
+
     public class ElysiumModMenuGUI : MonoBehaviour
     {
         public static string[] spoofMenuNames = { "ElysiumModMenu", "HostGuard/TOH", "Polar", "BanMod", "Better Among Us", "Sicko Menu", "GNC", "KillNetwork (V1)", "KillNetwork (V2)", "KNM" };
@@ -142,6 +194,27 @@ namespace ElysiumModMenu
         public static KeyCode bindEndImp = KeyCode.None;
         public static KeyCode bindEndImpDC = KeyCode.None;
         public static KeyCode bindEndHnsDC = KeyCode.None;
+        public static KeyCode bindToggleTracers = KeyCode.None;
+        public static KeyCode bindToggleNoClip = KeyCode.None;
+        public static KeyCode bindToggleFreecam = KeyCode.None;
+        public static KeyCode bindToggleCameraZoom = KeyCode.None;
+        public static KeyCode bindKillAll = KeyCode.None;
+        public static KeyCode bindCallMeeting = KeyCode.None;
+        public static KeyCode bindTogglePlayerInfo = KeyCode.None;
+        public static KeyCode bindToggleSeeRoles = KeyCode.None;
+        public static KeyCode bindToggleSeeGhosts = KeyCode.None;
+        public static KeyCode bindToggleFullBright = KeyCode.None;
+        public static KeyCode bindKickAll = KeyCode.None;
+        public static KeyCode bindFixSabotages = KeyCode.None;
+        public static KeyCode bindSetAllGhost = KeyCode.None;
+        public static KeyCode bindSetAllGhostImp = KeyCode.None;
+
+        public static readonly HashSet<byte> VanillaRpcIds = new HashSet<byte>
+        {
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+            22, 23, 24, 25, 26, 27, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+            43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 60, 61, 62, 63, 64, 65
+        };
 
         private bool isScannerActiveFlag = false;
         private bool isCamsActiveFlag = false;
@@ -155,6 +228,20 @@ namespace ElysiumModMenu
         public static bool isWaitBindEndImp = false;
         public static bool isWaitBindEndImpDC = false;
         public static bool isWaitBindEndHnsDC = false;
+        public static bool isWaitBindToggleTracers = false;
+        public static bool isWaitBindToggleNoClip = false;
+        public static bool isWaitBindToggleFreecam = false;
+        public static bool isWaitBindToggleCameraZoom = false;
+        public static bool isWaitBindKillAll = false;
+        public static bool isWaitBindCallMeeting = false;
+        public static bool isWaitBindTogglePlayerInfo = false;
+        public static bool isWaitBindToggleSeeRoles = false;
+        public static bool isWaitBindToggleSeeGhosts = false;
+        public static bool isWaitBindToggleFullBright = false;
+        public static bool isWaitBindKickAll = false;
+        public static bool isWaitBindFixSabotages = false;
+        public static bool isWaitBindSetAllGhost = false;
+        public static bool isWaitBindSetAllGhostImp = false;
         public static bool SpoofMenuEnabled = false;
         public static int selectedSpoofMenuIndex = 0;
         private float uiSpoofTimer = 0f;
@@ -166,15 +253,20 @@ namespace ElysiumModMenu
         public static bool DetailedJoinInfo = true;
         private static List<byte> lastPlayerIds = new List<byte>();
         private static Dictionary<byte, float> pendingJoinTimers = new Dictionary<byte, float>();
+        private static Dictionary<byte, string> playerHistoryKeysById = new Dictionary<byte, string>();
         public class PlayerHistoryEntry
         {
             public string Name;
             public string FriendCode;
             public string Puid;
             public string Platform;
+            public string CustomPlatform;
             public int Level;
             public DateTime FirstSeenUtc;
             public DateTime LastSeenUtc;
+            public DateTime? LeftUtc;
+            public bool IsOnline;
+            public List<byte> RpcCalls = new List<byte>();
         }
         private static List<PlayerHistoryEntry> playerHistoryEntries = new List<PlayerHistoryEntry>();
         private Vector2 playersHistoryScroll = Vector2.zero;
@@ -189,11 +281,11 @@ namespace ElysiumModMenu
         public static RoleTypes[] forceRoleOptions = { RoleTypes.Crewmate, RoleTypes.Impostor, RoleTypes.Engineer, RoleTypes.Scientist, RoleTypes.Shapeshifter, RoleTypes.GuardianAngel };
         public static RoleTypes[] roleAssignOptions = {
             RoleTypes.Crewmate, RoleTypes.Impostor, RoleTypes.Engineer, RoleTypes.Scientist, RoleTypes.Shapeshifter, RoleTypes.GuardianAngel,
-            (RoleTypes)8, (RoleTypes)9, (RoleTypes)10, (RoleTypes)12, (RoleTypes)18
+            (RoleTypes)8, (RoleTypes)9, (RoleTypes)10, (RoleTypes)12, (RoleTypes)18, RoleTypes.Crewmate, RoleTypes.Impostor
         };
         public static string[] roleAssignNames = {
             "Crewmate", "Impostor", "Engineer", "Scientist", "Shapeshifter", "Guardian Angel",
-            "Noisemaker", "Phantom", "Tracker", "Detective", "Viper"
+            "Noisemaker", "Phantom", "Tracker", "Detective", "Viper", "Ghost", "Ghost Imp"
         };
         private int targetRoleAssignIdx = 0;
         private int allPlayersRoleAssignIdx = 0;
@@ -373,20 +465,50 @@ namespace ElysiumModMenu
         {
             public static bool Prefix(VoteBanSystem __instance, byte callId, Hazel.MessageReader reader)
             {
-                if (!AmongUsClient.Instance.AmHost || !ElysiumModMenuGUI.disableVoteKicks)
+                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || !ElysiumModMenuGUI.disableVoteKicks)
                     return true;
 
                 if (callId == 26)
                 {
-                    reader.ReadInt32();
-                    reader.ReadInt32();
-
-                    ElysiumModMenuGUI.ShowNotification("<color=#FFAC1C>[SHIELD]</color> Заблокирована попытка Vote-Kick'а!");
+                    try
+                    {
+                        int targetClientId = reader.ReadInt32();
+                        int voterClientId = reader.ReadInt32();
+                        string targetName = ResolveVoteClientName(targetClientId);
+                        string voterName = ResolveVoteClientName(voterClientId);
+                        ElysiumModMenuGUI.ShowNotification($"<color=#FFAC1C>[VOTEKICK BLOCK]</color> {voterName} tried to vote-kick {targetName}");
+                    }
+                    catch
+                    {
+                        ElysiumModMenuGUI.ShowNotification("<color=#FFAC1C>[VOTEKICK BLOCK]</color> Vote-kick blocked, sender could not be resolved.");
+                    }
 
                     return false;
                 }
 
                 return true;
+            }
+
+            private static string ResolveVoteClientName(int clientId)
+            {
+                try
+                {
+                    if (PlayerControl.AllPlayerControls != null)
+                    {
+                        foreach (var pc in PlayerControl.AllPlayerControls)
+                        {
+                            if (pc == null || pc.Data == null) continue;
+                            if (pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId)
+                            {
+                                string name = string.IsNullOrWhiteSpace(pc.Data.PlayerName) ? "Unknown" : pc.Data.PlayerName;
+                                return $"{name} ({clientId})";
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                return $"client {clientId}";
             }
         }
         public static bool disableVoteKicks = false;
@@ -412,27 +534,18 @@ namespace ElysiumModMenu
             try
             {
                 if ((UnityEngine.Object)(object)AmongUsClient.Instance == (UnityEngine.Object)null || AmongUsClient.Instance.ShipPrefabs == null)
-                {
-                    System.Console.WriteLine("[MAP] AmongUsClient or ShipPrefabs is null");
                     return;
-                }
 
                 int realMapId = mapId;
                 if (mapId == 3) realMapId = 4;
                 if (mapId == 4) realMapId = 5;
 
                 if (realMapId >= AmongUsClient.Instance.ShipPrefabs.Count)
-                {
-                    System.Console.WriteLine("[MAP] Invalid map ID");
                     return;
-                }
 
                 BepInEx.Unity.IL2CPP.Utils.MonoBehaviourExtensions.StartCoroutine(this, CoSpawnMap(realMapId));
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine("[MAP ERROR] Failed to spawn map: " + ex.Message);
-            }
+            catch { }
         }
 
         [HideFromIl2Cpp]
@@ -444,7 +557,6 @@ namespace ElysiumModMenu
             ShipStatus.Instance = AmongUsClient.Instance.ShipLoadingAsyncHandle.Result.GetComponent<ShipStatus>();
             ((InnerNetClient)AmongUsClient.Instance).Spawn(((Component)ShipStatus.Instance).GetComponent<InnerNetObject>(), -2, (SpawnFlags)0);
 
-            System.Console.WriteLine($"[MAP] Map ID: {mapId} spawned successfully");
         }
 
         private void DespawnMap()
@@ -454,13 +566,9 @@ namespace ElysiumModMenu
                 if (ShipStatus.Instance != null)
                 {
                     ShipStatus.Instance.Despawn();
-                    System.Console.WriteLine("[MAP] Map despawned successfully");
                 }
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine("[MAP ERROR] Failed to despawn map: " + ex.Message);
-            }
+            catch { }
         }
 
         private void DespawnCurrentMap()
@@ -686,6 +794,8 @@ namespace ElysiumModMenu
             alwaysChat = DrawToggle(alwaysChat, L("Always Show Chat", "Всегда показывать чат"), 280);
             GUILayout.Space(2);
             readGhostChat = DrawToggle(readGhostChat, L("Read Ghost Chat", "Читать чат призраков"), 280);
+            GUILayout.Space(4);
+            DrawGhostChatColorControl(280f);
             GUILayout.Space(2);
             enableExtendedChat = DrawToggle(enableExtendedChat, L("Extended Chat (120 chars)", "Длинный чат (120 симв.)"), 280);
             GUILayout.Space(2);
@@ -906,6 +1016,7 @@ namespace ElysiumModMenu
                 string fc = GetDisplayedFriendCode(pc.Data);
                 string puid = "Unknown";
                 string platform = "Unknown";
+                string customPlatform = "";
                 int level = 1;
 
                 try
@@ -921,33 +1032,200 @@ namespace ElysiumModMenu
                     if (client != null)
                     {
                         platform = GetPlatform(client);
-                        puid = client.Id.ToString();
+                        customPlatform = GetCustomPlatformName(client);
+                        puid = GetClientPuid(client);
                     }
                 }
                 catch { }
 
                 string key = $"{fc}|{puid}|{name}";
                 var item = playerHistoryEntries.FirstOrDefault(x => $"{x.FriendCode}|{x.Puid}|{x.Name}" == key);
+                bool changed = false;
                 if (item == null)
                 {
-                    playerHistoryEntries.Add(new PlayerHistoryEntry
+                    item = new PlayerHistoryEntry
                     {
                         Name = name,
                         FriendCode = fc,
                         Puid = puid,
                         Platform = platform,
+                        CustomPlatform = customPlatform,
                         Level = level,
                         FirstSeenUtc = DateTime.UtcNow,
-                        LastSeenUtc = DateTime.UtcNow
-                    });
+                        LastSeenUtc = DateTime.UtcNow,
+                        IsOnline = true
+                    };
+                    playerHistoryEntries.Add(item);
+                    changed = true;
                 }
                 else
                 {
+                    changed = item.Name != name ||
+                              item.FriendCode != fc ||
+                              item.Puid != puid ||
+                              item.Platform != platform ||
+                              item.CustomPlatform != customPlatform ||
+                              item.Level != level ||
+                              !item.IsOnline ||
+                              item.LeftUtc.HasValue;
                     item.Name = name;
+                    item.FriendCode = fc;
+                    item.Puid = puid;
                     item.Platform = platform;
+                    item.CustomPlatform = customPlatform;
                     item.Level = level;
                     item.LastSeenUtc = DateTime.UtcNow;
+                    item.LeftUtc = null;
+                    item.IsOnline = true;
                 }
+                playerHistoryKeysById[pc.PlayerId] = key;
+                if (changed) WritePlayerHistoryFile();
+            }
+            catch { }
+        }
+
+        private static string GetCustomPlatformName(ClientData client)
+        {
+            try
+            {
+                string value = client?.PlatformData?.PlatformName;
+                if (string.IsNullOrWhiteSpace(value)) return "";
+                value = Regex.Replace(value, "<.*?>", string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(value)) return "";
+
+                string platform = GetPlatform(client);
+                if (value.Equals(platform, StringComparison.OrdinalIgnoreCase)) return "";
+                if (value.Equals(client.PlatformData.Platform.ToString(), StringComparison.OrdinalIgnoreCase)) return "";
+                return value;
+            }
+            catch { return ""; }
+        }
+
+        public static string GetClientPuid(ClientData client)
+        {
+            if (client == null) return "Unknown";
+
+            try
+            {
+                string direct = client.ProductUserId;
+                if (!string.IsNullOrWhiteSpace(direct)) return direct.Trim();
+            }
+            catch { }
+
+            string[] memberNames = { "ProductUserId", "productUserId", "Puid", "PUID", "puid", "EosId", "EOSId", "ProductId", "PlayerId" };
+            foreach (string memberName in memberNames)
+            {
+                try
+                {
+                    PropertyInfo prop = client.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    object value = prop?.GetValue(client, null);
+                    if (value != null && !string.IsNullOrWhiteSpace(value.ToString())) return value.ToString().Trim();
+                }
+                catch { }
+
+                try
+                {
+                    FieldInfo field = client.GetType().GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    object value = field?.GetValue(client);
+                    if (value != null && !string.IsNullOrWhiteSpace(value.ToString())) return value.ToString().Trim();
+                }
+                catch { }
+            }
+
+            return "Unknown";
+        }
+
+        private static string FormatPlatformHistory(PlayerHistoryEntry entry)
+        {
+            if (entry == null) return "Unknown";
+            return string.IsNullOrWhiteSpace(entry.CustomPlatform)
+                ? entry.Platform
+                : $"{entry.Platform} + custom: {entry.CustomPlatform}";
+        }
+
+        private static string PlayerHistoryFilePath()
+        {
+            string folder = string.IsNullOrWhiteSpace(Plugin.ElysiumFolder)
+                ? System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "ElysiumModMenu")
+                : Plugin.ElysiumFolder;
+            return System.IO.Path.Combine(folder, "ElysiumPlayerHistory.txt");
+        }
+
+        private static void MarkPlayerHistoryLeft(byte playerId)
+        {
+            try
+            {
+                if (!playerHistoryKeysById.TryGetValue(playerId, out string key)) return;
+                var item = playerHistoryEntries.FirstOrDefault(x => $"{x.FriendCode}|{x.Puid}|{x.Name}" == key);
+                if (item == null || !item.IsOnline) return;
+
+                item.IsOnline = false;
+                item.LeftUtc = DateTime.UtcNow;
+                item.LastSeenUtc = item.LeftUtc.Value;
+                WritePlayerHistoryFile();
+            }
+            catch { }
+        }
+
+        public static void RecordPlayerRpc(PlayerControl pc, byte callId)
+        {
+            try
+            {
+                if (VanillaRpcIds.Contains(callId)) return;
+                if (pc == null || pc.Data == null) return;
+                UpsertPlayerHistory(pc);
+
+                if (!playerHistoryKeysById.TryGetValue(pc.PlayerId, out string key)) return;
+                var item = playerHistoryEntries.FirstOrDefault(x => $"{x.FriendCode}|{x.Puid}|{x.Name}" == key);
+                if (item == null) return;
+
+                if (!item.RpcCalls.Contains(callId))
+                {
+                    item.RpcCalls.Add(callId);
+                    item.RpcCalls.Sort();
+                    WritePlayerHistoryFile();
+                }
+            }
+            catch { }
+        }
+
+        private static string FormatRpcHistory(PlayerHistoryEntry entry)
+        {
+            if (entry == null || entry.RpcCalls == null || entry.RpcCalls.Count == 0) return "нет";
+            byte[] customRpcCalls = entry.RpcCalls.Where(x => !VanillaRpcIds.Contains(x)).Distinct().OrderBy(x => x).ToArray();
+            if (customRpcCalls.Length == 0) return "нет";
+            return string.Join(", ", customRpcCalls.Select(x => x.ToString()).ToArray());
+        }
+
+        private static void WritePlayerHistoryFile()
+        {
+            try
+            {
+                string path = PlayerHistoryFilePath();
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
+
+                List<string> lines = new List<string>
+                {
+                    "ElysiumModMenu Player History",
+                    $"Updated UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}",
+                    ""
+                };
+
+                foreach (var e in playerHistoryEntries.OrderByDescending(x => x.LastSeenUtc))
+                {
+                    string left = e.LeftUtc.HasValue ? e.LeftUtc.Value.ToString("yyyy-MM-dd HH:mm:ss") : "online";
+                    lines.Add($"Nick: {e.Name}");
+                    lines.Add($"Level: {e.Level}");
+                    lines.Add($"FriendCode: {e.FriendCode}");
+                    lines.Add($"PUID: {e.Puid}");
+                    lines.Add($"Joined UTC: {e.FirstSeenUtc:yyyy-MM-dd HH:mm:ss}");
+                    lines.Add($"Left UTC: {left}");
+                    lines.Add($"Platform: {FormatPlatformHistory(e)}");
+                    lines.Add($"RPC calls: {FormatRpcHistory(e)}");
+                    lines.Add(new string('-', 48));
+                }
+
+                System.IO.File.WriteAllLines(path, lines.ToArray(), Encoding.UTF8);
             }
             catch { }
         }
@@ -1062,7 +1340,12 @@ namespace ElysiumModMenu
             blockMeetingFloodRpc = DrawToggle(blockMeetingFloodRpc, "Block Meeting RPC Flood", 250);
             GUILayout.Space(5);
             blockChatFloodRpc = DrawToggle(blockChatFloodRpc, "Block Chat RPC Flood", 250);
-
+            GUILayout.Space(5);
+            enablePasosLimit = DrawToggle(enablePasosLimit, "Message Block Freeze", 250);
+            GUILayout.Space(5);
+            enableLocalPasosBan = DrawToggle(enableLocalPasosBan, "Message Block Freeze Local Ban", 250);
+            GUILayout.Space(5);
+            enableHostPasosBan = DrawToggle(enableHostPasosBan, "Message Block Freeze Host Ban", 250);
             GUILayout.Space(15);
             GUILayout.Label(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"), headerStyle);
 
@@ -1098,6 +1381,7 @@ namespace ElysiumModMenu
             if (DrawPseudoInputButton(banValue, isEditingBan, 25f, 46))
             {
                 isEditingBan = !isEditingBan;
+                isEditingGhostChatColor = false;
                 ResetAllBindWaits();
             }
 
@@ -1165,7 +1449,6 @@ namespace ElysiumModMenu
                 if (mode >= 1)
                 {
                     ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[ANTICHEAT]</color> <b>{pName}</b>: {reason}");
-                    System.Console.WriteLine($"[Anticheat] {pName} flagged for: {reason}");
                 }
 
                 if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
@@ -1181,7 +1464,7 @@ namespace ElysiumModMenu
                         try
                         {
                             var client = AmongUsClient.Instance.GetClientFromCharacter(player);
-                            if (client != null) puid = client.Id.ToString();
+                            if (client != null) puid = GetClientPuid(client);
                         }
                         catch { }
 
@@ -2190,18 +2473,43 @@ namespace ElysiumModMenu
         public static string customNameInput = "хыхых";
         public static string spoofFriendCodeInput = "crewmate01";
         public static string localFriendCodeInput = "Steam#Local";
+        public static string ghostChatColorHex = "#D7B8FF";
         public static bool isEditingLevel = false;
         public static bool isEditingName = false;
         public static bool isEditingFriendCode = false;
         public static bool isEditingLocalFriendCode = false;
+        public static bool isEditingGhostChatColor = false;
+        private static bool discordLaunchStatusSent = false;
+        private static bool discordInvalidWebhookNotified = false;
+        private static float discordLaunchStatusNextTryAt = 0f;
+        private static readonly string relaySessionId = Guid.NewGuid().ToString("N").Substring(0, 12);
+        private static readonly Dictionary<string, int> watchedLogLineCounts = new Dictionary<string, int>();
+        private static readonly DateTime logMonitorStartedUtc = DateTime.UtcNow;
+        private static readonly object anomalyLogMonitorLock = new object();
+        private static System.Threading.Timer anomalyLogMonitorTimer;
+        private static string anomalyReportDetailsCache = $"sessionId={relaySessionId}\nclientId=Unknown\nnetworkMode=Unknown\nhost=Unknown\nplatform=Unknown\ninGame=Unknown";
+        private static float logMonitorNextScanAt = 0f;
+        private static float logBurstWindowStartedAt = -1f;
+        private static float logBurstCooldownUntil = 0f;
+        private static int logBurstLineCount = 0;
+        private static bool anomalyLogWatchNotified = false;
+        private const int LogBurstLineThreshold = 15;
+        private const int InitialLogTailLineLimit = 120;
+        private const float LogBurstWindowSeconds = 5f;
+        private const float LogBurstScanIntervalSeconds = 1f;
+        private const float LogBurstAlertCooldownSeconds = 60f;
         public static bool enableLocalNameSpoof = false;
         public static bool enableLocalFriendCodeSpoof = false;
         public static bool enableFriendCodeSpoof = false;
         public static bool enablePlatformSpoof = true;
+        public static bool enableAnomalyLogReports = true;
+        public static bool showEspFriendCode = true;
         public static int currentPlatformIndex = 1;
         private static float localNameRefreshTimer = 0f;
         private static float localFriendCodeRefreshTimer = 0f;
         private static string originalLocalFriendCode = null;
+        private static float friendEspIgnoreNextLoadAt = 0f;
+        private static readonly HashSet<string> friendEspIgnoreTokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private float brokenFcScanTimer = 0f;
         private static readonly HashSet<int> brokenFcPunishedOwners = new HashSet<int>();
 
@@ -2421,6 +2729,12 @@ namespace ElysiumModMenu
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
+            showEspFriendCode = DrawToggle(showEspFriendCode, L("Show FC In ESP", "FriendCode в ESP"), 210);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
             removePenalty = DrawToggle(removePenalty, L("No Disconnect Penalty", "Нет штрафа за выход"), 210);
             alwaysShowLobbyTimer = DrawToggle(alwaysShowLobbyTimer, L("Always Show Lobby Timer", "Всегда показывать таймер лобби"), 210);
             GUILayout.EndHorizontal();
@@ -2461,6 +2775,519 @@ namespace ElysiumModMenu
 
         public static bool enableLocalPetSpamDrop = true;
         public static bool enableHostPetSpamBan = false;
+
+        [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadMessage))]
+        public static class Shield_PasosLimit_Patch
+        {
+            private const byte RpcGameDataTag = 2;
+            private const byte DroppedGameDataTag = 0;
+            private const int PasosBanPacketThreshold = 3;
+            private const float PasosWindow = 0.25f;
+            private const float PasosNotifyCooldown = 2f;
+            private static readonly Queue<float> emptyRpcDrops = new Queue<float>();
+            private static readonly Dictionary<int, Queue<float>> pasosDropTrackers = new Dictionary<int, Queue<float>>();
+            private static readonly HashSet<int> pasosBlockedClientIds = new HashSet<int>();
+            private static readonly HashSet<int> pasosHostBannedClientIds = new HashSet<int>();
+            private static float lastPasosNotify;
+            private static int currentPasosClientId = -1;
+
+            public static void BeginMessageContext(int clientId)
+            {
+                currentPasosClientId = IsValidClientId(clientId) ? clientId : -1;
+            }
+
+            public static bool IsClientBlocked(int clientId)
+            {
+                return ElysiumModMenuGUI.enableLocalPasosBan && IsValidClientId(clientId) && pasosBlockedClientIds.Contains(clientId);
+            }
+
+            public static bool IsEmptyGameDataReader(MessageReader reader)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit || reader == null) return false;
+
+                try
+                {
+                    return reader.Length <= 0 || (reader.Position <= 0 && reader.BytesRemaining <= 0);
+                }
+                catch { }
+
+                return false;
+            }
+
+            public static bool IsValidClientId(int clientId)
+            {
+                return clientId >= 0 && clientId < 256;
+            }
+
+            public static void RecordDrop(int clientId = -1)
+            {
+                float now = UnityEngine.Time.time;
+                while (emptyRpcDrops.Count > 0 && emptyRpcDrops.Peek() < now - PasosWindow)
+                    emptyRpcDrops.Dequeue();
+
+                emptyRpcDrops.Enqueue(now);
+
+                int resolvedClientId = IsValidClientId(clientId) ? clientId : currentPasosClientId;
+                if (!IsValidClientId(resolvedClientId))
+                    resolvedClientId = ResolveSingleRemoteClientId();
+
+                int clientDropCount = 0;
+                if (IsValidClientId(resolvedClientId))
+                {
+                    clientDropCount = TrackPasosClientDrop(resolvedClientId, now);
+                    if (clientDropCount >= PasosBanPacketThreshold)
+                        BlockPasosClient(resolvedClientId, clientDropCount);
+                }
+
+                if (emptyRpcDrops.Count >= PasosBanPacketThreshold && now - lastPasosNotify > PasosNotifyCooldown)
+                    lastPasosNotify = now;
+            }
+
+            private static int TrackPasosClientDrop(int clientId, float now)
+            {
+                if (!IsValidClientId(clientId)) return 0;
+
+                if (!pasosDropTrackers.TryGetValue(clientId, out Queue<float> drops))
+                {
+                    drops = new Queue<float>();
+                    pasosDropTrackers[clientId] = drops;
+                }
+
+                while (drops.Count > 0 && drops.Peek() < now - PasosWindow)
+                    drops.Dequeue();
+
+                drops.Enqueue(now);
+                return drops.Count;
+            }
+
+            private static void BlockPasosClient(int clientId, int packetCount)
+            {
+                try
+                {
+                    if (!IsValidClientId(clientId) || (AmongUsClient.Instance != null && clientId == AmongUsClient.Instance.ClientId)) return;
+
+                    PlayerControl player = FindPlayerByClientId(clientId);
+                    string pName = player?.Data?.PlayerName ?? $"Client {clientId}";
+                    int banClientId = GetKickClientId(player, clientId);
+                    string fc = string.IsNullOrEmpty(player?.Data?.FriendCode) ? "Unknown" : player.Data.FriendCode;
+                    string puid = IsValidClientId(banClientId) ? banClientId.ToString() : clientId.ToString();
+
+                    try
+                    {
+                        if (player != null && AmongUsClient.Instance != null)
+                        {
+                            var client = AmongUsClient.Instance.GetClientFromCharacter(player);
+                            if (client != null) puid = GetClientPuid(client);
+                        }
+                    }
+                    catch { }
+
+                    if (ElysiumModMenuGUI.enableLocalPasosBan && pasosBlockedClientIds.Add(clientId))
+                    {
+                        ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Local Message Block Freeze blacklist after {packetCount} packets");
+                    }
+
+                    if (!ElysiumModMenuGUI.enableHostPasosBan || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+                    if (!pasosHostBannedClientIds.Add(clientId)) return;
+                    if (!IsValidClientId(banClientId)) return;
+
+                    ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Host auto-ban for Message Block Freeze empty RPC spam after {packetCount} packets");
+                    AmongUsClient.Instance.KickPlayer(banClientId, true);
+                }
+                catch { }
+            }
+
+            public static int GetKickClientId(PlayerControl player, int fallbackClientId)
+            {
+                try
+                {
+                    if (player != null)
+                    {
+                        int ownerId = (int)player.OwnerId;
+                        if (IsValidClientId(ownerId)) return ownerId;
+
+                        if (player.Data != null && IsValidClientId(player.Data.ClientId))
+                            return player.Data.ClientId;
+                    }
+                }
+                catch { }
+
+                return IsValidClientId(fallbackClientId) ? fallbackClientId : -1;
+            }
+
+            public static PlayerControl FindPlayerByClientId(int clientId)
+            {
+                try
+                {
+                    if (PlayerControl.AllPlayerControls == null) return null;
+
+                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == null) continue;
+                        if ((int)pc.OwnerId == clientId) return pc;
+
+                        try
+                        {
+                            if (pc.Data != null && pc.Data.ClientId == clientId) return pc;
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
+
+                return null;
+            }
+
+            public static int ResolveClientId(object source)
+            {
+                return ResolveClientId(source, 0);
+            }
+
+            private static int ResolveClientId(object source, int depth)
+            {
+                if (source == null || depth > 2 || source is MessageReader || source is SendOption) return -1;
+
+                try
+                {
+                    if (source is PlayerControl pc)
+                        return GetKickClientId(pc, -1);
+
+                    int direct = ConvertNumericClientId(source);
+                    if (direct >= 0) return direct;
+
+                    Type type = source.GetType();
+                    foreach (string name in new[] { "ClientId", "OwnerId", "Id", "clientId", "ownerId", "id" })
+                    {
+                        PropertyInfo property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        direct = ConvertNumericClientId(property?.GetValue(source));
+                        if (direct >= 0) return direct;
+
+                        FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        direct = ConvertNumericClientId(field?.GetValue(source));
+                        if (direct >= 0) return direct;
+                    }
+
+                    foreach (string name in new[] { "Character", "Object", "Player", "Data", "character", "player" })
+                    {
+                        PropertyInfo property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        direct = ResolveClientId(property?.GetValue(source), depth + 1);
+                        if (direct >= 0) return direct;
+
+                        FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        direct = ResolveClientId(field?.GetValue(source), depth + 1);
+                        if (direct >= 0) return direct;
+                    }
+
+                    string typeName = type.FullName ?? type.Name;
+                    if (typeName.IndexOf("Player", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        typeName.IndexOf("Client", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                        {
+                            if (property.GetIndexParameters().Length > 0) continue;
+
+                            try
+                            {
+                                direct = ConvertNumericClientId(property.GetValue(source));
+                                if (direct >= 0) return direct;
+                            }
+                            catch { }
+                        }
+
+                        foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                        {
+                            try
+                            {
+                                direct = ConvertNumericClientId(field.GetValue(source));
+                                if (direct >= 0) return direct;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                catch { }
+
+                return -1;
+            }
+
+            private static int ResolveSingleRemoteClientId()
+            {
+                try
+                {
+                    if (PlayerControl.AllPlayerControls == null) return -1;
+
+                    int found = -1;
+                    int count = 0;
+                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
+
+                        int ownerId = (int)pc.OwnerId;
+                        if (!IsValidClientId(ownerId)) continue;
+
+                        found = ownerId;
+                        count++;
+                        if (count > 1) return -1;
+                    }
+
+                    return count == 1 ? found : -1;
+                }
+                catch { }
+
+                return -1;
+            }
+
+            private static int ConvertNumericClientId(object value)
+            {
+                if (value == null) return -1;
+
+                try
+                {
+                    TypeCode code = Type.GetTypeCode(value.GetType());
+                    switch (code)
+                    {
+                        case TypeCode.Byte:
+                        case TypeCode.SByte:
+                        case TypeCode.Int16:
+                        case TypeCode.UInt16:
+                        case TypeCode.Int32:
+                        case TypeCode.UInt32:
+                        case TypeCode.Int64:
+                        case TypeCode.UInt64:
+                            long id = Convert.ToInt64(value);
+                            return id >= 0 && id < 256 ? (int)id : -1;
+                    }
+                }
+                catch { }
+
+                return -1;
+            }
+
+            public static void Postfix(MessageReader __result)
+            {
+                DropEmptyRpcMessage(__result);
+            }
+
+            public static void DropEmptyRpcMessage(MessageReader reader)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit || reader == null) return;
+
+                try
+                {
+                    if (reader.Tag != RpcGameDataTag || reader.BytesRemaining > 0 || reader.Length > 0) return;
+
+                    reader.Tag = DroppedGameDataTag;
+                    reader.Position = reader.Length;
+
+                    RecordDrop();
+                }
+                catch { }
+            }
+        }
+
+        public static class Shield_PasosLimit_GameDataGuard
+        {
+            private static readonly Dictionary<Type, PropertyInfo> coroutineReaderProperties = new Dictionary<Type, PropertyInfo>();
+
+            public static bool ShouldDrop(object[] args)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit) return false;
+
+                try
+                {
+                    MessageReader reader = FindReader(args);
+
+                    if (!Shield_PasosLimit_Patch.IsEmptyGameDataReader(reader))
+                        return false;
+
+                    Shield_PasosLimit_Patch.RecordDrop();
+                    return true;
+                }
+                catch { }
+
+                return false;
+            }
+
+            public static bool ShouldDropCoroutine(object instance)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit) return false;
+
+                try
+                {
+                    MessageReader reader = GetCoroutineReader(instance);
+
+                    if (!Shield_PasosLimit_Patch.IsEmptyGameDataReader(reader))
+                        return false;
+
+                    Shield_PasosLimit_Patch.RecordDrop();
+                    return true;
+                }
+                catch { }
+
+                return false;
+            }
+
+            private static MessageReader FindReader(object[] args)
+            {
+                if (args == null) return null;
+
+                foreach (object arg in args)
+                {
+                    if (arg is MessageReader reader)
+                        return reader;
+                }
+
+                return null;
+            }
+
+            private static MessageReader GetCoroutineReader(object instance)
+            {
+                if (instance == null) return null;
+
+                try
+                {
+                    Type type = instance.GetType();
+                    if (!coroutineReaderProperties.TryGetValue(type, out PropertyInfo property))
+                    {
+                        property = type.GetProperty("reader", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        coroutineReaderProperties[type] = property;
+                    }
+
+                    return property?.GetValue(instance) as MessageReader;
+                }
+                catch { }
+
+                return null;
+            }
+
+            private static System.Collections.IEnumerator EmptyGameDataCoroutine()
+            {
+                yield break;
+            }
+
+            public static Il2CppSystem.Collections.IEnumerator EmptyGameDataCoroutineIl2Cpp()
+            {
+                return EmptyGameDataCoroutine().WrapToIl2Cpp();
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Shield_PasosLimit_HandleGameData_Patch
+        {
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                foreach (MethodInfo method in typeof(InnerNetClient).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (method.Name == "HandleGameData" && method.ReturnType == typeof(void) &&
+                        method.GetParameters().Any(p => p.ParameterType == typeof(MessageReader)))
+                    {
+                        yield return method;
+                    }
+                }
+            }
+
+            public static bool Prefix(object[] __args)
+            {
+                return !Shield_PasosLimit_GameDataGuard.ShouldDrop(__args);
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Shield_PasosLimit_HandleGameDataInner_Patch
+        {
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                foreach (MethodInfo method in typeof(InnerNetClient).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (method.Name == "HandleGameDataInner" &&
+                        method.GetParameters().Any(p => p.ParameterType == typeof(MessageReader)))
+                    {
+                        yield return method;
+                    }
+                }
+            }
+
+            public static bool Prefix(object[] __args, ref Il2CppSystem.Collections.IEnumerator __result)
+            {
+                if (!Shield_PasosLimit_GameDataGuard.ShouldDrop(__args))
+                    return true;
+
+                __result = Shield_PasosLimit_GameDataGuard.EmptyGameDataCoroutineIl2Cpp();
+                return false;
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Shield_PasosLimit_GameDataCoroutine_Patch
+        {
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                foreach (Type nestedType in typeof(InnerNetClient).GetNestedTypes(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (nestedType.Name.IndexOf("HandleGameDataInner", StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                    MethodInfo moveNext = nestedType.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (moveNext != null && moveNext.ReturnType == typeof(bool))
+                        yield return moveNext;
+                }
+            }
+
+            public static bool Prefix(object __instance, ref bool __result)
+            {
+                if (!Shield_PasosLimit_GameDataGuard.ShouldDropCoroutine(__instance))
+                    return true;
+
+                __result = false;
+                return false;
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Shield_PasosLimit_HandleMessageContext_Patch
+        {
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                foreach (MethodInfo method in typeof(InnerNetClient).GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (method.Name != "HandleMessage") continue;
+                    if (method.GetParameters().Any(p => p.ParameterType == typeof(MessageReader)))
+                        yield return method;
+                }
+            }
+
+            public static bool Prefix(object[] __args)
+            {
+                if (!ElysiumModMenuGUI.enablePasosLimit) return true;
+
+                try
+                {
+                    int clientId = ExtractClientId(__args);
+                    Shield_PasosLimit_Patch.BeginMessageContext(clientId);
+                }
+                catch { }
+
+                return true;
+            }
+
+            public static int ExtractClientId(object[] args)
+            {
+                if (args == null) return -1;
+
+                foreach (object arg in args)
+                {
+                    int clientId = ExtractClientId(arg);
+                    if (clientId >= 0) return clientId;
+                }
+
+                return -1;
+            }
+
+            private static int ExtractClientId(object source)
+            {
+                return Shield_PasosLimit_Patch.ResolveClientId(source);
+            }
+        }
+
         [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
         public static class Shield_PetSpam_Patch
         {
@@ -2505,11 +3332,6 @@ namespace ElysiumModMenu
 
                             string pName = __instance.myPlayer.Data?.PlayerName ?? "Unknown";
 
-                            if (ElysiumModMenuGUI.enableLocalPetSpamDrop)
-                            {
-                                ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> Игрок <b>{pName}</b> заблокирован за Pet Spam (Локально)!");
-                            }
-
                             if (ElysiumModMenuGUI.enableHostPetSpamBan && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
                             {
                                 string fc = string.IsNullOrEmpty(__instance.myPlayer.Data?.FriendCode) ? "Unknown" : __instance.myPlayer.Data.FriendCode;
@@ -2518,7 +3340,7 @@ namespace ElysiumModMenu
                                 try
                                 {
                                     var client = AmongUsClient.Instance.GetClientFromCharacter(__instance.myPlayer);
-                                    if (client != null) puid = client.Id.ToString();
+                                    if (client != null) puid = GetClientPuid(client);
                                 }
                                 catch { }
 
@@ -2526,7 +3348,6 @@ namespace ElysiumModMenu
 
                                 AmongUsClient.Instance.KickPlayer(__instance.myPlayer.OwnerId, true);
 
-                                ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[SHIELD]</color> Игрок <b>{pName}</b> АВТОМАТИЧЕСКИ ЗАБАНЕН за спам петом!");
                             }
 
                             return false;
@@ -2870,6 +3691,9 @@ namespace ElysiumModMenu
                 Plugin.UnlockCosmeticsConfig.Value = unlockCosmetics;
                 Plugin.MoreLobbyInfoConfig.Value = moreLobbyInfo;
                 Plugin.EnableChatDarkModeConfig.Value = enableChatDarkMode;
+                Plugin.GhostChatColorConfig.Value = SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
+                Plugin.EnableAnomalyLogReportsConfig.Value = enableAnomalyLogReports;
+                Plugin.ShowEspFriendCodeConfig.Value = showEspFriendCode;
                 Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
                 Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
                 Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
@@ -2886,6 +3710,20 @@ namespace ElysiumModMenu
                 PlayerPrefs.SetInt("M_BndEndImp", (int)bindEndImp);
                 PlayerPrefs.SetInt("M_BndEndImpDC", (int)bindEndImpDC);
                 PlayerPrefs.SetInt("M_BndEndHnsDC", (int)bindEndHnsDC);
+                PlayerPrefs.SetInt("M_BndToggleTracers", (int)bindToggleTracers);
+                PlayerPrefs.SetInt("M_BndToggleNoClip", (int)bindToggleNoClip);
+                PlayerPrefs.SetInt("M_BndToggleFreecam", (int)bindToggleFreecam);
+                PlayerPrefs.SetInt("M_BndToggleCameraZoom", (int)bindToggleCameraZoom);
+                PlayerPrefs.SetInt("M_BndKillAll", (int)bindKillAll);
+                PlayerPrefs.SetInt("M_BndCallMeeting", (int)bindCallMeeting);
+                PlayerPrefs.SetInt("M_BndTogglePlayerInfo", (int)bindTogglePlayerInfo);
+                PlayerPrefs.SetInt("M_BndToggleSeeRoles", (int)bindToggleSeeRoles);
+                PlayerPrefs.SetInt("M_BndToggleSeeGhosts", (int)bindToggleSeeGhosts);
+                PlayerPrefs.SetInt("M_BndToggleFullBright", (int)bindToggleFullBright);
+                PlayerPrefs.SetInt("M_BndKickAll", (int)bindKickAll);
+                PlayerPrefs.SetInt("M_BndFixSabotages", (int)bindFixSabotages);
+                PlayerPrefs.SetInt("M_BndSetAllGhost", (int)bindSetAllGhost);
+                PlayerPrefs.SetInt("M_BndSetAllGhostImp", (int)bindSetAllGhostImp);
                 SaveBool("M_AutoKickBugs", autoKickBugs);
                 PlayerPrefs.SetFloat("M_AutoKickTimer", autoKickTimer);
                 SaveBool("M_DisableVoteKicks", disableVoteKicks);
@@ -2933,6 +3771,9 @@ namespace ElysiumModMenu
                 SaveBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 SaveBool("M_BlockChatFloodRpc", blockChatFloodRpc);
                 SaveBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
+                SaveBool("M_PasosLimit", enablePasosLimit);
+                SaveBool("M_AntiPasosLocalBan", enableLocalPasosBan);
+                SaveBool("M_AntiPasosHostBan", enableHostPasosBan);
                 SaveBool("M_AutoHostEnabled", AutoHostEnabled);
                 SaveBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 SaveBool("M_AutoHostNotifications", AutoHostNotifications);
@@ -3021,6 +3862,9 @@ namespace ElysiumModMenu
                 unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
                 moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;
                 enableChatDarkMode = Plugin.EnableChatDarkModeConfig.Value;
+                ghostChatColorHex = SanitizeHexColor(Plugin.GhostChatColorConfig.Value, "#D7B8FF");
+                enableAnomalyLogReports = Plugin.EnableAnomalyLogReportsConfig.Value;
+                showEspFriendCode = Plugin.ShowEspFriendCodeConfig.Value;
                 rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
                 currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
                 rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
@@ -3044,6 +3888,20 @@ namespace ElysiumModMenu
                 if (PlayerPrefs.HasKey("M_BndEndImp")) bindEndImp = (KeyCode)PlayerPrefs.GetInt("M_BndEndImp");
                 if (PlayerPrefs.HasKey("M_BndEndImpDC")) bindEndImpDC = (KeyCode)PlayerPrefs.GetInt("M_BndEndImpDC");
                 if (PlayerPrefs.HasKey("M_BndEndHnsDC")) bindEndHnsDC = (KeyCode)PlayerPrefs.GetInt("M_BndEndHnsDC");
+                if (PlayerPrefs.HasKey("M_BndToggleTracers")) bindToggleTracers = (KeyCode)PlayerPrefs.GetInt("M_BndToggleTracers");
+                if (PlayerPrefs.HasKey("M_BndToggleNoClip")) bindToggleNoClip = (KeyCode)PlayerPrefs.GetInt("M_BndToggleNoClip");
+                if (PlayerPrefs.HasKey("M_BndToggleFreecam")) bindToggleFreecam = (KeyCode)PlayerPrefs.GetInt("M_BndToggleFreecam");
+                if (PlayerPrefs.HasKey("M_BndToggleCameraZoom")) bindToggleCameraZoom = (KeyCode)PlayerPrefs.GetInt("M_BndToggleCameraZoom");
+                if (PlayerPrefs.HasKey("M_BndKillAll")) bindKillAll = (KeyCode)PlayerPrefs.GetInt("M_BndKillAll");
+                if (PlayerPrefs.HasKey("M_BndCallMeeting")) bindCallMeeting = (KeyCode)PlayerPrefs.GetInt("M_BndCallMeeting");
+                if (PlayerPrefs.HasKey("M_BndTogglePlayerInfo")) bindTogglePlayerInfo = (KeyCode)PlayerPrefs.GetInt("M_BndTogglePlayerInfo");
+                if (PlayerPrefs.HasKey("M_BndToggleSeeRoles")) bindToggleSeeRoles = (KeyCode)PlayerPrefs.GetInt("M_BndToggleSeeRoles");
+                if (PlayerPrefs.HasKey("M_BndToggleSeeGhosts")) bindToggleSeeGhosts = (KeyCode)PlayerPrefs.GetInt("M_BndToggleSeeGhosts");
+                if (PlayerPrefs.HasKey("M_BndToggleFullBright")) bindToggleFullBright = (KeyCode)PlayerPrefs.GetInt("M_BndToggleFullBright");
+                if (PlayerPrefs.HasKey("M_BndKickAll")) bindKickAll = (KeyCode)PlayerPrefs.GetInt("M_BndKickAll");
+                if (PlayerPrefs.HasKey("M_BndFixSabotages")) bindFixSabotages = (KeyCode)PlayerPrefs.GetInt("M_BndFixSabotages");
+                if (PlayerPrefs.HasKey("M_BndSetAllGhost")) bindSetAllGhost = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhost");
+                if (PlayerPrefs.HasKey("M_BndSetAllGhostImp")) bindSetAllGhostImp = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhostImp");
 
                 if (!rgbMenuMode && currentMenuColorIndex >= 0 && currentMenuColorIndex < menuColors.Length)
                 {
@@ -3090,6 +3948,9 @@ namespace ElysiumModMenu
                 blockGameRpcInLobby = LoadBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 blockChatFloodRpc = LoadBool("M_BlockChatFloodRpc", blockChatFloodRpc);
                 blockMeetingFloodRpc = LoadBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
+                enablePasosLimit = LoadBool("M_PasosLimit", enablePasosLimit);
+                enableLocalPasosBan = LoadBool("M_AntiPasosLocalBan", enableLocalPasosBan);
+                enableHostPasosBan = LoadBool("M_AntiPasosHostBan", enableHostPasosBan);
                 AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
                 AutoReturnLobbyAfterMatch = LoadBool("M_AutoReturnLobbyAfterMatch", AutoReturnLobbyAfterMatch);
                 AutoHostNotifications = LoadBool("M_AutoHostNotifications", AutoHostNotifications);
@@ -3541,6 +4402,20 @@ namespace ElysiumModMenu
                 DrawKeybindRow("End: Impostor Win:", ref bindEndImp, ref isWaitBindEndImp);
                 DrawKeybindRow("End: Imp Disconnect:", ref bindEndImpDC, ref isWaitBindEndImpDC);
                 DrawKeybindRow("End: H&S Disconnect:", ref bindEndHnsDC, ref isWaitBindEndHnsDC);
+                DrawKeybindRow("Toggle Tracers:", ref bindToggleTracers, ref isWaitBindToggleTracers);
+                DrawKeybindRow("Toggle NoClip:", ref bindToggleNoClip, ref isWaitBindToggleNoClip);
+                DrawKeybindRow("Toggle Freecam:", ref bindToggleFreecam, ref isWaitBindToggleFreecam);
+                DrawKeybindRow("Toggle Camera Zoom:", ref bindToggleCameraZoom, ref isWaitBindToggleCameraZoom);
+                DrawKeybindRow("Toggle Player Info:", ref bindTogglePlayerInfo, ref isWaitBindTogglePlayerInfo);
+                DrawKeybindRow("Toggle See Roles:", ref bindToggleSeeRoles, ref isWaitBindToggleSeeRoles);
+                DrawKeybindRow("Toggle See Ghosts:", ref bindToggleSeeGhosts, ref isWaitBindToggleSeeGhosts);
+                DrawKeybindRow("Toggle Full Bright:", ref bindToggleFullBright, ref isWaitBindToggleFullBright);
+                DrawKeybindRow("Kill All:", ref bindKillAll, ref isWaitBindKillAll);
+                DrawKeybindRow("Call Meeting:", ref bindCallMeeting, ref isWaitBindCallMeeting);
+                DrawKeybindRow("Kick All:", ref bindKickAll, ref isWaitBindKickAll);
+                DrawKeybindRow("Fix Sabotages:", ref bindFixSabotages, ref isWaitBindFixSabotages);
+                DrawKeybindRow("All -> Ghost:", ref bindSetAllGhost, ref isWaitBindSetAllGhost);
+                DrawKeybindRow("All -> Ghost Imp:", ref bindSetAllGhostImp, ref isWaitBindSetAllGhostImp);
             }
             finally { GUILayout.EndVertical(); }
         }
@@ -3587,6 +4462,20 @@ namespace ElysiumModMenu
             isWaitBindEndImpDC = false;
             isWaitBindEndHnsDC = false;
             isWaitBindMagnetCursor = false;
+            isWaitBindToggleTracers = false;
+            isWaitBindToggleNoClip = false;
+            isWaitBindToggleFreecam = false;
+            isWaitBindToggleCameraZoom = false;
+            isWaitBindKillAll = false;
+            isWaitBindCallMeeting = false;
+            isWaitBindTogglePlayerInfo = false;
+            isWaitBindToggleSeeRoles = false;
+            isWaitBindToggleSeeGhosts = false;
+            isWaitBindToggleFullBright = false;
+            isWaitBindKickAll = false;
+            isWaitBindFixSabotages = false;
+            isWaitBindSetAllGhost = false;
+            isWaitBindSetAllGhostImp = false;
         }
 
         private void DrawGeneralTab()
@@ -3687,7 +4576,7 @@ namespace ElysiumModMenu
             string contributorHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(109, 138, 255, 255)) : new Color32(109, 138, 255, 255));
             string dangerHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(231, 76, 60, 255)) : new Color32(231, 76, 60, 255));
             string safeHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(57, 255, 20, 255)) : new Color32(57, 255, 20, 255));
-            string versionText = "1.3.2";
+            string versionText = "1.2.7";
 
             GUIStyle textStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
             textStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : new Color(0.85f, 0.85f, 0.85f, 1f);
@@ -3748,12 +4637,17 @@ namespace ElysiumModMenu
                 GUILayout.Label($"<b><color=#{devHex}>DEVELOPERS</color></b>", textStyle);
                 GUILayout.Space(4);
                 GUILayout.BeginHorizontal();
-                if (DrawColoredActionButton("abobanamne", new Color32(38, 194, 129, 255), 150f))
-                    OpenExternalLink("https://github.com/abobanamne", "abobanamne");
+                if (DrawColoredActionButton("Carrot", new Color32(38, 194, 129, 255), 150f))
+                    OpenExternalLink("https://github.com/abobanamne", "Carrot");
                 GUILayout.Space(6);
                 if (DrawColoredActionButton("wextikit", new Color32(109, 138, 255, 255), 150f))
                     OpenExternalLink("https://github.com/wextikit", "wextikit");
                 GUILayout.EndHorizontal();
+
+                GUILayout.Space(10);
+                GUILayout.Label($"<b><color=#{contributorHex}>TESTERS</color></b>", textStyle);
+                GUILayout.Space(4);
+                DrawColoredActionButton("Жена", new Color32(109, 138, 255, 255), 150f);
 
                 GUILayout.Space(10);
                 GUILayout.Label($"<b><color=#{accentHex}>{L("Repository", "Репозиторий")}</color></b>", textStyle);
@@ -3804,7 +4698,7 @@ namespace ElysiumModMenu
                         var client = AmongUsClient.Instance?.GetClientFromCharacter(sourcePlayer);
                         if (client != null)
                         {
-                            puid = client.Id.ToString();
+                            puid = GetClientPuid(client);
                             platformStr = ElysiumModMenuGUI.GetPlatform(client);
                         }
                     }
@@ -3962,6 +4856,8 @@ namespace ElysiumModMenu
             alwaysChat = DrawToggle(alwaysChat, L("Always Show Chat", "Всегда показывать чат"), 230);
             GUILayout.Space(3);
             readGhostChat = DrawToggle(readGhostChat, L("Read Ghost Chat", "Читать чат призраков"), 230);
+            GUILayout.Space(4);
+            DrawGhostChatColorControl(230f);
             GUILayout.Space(3);
             enableExtendedChat = DrawToggle(enableExtendedChat, L("Extended Chat", "Длинный чат"), 230);
             GUILayout.Space(3);
@@ -4080,6 +4976,31 @@ namespace ElysiumModMenu
             GUILayout.EndVertical();
         }
 
+        private void DrawGhostChatColorControl(float width)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(width));
+            GUILayout.Label(L("Ghost Chat:", "Ghost Chat:"), new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(88));
+            if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
+            {
+                isEditingGhostChatColor = !isEditingGhostChatColor;
+                isEditingName = false;
+                isEditingLevel = false;
+                isEditingFriendCode = false;
+                isEditingLocalFriendCode = false;
+                isEditingBan = false;
+            }
+            if (GUILayout.Button(L("Apply", "OK"), btnStyle, GUILayout.Width(52), GUILayout.Height(24)))
+            {
+                isEditingGhostChatColor = false;
+                ghostChatColorHex = SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
+                SaveConfig();
+            }
+            GUILayout.EndHorizontal();
+
+            string previewHex = GetGhostChatColorHex();
+            GUILayout.Label($"<size=90%><color={previewHex}>{L("Preview ghost chat color", "Пример цвета чата призраков")}</color></size>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 }, GUILayout.Width(width));
+        }
+
         private void DrawPlayerMovement()
         {
             GUILayout.BeginVertical(boxStyle);
@@ -4166,6 +5087,30 @@ namespace ElysiumModMenu
                 if (clean.Length >= 10) break;
             }
             return clean;
+        }
+
+        private static string SanitizeHexColor(string input, string fallback)
+        {
+            string value = (input ?? string.Empty).Trim();
+            if (value.StartsWith("#")) value = value.Substring(1);
+
+            string clean = "";
+            foreach (char c in value)
+            {
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+                {
+                    clean += char.ToUpperInvariant(c);
+                    if (clean.Length >= 6) break;
+                }
+            }
+
+            return clean.Length == 6 ? "#" + clean : fallback;
+        }
+
+        public static string GetGhostChatColorHex()
+        {
+            ghostChatColorHex = SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
+            return ghostChatColorHex;
         }
 
         private static string BuildLocalNameRenderText(string input)
@@ -4342,7 +5287,7 @@ namespace ElysiumModMenu
                     try
                     {
                         var client = AmongUsClient.Instance.GetClientFromCharacter(pc);
-                        if (client != null) puid = client.Id.ToString();
+                        if (client != null) puid = GetClientPuid(client);
                     }
                     catch { }
 
@@ -4372,6 +5317,7 @@ namespace ElysiumModMenu
                 isEditingName = false;
                 isEditingFriendCode = false;
                 isEditingLocalFriendCode = false;
+                isEditingGhostChatColor = false;
             }
             if (GUILayout.Button("Apply", btnStyle, GUILayout.Width(56), GUILayout.Height(28)))
             {
@@ -4406,6 +5352,7 @@ namespace ElysiumModMenu
                 isEditingLevel = false;
                 isEditingFriendCode = false;
                 isEditingLocalFriendCode = false;
+                isEditingGhostChatColor = false;
             }
             if (GUILayout.Button("Apply", btnStyle, GUILayout.Width(56), GUILayout.Height(28)))
             {
@@ -4438,6 +5385,7 @@ namespace ElysiumModMenu
                 isEditingName = false;
                 isEditingLevel = false;
                 isEditingFriendCode = false;
+                isEditingGhostChatColor = false;
             }
             if (GUILayout.Button("Apply", btnStyle, GUILayout.Width(56), GUILayout.Height(28)))
             {
@@ -4462,6 +5410,7 @@ namespace ElysiumModMenu
                 isEditingName = false;
                 isEditingLevel = false;
                 isEditingLocalFriendCode = false;
+                isEditingGhostChatColor = false;
             }
             if (GUILayout.Button("Apply", btnStyle, GUILayout.Width(56), GUILayout.Height(28)))
             {
@@ -4684,10 +5633,29 @@ namespace ElysiumModMenu
                     }
                     else
                     {
-                        SetPlayerRole(target, roleAssignOptions[targetRoleAssignIdx]);
-                        ShowNotification($"<color=#00FF00>[ROLE]</color> {target.Data.PlayerName} -> {roleAssignNames[targetRoleAssignIdx]}");
+                        if (IsGhostRoleSelection(targetRoleAssignIdx))
+                        {
+                            MakePlayerGhost(target);
+                        }
+                        else if (IsGhostImpostorRoleSelection(targetRoleAssignIdx))
+                        {
+                            MakePlayerGhost(target, true);
+                        }
+                        else
+                        {
+                            SetPlayerRole(target, roleAssignOptions[targetRoleAssignIdx]);
+                            ShowNotification($"<color=#00FF00>[ROLE]</color> {target.Data.PlayerName} -> {roleAssignNames[targetRoleAssignIdx]}");
+                        }
                     }
                 }
+                if (GUILayout.Button("TARGET -> GHOST", btnStyle, GUILayout.Height(26)))
+                {
+                    MakePlayerGhost(target);
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(4);
+                GUILayout.BeginHorizontal();
                 if (GUILayout.Button("REVIVE TARGET", activeTabStyle, GUILayout.Height(26)))
                 {
                     RevivePlayer(target);
@@ -4795,9 +5763,14 @@ namespace ElysiumModMenu
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Entries: {playerHistoryEntries.Count}", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(120));
+            GUILayout.Label("File: ElysiumPlayerHistory.txt", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(190));
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Clear History", btnStyle, GUILayout.Width(120), GUILayout.Height(24)))
+            {
                 playerHistoryEntries.Clear();
+                playerHistoryKeysById.Clear();
+                WritePlayerHistoryFile();
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6);
@@ -4811,9 +5784,12 @@ namespace ElysiumModMenu
                 foreach (var e in playerHistoryEntries.OrderByDescending(x => x.LastSeenUtc))
                 {
                     GUILayout.BeginVertical(boxStyle);
-                    GUILayout.Label($"{e.Name}  <color=#aaaaaa>({e.Platform})</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
-                    GUILayout.Label($"FC: {e.FriendCode} | PUID: {e.Puid}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
-                    GUILayout.Label($"Lv: {e.Level} | Last: {e.LastSeenUtc:HH:mm:ss}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+                    string status = e.IsOnline ? "<color=#55FF77>ONLINE</color>" : "<color=#aaaaaa>LEFT</color>";
+                    GUILayout.Label($"{e.Name}  {status}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
+                    GUILayout.Label($"Lv: {e.Level} | FC: {e.FriendCode} | PUID: {e.Puid}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+                    GUILayout.Label($"Joined: {e.FirstSeenUtc:HH:mm:ss} | Left: {(e.LeftUtc.HasValue ? e.LeftUtc.Value.ToString("HH:mm:ss") : "online")}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+                    GUILayout.Label($"Platform: {FormatPlatformHistory(e)}", new GUIStyle(GUI.skin.label) { fontSize = 11, wordWrap = true });
+                    GUILayout.Label($"RPC: {FormatRpcHistory(e)}", new GUIStyle(GUI.skin.label) { fontSize = 11, wordWrap = true });
                     GUILayout.EndVertical();
                     GUILayout.Space(2);
                 }
@@ -4847,9 +5823,8 @@ namespace ElysiumModMenu
 
                 ShowNotification($"<color=#00FF00>[EJECT]</color> Изгоняем <b>{target.Data.PlayerName}</b>...");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine("Eject Error: " + ex.Message);
             }
         }
 
@@ -4925,9 +5900,8 @@ namespace ElysiumModMenu
                 PlayerControl.LocalPlayer.CmdReportDeadBody(target.Data);
                 ShowNotification($"<color=#00FF00>[REPORT]</color> Репорт {target.Data.PlayerName}");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine($"Report body error: {ex.Message}");
             }
         }
 
@@ -4952,9 +5926,8 @@ namespace ElysiumModMenu
                 target.Data.RpcSetTasks(taskIds);
                 ShowNotification($"<color=#00FF00>[TASKS]</color> {target.Data.PlayerName} получил flood tasks.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine($"Flood tasks error: {ex.Message}");
             }
         }
 
@@ -4977,9 +5950,8 @@ namespace ElysiumModMenu
                 target.Data.RpcSetTasks(Array.Empty<byte>());
                 ShowNotification($"<color=#00FF00>[TASKS]</color> Задачи {target.Data.PlayerName} очищены.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine($"Clear tasks error: {ex.Message}");
             }
         }
 
@@ -4989,6 +5961,26 @@ namespace ElysiumModMenu
                 if (roleAssignOptions[i].Equals(role))
                     return roleAssignNames[i];
             return role.ToString();
+        }
+
+        private static bool IsGhostRoleSelection(int roleIndex)
+        {
+            return roleIndex >= 0 &&
+                   roleIndex < roleAssignNames.Length &&
+                   string.Equals(roleAssignNames[roleIndex], "Ghost", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsGhostImpostorRoleSelection(int roleIndex)
+        {
+            return roleIndex >= 0 &&
+                   roleIndex < roleAssignNames.Length &&
+                   string.Equals(roleAssignNames[roleIndex], "Ghost Imp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsImpostorTeamRole(RoleTypes role)
+        {
+            int roleId = (int)role;
+            return role == RoleTypes.Impostor || role == RoleTypes.Shapeshifter || roleId == 9 || roleId == 18;
         }
 
         public static void RevivePlayer(PlayerControl target)
@@ -5076,11 +6068,176 @@ namespace ElysiumModMenu
 
                 ShowNotification($"<color=#00FF00>[ВОСКРЕШЕНИЕ]</color> {target.Data.PlayerName} воскрешён!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine($"Revive error: {ex.Message}");
                 ShowNotification("<color=#FF0000>Ошибка воскрешения!</color>");
             }
+        }
+
+        public static void MakePlayerGhost(PlayerControl target, bool impostorGhost = false, bool notify = true)
+        {
+            if (target == null || target.Data == null)
+            {
+                if (notify) ShowNotification("<color=#FF0000>[ОШИБКА]</color> Цель не найдена!");
+                return;
+            }
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+            {
+                if (notify) ShowNotification("<color=#FF0000>[ОШИБКА]</color> Требуются права хоста!");
+                return;
+            }
+            if (target.Data.IsDead)
+            {
+                if (!TrySetGhostRole(target, impostorGhost, out _))
+                    SetPlayerRole(target, impostorGhost ? RoleTypes.Impostor : (IsImpostorTeamRole(target.Data.RoleType) ? RoleTypes.Impostor : RoleTypes.Crewmate));
+                if (notify) ShowNotification($"{target.Data.PlayerName} уже призрак!");
+                return;
+            }
+
+            try
+            {
+                string methodUsed;
+                if (!TrySetGhostRole(target, impostorGhost, out methodUsed))
+                {
+                    RoleTypes fallbackRole = impostorGhost ? RoleTypes.Impostor : (IsImpostorTeamRole(target.Data.RoleType) ? RoleTypes.Impostor : RoleTypes.Crewmate);
+                    SetPlayerRole(target, fallbackRole);
+                    TryActivateGhostState(target, out methodUsed);
+                }
+
+                var netObj = GameData.Instance?.GetComponent<InnerNetObject>();
+                if (netObj != null) netObj.SetDirtyBit(uint.MaxValue);
+
+                if (notify) ShowNotification($"<color=#00FF00>[GHOST]</color> {target.Data.PlayerName} стал призраком ({methodUsed})!");
+            }
+            catch (Exception)
+            {
+                if (notify) ShowNotification("<color=#FF0000>Ошибка перевода в призрака!</color>");
+            }
+        }
+
+        private static bool TrySetGhostRole(PlayerControl target, bool impostorGhost, out string methodUsed)
+        {
+            methodUsed = string.Empty;
+            if (target == null || target.Data == null) return false;
+
+            string[] roleNames = impostorGhost
+                ? new[] { "ImpostorGhost", "GhostImpostor", "ImpGhost", "Ghost" }
+                : new[] { "CrewmateGhost", "GhostCrewmate", "CrewGhost", "Ghost" };
+
+            foreach (string roleName in roleNames)
+            {
+                if (!Enum.TryParse(roleName, true, out RoleTypes ghostRole)) continue;
+
+                try { target.RpcSetRole(ghostRole, true); } catch { }
+                try { RoleManager.Instance?.SetRole(target, ghostRole); } catch { }
+
+                methodUsed = $"SetRole:{roleName}";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryActivateGhostState(PlayerControl target, out string methodUsed)
+        {
+            methodUsed = string.Empty;
+            if (target == null) return false;
+            if (target.Data != null && target.Data.IsDead)
+            {
+                methodUsed = "already_dead";
+                return true;
+            }
+
+            if (TryDie(target, DeathReason.Exile, true) ||
+                TryDie(target, DeathReason.Exile, false) ||
+                TryDie(target, DeathReason.Kill, true) ||
+                TryDie(target, DeathReason.Kill, false))
+            {
+                methodUsed = "Die";
+                return true;
+            }
+
+            if (TryInvokeNoArg(target, "Exiled") ||
+                TryInvokeNoArg(target, "RpcExiled") ||
+                TryInvokeNoArg(target, "RpcExiledV2") ||
+                TryInvokeNoArg(target, "SetDead"))
+            {
+                methodUsed = "Exiled/SetDead";
+                return true;
+            }
+
+            if (TrySetDeadFlag(target))
+            {
+                methodUsed = "Data.IsDead";
+                return true;
+            }
+
+            methodUsed = "fallback";
+            return false;
+        }
+
+        private static bool TryDie(PlayerControl target, DeathReason reason, bool allowAnimation)
+        {
+            try { target.Die(reason, allowAnimation); }
+            catch { }
+            return target != null && target.Data != null && target.Data.IsDead;
+        }
+
+        private static bool TryInvokeNoArg(object target, string methodName)
+        {
+            if (target == null || string.IsNullOrWhiteSpace(methodName)) return false;
+            try
+            {
+                for (Type type = target.GetType(); type != null; type = type.BaseType)
+                {
+                    MethodInfo method = type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                    if (method == null) continue;
+                    method.Invoke(target, null);
+                    return target is PlayerControl player && player.Data != null && player.Data.IsDead;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool TrySetDeadFlag(PlayerControl target)
+        {
+            if (target == null || target.Data == null) return false;
+            try
+            {
+                target.Data.IsDead = true;
+                if (target.Collider != null) target.Collider.enabled = false;
+                if (target.MyPhysics != null) target.MyPhysics.gameObject.layer = LayerMask.NameToLayer("Ghost");
+            }
+            catch { }
+            return target.Data.IsDead;
+        }
+
+        public static void SetAllPlayersGhost()
+        {
+            SetAllPlayersGhost(false);
+        }
+
+        public static void SetAllPlayersGhost(bool impostorGhost)
+        {
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+            {
+                ShowNotification("<color=#FF0000>[ОШИБКА]</color> Требуются права хоста!");
+                return;
+            }
+            if (PlayerControl.AllPlayerControls == null) return;
+
+            int count = 0;
+            foreach (var pc in PlayerControl.AllPlayerControls)
+            {
+                if (pc != null && pc.Data != null && !pc.Data.Disconnected)
+                {
+                    MakePlayerGhost(pc, impostorGhost, false);
+                    count++;
+                }
+            }
+
+            ShowNotification($"<color=#00FF00>[GHOST]</color> {count} игрок(а/ов) стали {(impostorGhost ? "ghost impostor" : "призраками")}!");
         }
 
         public static void SetAllPlayersRole(RoleTypes role)
@@ -5327,10 +6484,7 @@ namespace ElysiumModMenu
                 PlayerControl.LocalPlayer.CmdReportDeadBody(null);
                 ShowNotification("<color=#00FF00>[MEETING]</color> Легально нажата кнопка собрания!");
             }
-            catch (Exception ex)
-            {
-                Debug.Log("Public Meeting Error: " + ex.Message);
-            }
+            catch { }
         }
         private void TriggerAllSabotages()
         {
@@ -5349,7 +6503,7 @@ namespace ElysiumModMenu
 
                 ShowNotification("<color=#FF0000>[SABOTAGE]</color> Все системы саботированы!");
             }
-            catch (Exception ex) { Debug.Log("Trigger All Sabotages Error: " + ex.Message); }
+            catch { }
         }
         private void FixAllSabotages()
         {
@@ -5380,7 +6534,7 @@ namespace ElysiumModMenu
                 try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, 0); } catch { }
                 ShowNotification("<color=#00FF00>[SABOTAGE]</color> Все саботажи и двери починены!");
             }
-            catch (Exception ex) { Debug.Log("Fix All Sabotages Error: " + ex.Message); }
+            catch { }
         }
 
         private void SabotageDoors()
@@ -5583,7 +6737,21 @@ namespace ElysiumModMenu
 
             GUILayout.Space(5);
             if (GUILayout.Button("SET ALL PLAYERS ROLE", activeTabStyle, GUILayout.Height(28)))
-                SetAllPlayersRole(roleAssignOptions[allPlayersRoleAssignIdx]);
+            {
+                if (IsGhostRoleSelection(allPlayersRoleAssignIdx))
+                    SetAllPlayersGhost();
+                else if (IsGhostImpostorRoleSelection(allPlayersRoleAssignIdx))
+                    SetAllPlayersGhost(true);
+                else
+                    SetAllPlayersRole(roleAssignOptions[allPlayersRoleAssignIdx]);
+            }
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("ALL -> GHOST", btnStyle, GUILayout.Height(26)))
+                SetAllPlayersGhost();
+            if (GUILayout.Button("ALL -> GHOST IMP", btnStyle, GUILayout.Height(26)))
+                SetAllPlayersGhost(true);
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.Space(10);
@@ -5808,7 +6976,6 @@ namespace ElysiumModMenu
 
                 if (stream == null)
                 {
-                    System.Console.WriteLine($"[ELYSIUM] Стрим равен null! Убедись, что {fileName} установлен как Embedded Resource.");
                     return null;
                 }
 
@@ -5824,9 +6991,8 @@ namespace ElysiumModMenu
 
                 return CachedSprites[path + pixelsPerUnit] = sprite;
             }
-            catch (System.Exception ex)
+            catch (System.Exception)
             {
-                System.Console.WriteLine($"[ELYSIUM] Ошибка загрузки спрайта {fileName}: " + ex.Message);
                 return null;
             }
         }
@@ -5836,6 +7002,7 @@ namespace ElysiumModMenu
             UnlockCosmetics();
             LoadConfig();
             LoadBanList();
+            StartBackgroundAnomalyLogMonitor();
 
 
             try
@@ -5862,6 +7029,7 @@ namespace ElysiumModMenu
 
         public void OnApplicationQuit()
         {
+            StopBackgroundAnomalyLogMonitor();
             SaveConfig();
         }
 
@@ -5870,15 +7038,381 @@ namespace ElysiumModMenu
             SaveConfig();
         }
 
+
+
+        private static void StartBackgroundAnomalyLogMonitor()
+        {
+            try
+            {
+                if (anomalyLogMonitorTimer != null) return;
+                anomalyLogMonitorTimer = new System.Threading.Timer(_ => TryDetectLogBurstTick(false), null, 1000, 1000);
+                System.Console.WriteLine("[ElysiumModMenu] Background freeze/overload log monitor started.");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[ElysiumModMenu] Failed to start background log monitor: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        private static void StopBackgroundAnomalyLogMonitor()
+        {
+            try
+            {
+                anomalyLogMonitorTimer?.Dispose();
+                anomalyLogMonitorTimer = null;
+            }
+            catch { }
+        }
+
+        private static float GetLogMonitorSeconds()
+        {
+            try { return (float)(DateTime.UtcNow - logMonitorStartedUtc).TotalSeconds; }
+            catch { return 0f; }
+        }
+
+        private static string BuildAnomalyReportDetails(bool allowUnityAccess = true)
+        {
+            if (!allowUnityAccess)
+                return anomalyReportDetailsCache + "\nmonitor=background";
+
+            string clientId = "Unknown";
+            string networkMode = "Unknown";
+            string inGame = "no";
+            string host = "no";
+            string platform = "Unknown";
+
+            try
+            {
+                if (AmongUsClient.Instance != null)
+                {
+                    clientId = AmongUsClient.Instance.ClientId.ToString();
+                    networkMode = AmongUsClient.Instance.NetworkMode.ToString();
+                    host = AmongUsClient.Instance.AmHost ? "yes" : "no";
+
+                    ClientData client = AmongUsClient.Instance.GetClientFromCharacter(PlayerControl.LocalPlayer);
+                    if (client != null)
+                    {
+                        platform = GetPlatform(client);
+                    }
+                }
+            }
+            catch { }
+
+            try { inGame = ShipStatus.Instance != null && LobbyBehaviour.Instance == null ? "yes" : "no"; } catch { }
+
+            string details = $"sessionId={relaySessionId}\nclientId={clientId}\nnetworkMode={networkMode}\nhost={host}\nplatform={platform}\ninGame={inGame}\nmonitor=unity";
+            anomalyReportDetailsCache = details;
+            return details;
+        }
+
+        private static void TryDetectLogBurstTick(bool allowUnityAccess = true)
+        {
+            if (!enableAnomalyLogReports) return;
+            lock (anomalyLogMonitorLock)
+            {
+                try
+                {
+                    float now = GetLogMonitorSeconds();
+                    if (now < logMonitorNextScanAt) return;
+                    logMonitorNextScanAt = now + LogBurstScanIntervalSeconds;
+
+                    List<string> watchedFiles = GetWatchedLogFiles().ToList();
+                    if (!anomalyLogWatchNotified)
+                    {
+                        anomalyLogWatchNotified = true;
+                        System.Console.WriteLine($"[ElysiumModMenu] Freeze/overload log reporting is enabled. Watching: {string.Join(", ", watchedFiles.Select(System.IO.Path.GetFileName).ToArray())}. Sends only summary counters when error/red logs appear or {LogBurstLineThreshold}+ new lines arrive within {LogBurstWindowSeconds:0}s.");
+                    }
+
+                    int newLines = 0;
+                    int errorLines = 0;
+                    int storedMsgLines = 0;
+                    List<string> touchedLogs = new List<string>();
+                    List<string> touchedLogFiles = new List<string>();
+                    foreach (string file in watchedFiles)
+                    {
+                        List<string> addedLines = ReadNewLogLines(file, out int currentLines);
+                        if (!watchedLogLineCounts.TryGetValue(file, out int previousLines))
+                        {
+                            watchedLogLineCounts[file] = currentLines;
+                            addedLines = ReadInitialRecentLogTail(file);
+                            if (addedLines.Count <= 0) continue;
+                        }
+                        else
+                        {
+                            watchedLogLineCounts[file] = currentLines;
+                        }
+
+                        if (addedLines.Count <= 0) continue;
+
+                        newLines += addedLines.Count;
+                        touchedLogs.Add(System.IO.Path.GetFileName(file));
+                        touchedLogFiles.Add(file);
+                        errorLines += addedLines.Count(IsErrorLogLine);
+                        storedMsgLines += addedLines.Count(IsStoredMessageOverloadLine);
+                    }
+
+                    if (newLines <= 0) return;
+
+                    if (logBurstWindowStartedAt < 0f || now - logBurstWindowStartedAt > LogBurstWindowSeconds)
+                    {
+                        logBurstWindowStartedAt = now;
+                        logBurstLineCount = 0;
+                    }
+
+                    logBurstLineCount += newLines;
+                    bool isStoredRpcBurst = storedMsgLines > 0;
+                    bool isErrorBurst = errorLines > 0;
+                    bool isLineBurst = logBurstLineCount >= LogBurstLineThreshold;
+                    if ((!isErrorBurst && !isLineBurst) || (!isStoredRpcBurst && now < logBurstCooldownUntil)) return;
+
+                    logBurstCooldownUntil = now + (isStoredRpcBurst ? 5f : LogBurstAlertCooldownSeconds);
+                    string reason = isStoredRpcBurst ? "stored rpc overload detected" : (isErrorBurst ? "error/red log detected" : "log spam detected");
+                    string message = $"{BuildAnomalyReportDetails(allowUnityAccess)}\nnewLogLines={logBurstLineCount}\nerrorLines={errorLines}\nstoredMsgLines={storedMsgLines}\nwindowSeconds={LogBurstWindowSeconds}\nthreshold={LogBurstLineThreshold}\nreason={reason}, needs fix\nwatchedLogs={string.Join(", ", touchedLogs.Distinct().ToArray())}";
+                    logBurstWindowStartedAt = -1f;
+                    logBurstLineCount = 0;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine($"[ElysiumModMenu] Log monitor failed: {ex.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
+
+        private static IEnumerable<string> GetWatchedLogFiles()
+        {
+            string root = GetAmongUsRoot();
+            List<string> files = new List<string>();
+
+            try
+            {
+                string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string unityLogRoot = System.IO.Path.Combine(userProfile, "AppData", "LocalLow", "Innersloth", "Among Us");
+                AddLogPath(files, System.IO.Path.Combine(unityLogRoot, "Player.log"));
+                AddLogPath(files, System.IO.Path.Combine(unityLogRoot, "Player-prev.log"));
+            }
+            catch { }
+
+            AddLogPath(files, System.IO.Path.Combine(root, "BepInEx", "ErrorLog.log"));
+            AddLogPath(files, System.IO.Path.Combine(root, "ErrorLog.log"));
+            AddLogPath(files, System.IO.Path.Combine(root, "BepInEx", "LogOutput.log"));
+            AddLogPath(files, System.IO.Path.Combine(root, "LogOutput.log"));
+
+            try
+            {
+                string[] banLogDirs =
+                {
+                    System.IO.Path.Combine(root, "BepInEx", "BAN_DATA", "LOG"),
+                    System.IO.Path.Combine(root, "BAN_DATA", "LOG")
+                };
+
+                foreach (string banLogDir in banLogDirs)
+                {
+                    if (!System.IO.Directory.Exists(banLogDir)) continue;
+                    foreach (string file in System.IO.Directory.GetFiles(banLogDir))
+                        AddLogPath(files, file);
+                }
+            }
+            catch { }
+
+            try
+            {
+                string playerLogRoot = System.IO.Path.Combine(root, "ElysiumModMenu", "PlayerLogs");
+                if (System.IO.Directory.Exists(playerLogRoot))
+                {
+                    foreach (string dir in System.IO.Directory.GetDirectories(playerLogRoot))
+                    {
+                        AddLogPath(files, System.IO.Path.Combine(dir, "LogOutput.txt"));
+                        AddLogPath(files, System.IO.Path.Combine(dir, "LogOutput.log"));
+                    }
+                }
+            }
+            catch { }
+
+            return files;
+        }
+
+        private static void AddLogPath(List<string> files, string file)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(file) && System.IO.File.Exists(file) && !files.Contains(file))
+                    files.Add(file);
+            }
+            catch { }
+        }
+
+        private static List<string> ReadNewLogLines(string file, out int currentLines)
+        {
+            currentLines = 0;
+            List<string> lines = new List<string>();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file)) return lines;
+
+                watchedLogLineCounts.TryGetValue(file, out int previousLines);
+                using (System.IO.FileStream stream = new System.IO.FileStream(file, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite | System.IO.FileShare.Delete))
+                using (System.IO.StreamReader reader = new System.IO.StreamReader(stream, Encoding.UTF8, true))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        currentLines++;
+                        if (currentLines > previousLines)
+                            lines.Add(line);
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return lines;
+        }
+
+        private static List<string> ReadInitialRecentLogTail(string file)
+        {
+            List<string> result = new List<string>();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(file) || !System.IO.File.Exists(file)) return result;
+
+                Queue<string> errorTail = new Queue<string>();
+                using (System.IO.FileStream stream = new System.IO.FileStream(file, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite | System.IO.FileShare.Delete))
+                using (System.IO.StreamReader reader = new System.IO.StreamReader(stream, Encoding.UTF8, true))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (!IsErrorLogLine(line)) continue;
+                        errorTail.Enqueue(line);
+                        while (errorTail.Count > InitialLogTailLineLimit)
+                            errorTail.Dequeue();
+                    }
+                }
+
+                result.AddRange(errorTail);
+            }
+            catch { }
+
+            return result;
+        }
+
+        private static bool IsErrorLogLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+            string lower = line.ToLowerInvariant();
+            if (lower.Contains("[elysiummodmenu]")) return false;
+            if (lower.Contains("method ") && lower.Contains(" has unsupported ") && lower.Contains("elysiummodmenu")) return false;
+            if (lower.Contains("registered mono type") && lower.Contains("elysiummodmenu")) return false;
+            return lower.Contains("[error") ||
+                   lower.Contains("[fatal") ||
+                   lower.Contains("exception") ||
+                   lower.Contains(" stack trace") ||
+                   lower.Contains("traceback") ||
+                   lower.Contains("stored data") ||
+                   lower.Contains("storeddata") ||
+                   IsStoredMessageOverloadLine(lower) ||
+                   IsKnownSpamWarningLine(lower) ||
+                   lower.Contains("overload") ||
+                   lower.Contains("freeze") ||
+                   lower.Contains("color=red") ||
+                   lower.Contains("#ff0000");
+        }
+
+        public static bool IsRelevantAnomalyLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+            string lower = line.ToLowerInvariant();
+            if (lower.Contains("[elysiummodmenu]")) return false;
+            if (lower.Contains("bepinex") && lower.Contains("chainloader")) return false;
+            if (lower.Contains("registered mono type") && lower.Contains("elysiummodmenu")) return false;
+            if (lower.Contains("method ") && lower.Contains(" has unsupported ") && lower.Contains("elysiummodmenu")) return false;
+            return IsStoredMessageOverloadLine(lower) ||
+                   IsKnownSpamWarningLine(lower) ||
+                   lower.Contains("[error") ||
+                   lower.Contains("[fatal") ||
+                   lower.Contains("nullreferenceexception") ||
+                   lower.Contains("invaliddataexception") ||
+                   lower.Contains("exception:") ||
+                   lower.Contains(" stack trace") ||
+                   lower.Contains("traceback") ||
+                   lower.Contains("stored data") ||
+                   lower.Contains("storeddata");
+        }
+
+        private static bool IsKnownSpamWarningLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+            string lower = line.ToLowerInvariant();
+            return lower.Contains("sendmode set to everything") ||
+                   lower.Contains("likely should be reliable") ||
+                   lower.Contains("stored msg");
+        }
+
+        private static bool IsStoredMessageOverloadLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+            string lower = line.ToLowerInvariant();
+            return lower.Contains("stored msg") && lower.Contains(" rpc ");
+        }
+
+        private static string GetAmongUsRoot()
+        {
+            try { return System.IO.Directory.GetCurrentDirectory(); }
+            catch { return string.Empty; }
+        }
+
+        private static string EscapeJson(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+
+            StringBuilder builder = new StringBuilder(value.Length + 16);
+            foreach (char c in value)
+            {
+                switch (c)
+                {
+                    case '\\': builder.Append("\\\\"); break;
+                    case '"': builder.Append("\\\""); break;
+                    case '\n': builder.Append("\\n"); break;
+                    case '\r': builder.Append("\\r"); break;
+                    case '\t': builder.Append("\\t"); break;
+                    default:
+                        if (c < 32) builder.Append("\\u").Append(((int)c).ToString("x4"));
+                        else builder.Append(c);
+                        break;
+                }
+            }
+
+            return builder.ToString();
+        }
+
+
         public static KeyCode bindMagnetCursor = KeyCode.F9;
         public static bool isWaitBindMagnetCursor = false;
+
+        private bool CanRunHostBind(string actionName)
+        {
+            try
+            {
+                if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost) return true;
+            }
+            catch { }
+
+            ShowNotification($"<color=#FF0000>[BIND]</color> {actionName}: host only");
+            return false;
+        }
+
         public void Update()
         {
-            bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingBan || customChatInputFocused ||
+            bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
                                      isWaitBindDespawnLobby || isWaitBindCloseMeeting || isWaitBindInstaStart ||
                                      isWaitBindEndCrew || isWaitBindEndImp || isWaitBindEndImpDC || isWaitBindEndHnsDC ||
-                                     isWaitBindMagnetCursor;
+                                     isWaitBindMagnetCursor || isWaitBindToggleTracers || isWaitBindToggleNoClip ||
+                                     isWaitBindToggleFreecam || isWaitBindToggleCameraZoom || isWaitBindKillAll ||
+                                     isWaitBindCallMeeting || isWaitBindTogglePlayerInfo || isWaitBindToggleSeeRoles ||
+                                     isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright || isWaitBindKickAll ||
+                                     isWaitBindFixSabotages || isWaitBindSetAllGhost || isWaitBindSetAllGhostImp;
 
             KeyCode activeMenuKey = menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey;
             if (!isTypingOrBinding && Input.GetKeyDown(activeMenuKey))
@@ -5890,18 +7424,28 @@ namespace ElysiumModMenu
             if (!isTypingOrBinding)
             {
                 if (bindMassMorph != KeyCode.None && Input.GetKeyDown(bindMassMorph))
-                    this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
+                {
+                    if (CanRunHostBind("Mass Morph"))
+                        this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
+                }
 
                 if (bindSpawnLobby != KeyCode.None && Input.GetKeyDown(bindSpawnLobby))
-                    SpawnLobby();
+                {
+                    if (CanRunHostBind("Spawn Lobby")) SpawnLobby();
+                }
 
                 if (bindDespawnLobby != KeyCode.None && Input.GetKeyDown(bindDespawnLobby))
-                    DespawnLobby();
+                {
+                    if (CanRunHostBind("Despawn Lobby")) DespawnLobby();
+                }
 
-                if (bindCloseMeeting != KeyCode.None && Input.GetKeyDown(bindCloseMeeting) && MeetingHud.Instance != null)
-                    MeetingHud.Instance.RpcClose();
+                if (bindCloseMeeting != KeyCode.None && Input.GetKeyDown(bindCloseMeeting))
+                {
+                    if (CanRunHostBind("Close Meeting") && MeetingHud.Instance != null)
+                        MeetingHud.Instance.RpcClose();
+                }
 
-                if (bindInstaStart != KeyCode.None && Input.GetKeyDown(bindInstaStart) && GameStartManager.Instance != null)
+                if (bindInstaStart != KeyCode.None && Input.GetKeyDown(bindInstaStart) && CanRunHostBind("Insta Start") && GameStartManager.Instance != null)
                 {
                     GameStartManager.Instance.startState = GameStartManager.StartingStates.Countdown;
                     GameStartManager.Instance.countDownTimer = 0f;
@@ -5913,14 +7457,61 @@ namespace ElysiumModMenu
                         "<color=#00FF00>[MAGNET]</color> Magnet Cursor: ON" :
                         "<color=#FF0000>[MAGNET]</color> Magnet Cursor: OFF");
                 }
-                if (bindEndCrew != KeyCode.None && Input.GetKeyDown(bindEndCrew)) SmartEndGame("CrewWin");
-                if (bindEndImp != KeyCode.None && Input.GetKeyDown(bindEndImp)) SmartEndGame("ImpWin");
-                if (bindEndImpDC != KeyCode.None && Input.GetKeyDown(bindEndImpDC)) SmartEndGame("ImpDisconnect");
-                if (bindEndHnsDC != KeyCode.None && Input.GetKeyDown(bindEndHnsDC)) SmartEndGame("HnsImpDisconnect");
+                if (bindEndCrew != KeyCode.None && Input.GetKeyDown(bindEndCrew) && CanRunHostBind("End: Crewmate Win")) SmartEndGame("CrewWin");
+                if (bindEndImp != KeyCode.None && Input.GetKeyDown(bindEndImp) && CanRunHostBind("End: Impostor Win")) SmartEndGame("ImpWin");
+                if (bindEndImpDC != KeyCode.None && Input.GetKeyDown(bindEndImpDC) && CanRunHostBind("End: Imp Disconnect")) SmartEndGame("ImpDisconnect");
+                if (bindEndHnsDC != KeyCode.None && Input.GetKeyDown(bindEndHnsDC) && CanRunHostBind("End: H&S Disconnect")) SmartEndGame("HnsImpDisconnect");
+                if (bindToggleTracers != KeyCode.None && Input.GetKeyDown(bindToggleTracers))
+                {
+                    showTracers = !showTracers;
+                    ShowNotification(showTracers ? "<color=#00FF00>[TRACERS]</color> ON" : "<color=#FF0000>[TRACERS]</color> OFF");
+                }
+                if (bindToggleNoClip != KeyCode.None && Input.GetKeyDown(bindToggleNoClip))
+                {
+                    noClip = !noClip;
+                    ShowNotification(noClip ? "<color=#00FF00>[NOCLIP]</color> ON" : "<color=#FF0000>[NOCLIP]</color> OFF");
+                }
+                if (bindToggleFreecam != KeyCode.None && Input.GetKeyDown(bindToggleFreecam))
+                {
+                    freecam = !freecam;
+                    ShowNotification(freecam ? "<color=#00FF00>[FREECAM]</color> ON" : "<color=#FF0000>[FREECAM]</color> OFF");
+                }
+                if (bindToggleCameraZoom != KeyCode.None && Input.GetKeyDown(bindToggleCameraZoom))
+                {
+                    cameraZoom = !cameraZoom;
+                    ShowNotification(cameraZoom ? "<color=#00FF00>[ZOOM]</color> ON" : "<color=#FF0000>[ZOOM]</color> OFF");
+                }
+                if (bindTogglePlayerInfo != KeyCode.None && Input.GetKeyDown(bindTogglePlayerInfo))
+                {
+                    showPlayerInfo = !showPlayerInfo;
+                    ShowNotification(showPlayerInfo ? "<color=#00FF00>[PLAYER INFO]</color> ON" : "<color=#FF0000>[PLAYER INFO]</color> OFF");
+                }
+                if (bindToggleSeeRoles != KeyCode.None && Input.GetKeyDown(bindToggleSeeRoles))
+                {
+                    seeRoles = !seeRoles;
+                    ShowNotification(seeRoles ? "<color=#00FF00>[ROLES]</color> ON" : "<color=#FF0000>[ROLES]</color> OFF");
+                }
+                if (bindToggleSeeGhosts != KeyCode.None && Input.GetKeyDown(bindToggleSeeGhosts))
+                {
+                    seeGhosts = !seeGhosts;
+                    ShowNotification(seeGhosts ? "<color=#00FF00>[GHOSTS]</color> ON" : "<color=#FF0000>[GHOSTS]</color> OFF");
+                }
+                if (bindToggleFullBright != KeyCode.None && Input.GetKeyDown(bindToggleFullBright))
+                {
+                    fullBright = !fullBright;
+                    ShowNotification(fullBright ? "<color=#00FF00>[FULL BRIGHT]</color> ON" : "<color=#FF0000>[FULL BRIGHT]</color> OFF");
+                }
+                if (bindKillAll != KeyCode.None && Input.GetKeyDown(bindKillAll) && CanRunHostBind("Kill All")) KillAll();
+                if (bindCallMeeting != KeyCode.None && Input.GetKeyDown(bindCallMeeting) && CanRunHostBind("Call Meeting")) callMeetingPublic();
+                if (bindKickAll != KeyCode.None && Input.GetKeyDown(bindKickAll) && CanRunHostBind("Kick All")) KickAll();
+                if (bindFixSabotages != KeyCode.None && Input.GetKeyDown(bindFixSabotages) && CanRunHostBind("Fix Sabotages")) FixAllSabotages();
+                if (bindSetAllGhost != KeyCode.None && Input.GetKeyDown(bindSetAllGhost) && CanRunHostBind("All -> Ghost")) SetAllPlayersGhost();
+                if (bindSetAllGhostImp != KeyCode.None && Input.GetKeyDown(bindSetAllGhostImp) && CanRunHostBind("All -> Ghost Imp")) SetAllPlayersGhost(true);
             }
 
             ElysiumAutoHostService.Tick();
             ElysiumAutoLobbyReturn.UpdateLogic();
+            TryDetectLogBurstTick();
             if (votekickEveryone)
             {
                 TickVotekickEveryoneRun();
@@ -6306,16 +7897,21 @@ namespace ElysiumModMenu
         {
             Event e = Event.current;
 
-            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingBan;
+            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan;
             bool isBinding = isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby || isWaitBindDespawnLobby ||
                   isWaitBindCloseMeeting || isWaitBindInstaStart || isWaitBindEndCrew || isWaitBindEndImp ||
-                  isWaitBindEndImpDC || isWaitBindEndHnsDC || isWaitBindMagnetCursor;
+                  isWaitBindEndImpDC || isWaitBindEndHnsDC || isWaitBindMagnetCursor || isWaitBindToggleTracers ||
+                  isWaitBindToggleNoClip || isWaitBindToggleFreecam || isWaitBindToggleCameraZoom ||
+                  isWaitBindKillAll || isWaitBindCallMeeting || isWaitBindTogglePlayerInfo ||
+                  isWaitBindToggleSeeRoles || isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright ||
+                  isWaitBindKickAll || isWaitBindFixSabotages || isWaitBindSetAllGhost ||
+                  isWaitBindSetAllGhostImp;
 
             if (e != null && e.isKey && e.type == EventType.KeyDown)
             {
                 if (e.keyCode == KeyCode.Escape)
                 {
-                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingBan = false;
+                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingGhostChatColor = isEditingBan = false;
                     ResetAllBindWaits();
                     e.Use();
                 }
@@ -6332,6 +7928,20 @@ namespace ElysiumModMenu
                     else if (isWaitBindEndImpDC) { bindEndImpDC = e.keyCode; }
                     else if (isWaitBindEndHnsDC) { bindEndHnsDC = e.keyCode; }
                     else if (isWaitBindMagnetCursor) { bindMagnetCursor = e.keyCode; }
+                    else if (isWaitBindToggleTracers) { bindToggleTracers = e.keyCode; }
+                    else if (isWaitBindToggleNoClip) { bindToggleNoClip = e.keyCode; }
+                    else if (isWaitBindToggleFreecam) { bindToggleFreecam = e.keyCode; }
+                    else if (isWaitBindToggleCameraZoom) { bindToggleCameraZoom = e.keyCode; }
+                    else if (isWaitBindKillAll) { bindKillAll = e.keyCode; }
+                    else if (isWaitBindCallMeeting) { bindCallMeeting = e.keyCode; }
+                    else if (isWaitBindTogglePlayerInfo) { bindTogglePlayerInfo = e.keyCode; }
+                    else if (isWaitBindToggleSeeRoles) { bindToggleSeeRoles = e.keyCode; }
+                    else if (isWaitBindToggleSeeGhosts) { bindToggleSeeGhosts = e.keyCode; }
+                    else if (isWaitBindToggleFullBright) { bindToggleFullBright = e.keyCode; }
+                    else if (isWaitBindKickAll) { bindKickAll = e.keyCode; }
+                    else if (isWaitBindFixSabotages) { bindFixSabotages = e.keyCode; }
+                    else if (isWaitBindSetAllGhost) { bindSetAllGhost = e.keyCode; }
+                    else if (isWaitBindSetAllGhostImp) { bindSetAllGhostImp = e.keyCode; }
 
                     ResetAllBindWaits();
                     SaveConfig();
@@ -6344,6 +7954,7 @@ namespace ElysiumModMenu
                     else if (isEditingLevel && HandleClipboardShortcut(e, ref spoofLevelString)) { }
                     else if (isEditingFriendCode && HandleClipboardShortcut(e, ref spoofFriendCodeInput)) { }
                     else if (isEditingLocalFriendCode && HandleClipboardShortcut(e, ref localFriendCodeInput)) { }
+                    else if (isEditingGhostChatColor && HandleClipboardShortcut(e, ref ghostChatColorHex, 7)) { }
                     else if (e.keyCode == KeyCode.Backspace)
                     {
                         if (isEditingBan && banInput.Length > 0) { banInput = banInput.Substring(0, banInput.Length - 1); }
@@ -6351,6 +7962,7 @@ namespace ElysiumModMenu
                         if (isEditingLevel && spoofLevelString.Length > 0) { spoofLevelString = spoofLevelString.Substring(0, spoofLevelString.Length - 1); }
                         if (isEditingFriendCode && spoofFriendCodeInput.Length > 0) { spoofFriendCodeInput = spoofFriendCodeInput.Substring(0, spoofFriendCodeInput.Length - 1); }
                         if (isEditingLocalFriendCode && localFriendCodeInput.Length > 0) { localFriendCodeInput = localFriendCodeInput.Substring(0, localFriendCodeInput.Length - 1); }
+                        if (isEditingGhostChatColor && ghostChatColorHex.Length > 0) { ghostChatColorHex = ghostChatColorHex.Substring(0, ghostChatColorHex.Length - 1); }
                         e.Use();
                     }
                     else if (e.character != 0 && e.character != '\n' && e.character != '\r')
@@ -6360,6 +7972,7 @@ namespace ElysiumModMenu
                         if (isEditingLevel) { spoofLevelString += e.character; }
                         if (isEditingFriendCode) { spoofFriendCodeInput += e.character; }
                         if (isEditingLocalFriendCode) { localFriendCodeInput += e.character; }
+                        if (isEditingGhostChatColor && ghostChatColorHex.Length < 7) { ghostChatColorHex += e.character; }
                         e.Use();
                     }
                 }
@@ -6400,7 +8013,7 @@ namespace ElysiumModMenu
                         List<byte> currentIds = new List<byte>();
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
-                            if (pc != null && pc.Data != null)
+                            if (pc != null && pc.Data != null && !pc.Data.Disconnected)
                             {
                                 currentIds.Add(pc.PlayerId);
                                 UpsertPlayerHistory(pc);
@@ -6451,7 +8064,11 @@ namespace ElysiumModMenu
 
                         foreach (var id in lastPlayerIds)
                         {
-                            if (!currentIds.Contains(id)) pendingJoinTimers.Remove(id);
+                            if (!currentIds.Contains(id))
+                            {
+                                pendingJoinTimers.Remove(id);
+                                MarkPlayerHistoryLeft(id);
+                            }
                         }
 
                         lastPlayerIds = new List<byte>(currentIds);
@@ -6459,6 +8076,8 @@ namespace ElysiumModMenu
                 }
                 else
                 {
+                    foreach (var id in lastPlayerIds)
+                        MarkPlayerHistoryLeft(id);
                     lastPlayerIds.Clear();
                     pendingJoinTimers.Clear();
                 }
@@ -6583,13 +8202,11 @@ namespace ElysiumModMenu
                             votekickedPlayerIds.Add(clientId);
 
                         ShowNotification($"<color=#ca08ff>[VOTEKICK]</color> <b>3 votes</b> sent to <b>{pc.Data.PlayerName}</b>.");
-                        System.Console.WriteLine($"[Votekick] Auto-votekicked {pc.Data.PlayerName}");
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine("VotekickAll error: " + ex.Message);
             }
 
             return votesSent;
@@ -6618,9 +8235,8 @@ namespace ElysiumModMenu
                     ShowNotification("<color=#ca08ff>[AUTO-VOTEKICK]</color> <b>Left room.</b> Auto mode is still armed.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine("Auto-votekick leave error: " + ex.Message);
                 votekickExitQueued = false;
                 votekickExitAt = 0f;
             }
@@ -6636,7 +8252,6 @@ namespace ElysiumModMenu
 
                 VoteBanSystem.Instance.CmdAddVote(targetClientId);
 
-                System.Console.WriteLine($"Votekick added to player with ClientId: {targetClientId}");
 
                 if (DestroyableSingleton<HudManager>.Instance != null && DestroyableSingleton<HudManager>.Instance.Notifier != null)
                 {
@@ -6645,9 +8260,8 @@ namespace ElysiumModMenu
 
                 ShowNotification($"<color=#ca08ff>[VOTEKICK]</color> Vote sent to <b>{target.Data.PlayerName}</b>!");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Console.WriteLine("Target Votekick error: " + ex.Message);
             }
         }
 
@@ -6791,6 +8405,9 @@ namespace ElysiumModMenu
         public static bool blockGameRpcInLobby = true;
         public static bool blockChatFloodRpc = true;
         public static bool blockMeetingFloodRpc = true;
+        public static bool enablePasosLimit = true;
+        public static bool enableLocalPasosBan = true;
+        public static bool enableHostPasosBan = true;
         public static bool autoBanBrokenFriendCode = false;
         public static int chatRpcLimit = 1;
         public static float chatRpcWindow = 1f;
@@ -7088,6 +8705,72 @@ namespace ElysiumModMenu
             return value;
         }
 
+        private static string NormalizeEspToken(string value)
+        {
+            return Regex.Replace(value ?? string.Empty, "<.*?>", string.Empty)
+                .Replace('\r', ' ')
+                .Replace('\n', ' ')
+                .Trim();
+        }
+
+        private static string FriendEspIgnoreFilePath()
+        {
+            string folder = string.IsNullOrWhiteSpace(Plugin.ElysiumFolder)
+                ? System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "ElysiumModMenu")
+                : Plugin.ElysiumFolder;
+            return System.IO.Path.Combine(folder, "ElysiumFriendEspIgnore.txt");
+        }
+
+        private static void LoadFriendEspIgnoreTokensIfNeeded()
+        {
+            try
+            {
+                if (Time.unscaledTime < friendEspIgnoreNextLoadAt) return;
+                friendEspIgnoreNextLoadAt = Time.unscaledTime + 3f;
+
+                friendEspIgnoreTokens.Clear();
+                string path = FriendEspIgnoreFilePath();
+                if (!System.IO.File.Exists(path))
+                {
+                    System.IO.File.WriteAllText(path, "# One nickname, Friend Code, or PUID per line. Matching players will not show ESP info.\n");
+                    return;
+                }
+
+                foreach (string line in System.IO.File.ReadAllLines(path))
+                {
+                    string token = NormalizeEspToken(line);
+                    if (string.IsNullOrWhiteSpace(token) || token.StartsWith("#")) continue;
+                    friendEspIgnoreTokens.Add(token);
+                }
+            }
+            catch { }
+        }
+
+        private static bool IsEspIgnored(NetworkedPlayerInfo info)
+        {
+            if (info == null) return false;
+
+            LoadFriendEspIgnoreTokensIfNeeded();
+            if (friendEspIgnoreTokens.Count == 0) return false;
+
+            try
+            {
+                string name = NormalizeEspToken(info.PlayerName);
+                if (!string.IsNullOrEmpty(name) && friendEspIgnoreTokens.Contains(name)) return true;
+
+                string displayedFc = NormalizeEspToken(GetDisplayedFriendCode(info, string.Empty));
+                if (!string.IsNullOrEmpty(displayedFc) && friendEspIgnoreTokens.Contains(displayedFc)) return true;
+
+                string rawFc = NormalizeEspToken(info.FriendCode);
+                if (!string.IsNullOrEmpty(rawFc) && friendEspIgnoreTokens.Contains(rawFc)) return true;
+
+                ClientData client = AmongUsClient.Instance?.GetClientFromPlayerInfo(info);
+                string puid = client == null ? string.Empty : NormalizeEspToken(GetClientPuid(client));
+                return !string.IsNullOrEmpty(puid) && friendEspIgnoreTokens.Contains(puid);
+            }
+            catch { return false; }
+        }
+
         public static string BuildESPInfoLine(NetworkedPlayerInfo info)
         {
             if (info == null) return string.Empty;
@@ -7121,7 +8804,7 @@ namespace ElysiumModMenu
             if (isHost) parts.Add("Host");
             parts.Add($"Lv:{level}");
             parts.Add(platform);
-            parts.Add(fc);
+            if (showEspFriendCode) parts.Add(fc);
             return string.Join(" - ", parts);
         }
 
@@ -7151,7 +8834,7 @@ namespace ElysiumModMenu
 
                 LineRenderer lr = target.GetComponent<LineRenderer>();
 
-                if (!enable || PlayerControl.LocalPlayer == null || target == PlayerControl.LocalPlayer || target.Data == null || target.Data.Disconnected)
+                if (!enable || PlayerControl.LocalPlayer == null || target == PlayerControl.LocalPlayer || target.Data == null || target.Data.Disconnected || IsEspIgnored(target.Data))
                 {
                     if (lr != null) lr.enabled = false;
                     return;
@@ -7306,7 +8989,9 @@ namespace ElysiumModMenu
             if (showPlayerInfo)
             {
                 string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
-                newName = $"<size=80%><color=#{accentHex}>{BuildESPInfoLine(info)}</color></size>\n{newName}";
+                string espLine = BuildESPInfoLine(info);
+                if (!string.IsNullOrWhiteSpace(espLine))
+                    newName = $"<size=80%><color=#{accentHex}>{espLine}</color></size>\n{newName}";
             }
             if (seeKillCooldown && info.Role != null && info.PlayerId != PlayerControl.LocalPlayer?.PlayerId)
             {
@@ -7415,7 +9100,7 @@ namespace ElysiumModMenu
 
                     if (ElysiumModMenuGUI.showWatermark)
                     {
-                        string shimmerTitle = ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu v1.3.2");
+                        string shimmerTitle = ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu v1.2.7");
                         finalString = $"{shimmerTitle} • " + finalString;
                     }
 
@@ -7705,7 +9390,9 @@ namespace ElysiumModMenu
                 try
                 {
                     string accentHex = ColorUtility.ToHtmlStringRGB(ElysiumModMenuGUI.currentAccentColor);
-                    string extra = $" <color=#{accentHex}><size=80%>{ElysiumModMenuGUI.BuildESPInfoLine(__instance.playerInfo)}</size></color>";
+                    string espLine = ElysiumModMenuGUI.BuildESPInfoLine(__instance.playerInfo);
+                    if (string.IsNullOrWhiteSpace(espLine)) return;
+                    string extra = $" <color=#{accentHex}><size=80%>{espLine}</size></color>";
 
                     if (!__instance.NameText.text.Contains("Lv:")) __instance.NameText.text += extra;
                 }
@@ -8494,12 +10181,7 @@ public static class LobbyStart_ApplyLevelSpoof
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
 public static class RPCSniffer_Patch
 {
-    private static readonly HashSet<byte> VanillaRPCs = new HashSet<byte>
-        {
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-            22, 23, 24, 25, 26, 27, 29, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-            43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 60, 61, 62, 63, 64, 65
-        };
+    private static readonly HashSet<byte> VanillaRPCs = ElysiumModMenuGUI.VanillaRpcIds;
 
     private static readonly Dictionary<byte, (string Name, string Color)> KnownMods = new Dictionary<byte, (string, string)>
         {
@@ -8545,6 +10227,8 @@ public static class RPCSniffer_Patch
 
 
         if (PlayerControl.LocalPlayer != null && __instance == PlayerControl.LocalPlayer) return true;
+
+        ElysiumModMenuGUI.RecordPlayerRpc(__instance, callId);
 
         if (ElysiumModMenuGUI.LogAllRPCs)
         {
@@ -8728,7 +10412,7 @@ public static class ChatController_AddChat_Patch
                 chatText = BlockedWords.CensorWords(chatText, false);
             }
 
-            pooledBubble.SetText($"<color=#b8b8b8>{chatText}</color>");
+            pooledBubble.SetText($"<color={ElysiumModMenuGUI.GetGhostChatColorHex()}>{chatText}</color>");
             pooledBubble.AlignChildren();
             chat.AlignAllBubbles();
 
@@ -8843,10 +10527,9 @@ public static class PlatformSpooferPatch
         {
             if (__instance != null)
             {
-                if (ElysiumModMenuGUI.enablePlatformSpoof)
-                {
-                    __instance.Platform = ElysiumModMenuGUI.platformValues[ElysiumModMenuGUI.currentPlatformIndex];
-                }
+                if (!ElysiumModMenuGUI.enablePlatformSpoof) return;
+
+                __instance.Platform = ElysiumModMenuGUI.platformValues[ElysiumModMenuGUI.currentPlatformIndex];
                 __instance.PlatformName = "ElysiumModMenu by Meowchelo (and one <color=#FFA500>silly</color> guy :p) https://github.com/meowchelo/ElysiumModMenu";
             }
         }
@@ -8909,7 +10592,7 @@ public static class AmongUsClient_KickPlayer_BanList_Patch
                     try
                     {
                         var client = AmongUsClient.Instance.GetClientFromCharacter(pc);
-                        if (client != null) puid = client.Id.ToString();
+                        if (client != null) puid = ElysiumModMenuGUI.GetClientPuid(client);
                     }
                     catch { }
 
