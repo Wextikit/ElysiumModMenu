@@ -158,7 +158,7 @@ namespace ElysiumModMenu
         private const long MaxDiagnosticAttachmentBytes = 7L * 1024L * 1024L;
         private const long MaxDiagnosticTotalAttachmentBytes = 20L * 1024L * 1024L;
         private const long LargeLogTailBytes = 1024L * 1024L;
-        private const int MaxDiagnosticExcerptLines = 5000;
+        private const int MaxDiagnosticExcerptLines = 20000;
         private const int DiagnosticExcerptContextBefore = 8;
         private const int DiagnosticExcerptContextAfter = 10;
         private static string decodedWebhookUrl;
@@ -343,9 +343,10 @@ namespace ElysiumModMenu
 
                     if (bytes == null || bytes.Length == 0) continue;
 
-                    string fileName = SanitizeAttachmentFileName(System.IO.Path.GetFileName(path));
-                    if (matchedLines > 0) fileName += ".anomaly-excerpt.txt";
-                    else if (truncated) fileName += ".tail.txt";
+                    string sourceFileName = SanitizeAttachmentFileName(System.IO.Path.GetFileName(path));
+                    string fileName = matchedLines > 0
+                        ? $"SpamErrorLog-{sourceFileName}.txt"
+                        : sourceFileName + (truncated ? ".tail.txt" : string.Empty);
                     attachments.Add(new LogAttachment { FileName = fileName, Bytes = bytes });
                     totalBytes += bytes.Length;
                 }
@@ -7653,6 +7654,7 @@ namespace ElysiumModMenu
                    lower.Contains("stored data") ||
                    lower.Contains("storeddata") ||
                    IsStoredMessageOverloadLine(lower) ||
+                   IsKnownSpamWarningLine(lower) ||
                    lower.Contains("overload") ||
                    lower.Contains("freeze") ||
                    lower.Contains("color=red") ||
@@ -7668,6 +7670,7 @@ namespace ElysiumModMenu
             if (lower.Contains("registered mono type") && lower.Contains("elysiummodmenu")) return false;
             if (lower.Contains("method ") && lower.Contains(" has unsupported ") && lower.Contains("elysiummodmenu")) return false;
             return IsStoredMessageOverloadLine(lower) ||
+                   IsKnownSpamWarningLine(lower) ||
                    lower.Contains("[error") ||
                    lower.Contains("[fatal") ||
                    lower.Contains("nullreferenceexception") ||
@@ -7677,6 +7680,15 @@ namespace ElysiumModMenu
                    lower.Contains("traceback") ||
                    lower.Contains("stored data") ||
                    lower.Contains("storeddata");
+        }
+
+        private static bool IsKnownSpamWarningLine(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return false;
+            string lower = line.ToLowerInvariant();
+            return lower.Contains("sendmode set to everything") ||
+                   lower.Contains("likely should be reliable") ||
+                   lower.Contains("stored msg");
         }
 
         private static bool IsStoredMessageOverloadLine(string line)
