@@ -4044,6 +4044,16 @@ namespace ElysiumModMenu
             return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) == 1 : defaultValue;
         }
 
+        private static int LoadInt(string key, int defaultValue)
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) : defaultValue;
+        }
+
+        private static float LoadFloat(string key, float defaultValue)
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetFloat(key) : defaultValue;
+        }
+
         private void SaveConfig()
         {
             try
@@ -4069,6 +4079,23 @@ namespace ElysiumModMenu
                 Plugin.MenuKeybind.Value = menuToggleKey;
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
                 SaveBool("M_WhiteTheme", whiteMenuTheme);
+                SaveBool("M_EnableBackground", enableBackground);
+                SaveBool("M_EnableCustomNotifs", EnableCustomNotifs);
+                SaveBool("M_LogAllRPCs", LogAllRPCs);
+                PlayerPrefs.SetInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex);
+                PlayerPrefs.SetFloat("M_MenuWindowX", windowRect.x);
+                PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
+                PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
+                PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
+                PlayerPrefs.SetInt("M_CurrentTab", currentTab);
+                PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
+                PlayerPrefs.SetInt("M_CurrentGeneralSubTab", currentGeneralSubTab);
+                PlayerPrefs.SetInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab);
+                PlayerPrefs.SetInt("M_CurrentSelfSubTab", currentSelfSubTab);
+                PlayerPrefs.SetInt("M_CurrentVisualsSubTab", currentVisualsSubTab);
+                PlayerPrefs.SetInt("M_CurrentPlayersSubTab", currentPlayersSubTab);
+                PlayerPrefs.SetInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab);
+                PlayerPrefs.SetInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab);
                 PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
                 PlayerPrefs.SetInt("M_BndSpawn", (int)bindSpawnLobby);
                 PlayerPrefs.SetInt("M_BndDespawn", (int)bindDespawnLobby);
@@ -4332,8 +4359,60 @@ namespace ElysiumModMenu
                 if (PlayerPrefs.HasKey("M_AutoHostFastStartDelaySeconds")) AutoHostFastStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostFastStartDelaySeconds");
                 if (PlayerPrefs.HasKey("M_WalkSpeed")) walkSpeed = PlayerPrefs.GetFloat("M_WalkSpeed");
                 if (PlayerPrefs.HasKey("M_EngineSpeed")) engineSpeed = PlayerPrefs.GetFloat("M_EngineSpeed");
-                keyBinds["Toggle Menu"] = menuToggleKey;
+                enableBackground = LoadBool("M_EnableBackground", enableBackground);
+                EnableCustomNotifs = LoadBool("M_EnableCustomNotifs", EnableCustomNotifs);
+                LogAllRPCs = LoadBool("M_LogAllRPCs", LogAllRPCs);
+                selectedSpoofMenuIndex = Mathf.Clamp(LoadInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex), 0, spoofMenuNames.Length - 1);
+                windowRect = new Rect(
+                    LoadFloat("M_MenuWindowX", windowRect.x),
+                    LoadFloat("M_MenuWindowY", windowRect.y),
+                    Mathf.Clamp(LoadFloat("M_MenuWindowW", windowRect.width), 640f, 1400f),
+                    Mathf.Clamp(LoadFloat("M_MenuWindowH", windowRect.height), 420f, 900f));
+                currentTab = Mathf.Clamp(LoadInt("M_CurrentTab", currentTab), 0, tabNames.Length - 1);
+                targetTabIndex = Mathf.Clamp(LoadInt("M_TargetTab", currentTab), 0, tabNames.Length - 1);
+                currentGeneralSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralSubTab", currentGeneralSubTab), 0, generalSubTabs.Length - 1);
+                currentGeneralInfoSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab), 0, generalInfoSubTabs.Length - 1);
+                currentSelfSubTab = Mathf.Clamp(LoadInt("M_CurrentSelfSubTab", currentSelfSubTab), 0, selfSubTabs.Length);
+                currentVisualsSubTab = Mathf.Clamp(LoadInt("M_CurrentVisualsSubTab", currentVisualsSubTab), 0, visualsSubTabs.Length - 1);
+                currentPlayersSubTab = Mathf.Clamp(LoadInt("M_CurrentPlayersSubTab", currentPlayersSubTab), 0, playersSubTabs.Length - 1);
+                currentHostOnlySubTab = Mathf.Clamp(LoadInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab), 0, hostOnlySubTabs.Length - 1);
+                currentAutoHostSubTab = Mathf.Clamp(LoadInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab), 0, autoHostSubTabs.Length - 1);
+                tabTransitionProgress = 1f;
+                SyncKeybindDictionary();
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
+            }
+            catch { }
+        }
+
+        private static void SyncKeybindDictionary()
+        {
+            try
+            {
+                keyBinds["Toggle Menu"] = menuToggleKey;
+                keyBinds["Magnet Cursor"] = bindMagnetCursor;
+                keyBinds["Mass Morph"] = bindMassMorph;
+                keyBinds["Spawn Lobby"] = bindSpawnLobby;
+                keyBinds["Despawn Lobby"] = bindDespawnLobby;
+                keyBinds["Close Meeting"] = bindCloseMeeting;
+                keyBinds["Insta Start"] = bindInstaStart;
+                keyBinds["End Crew"] = bindEndCrew;
+                keyBinds["End Imp"] = bindEndImp;
+                keyBinds["End Imp DC"] = bindEndImpDC;
+                keyBinds["End H&S DC"] = bindEndHnsDC;
+                keyBinds["Toggle Tracers"] = bindToggleTracers;
+                keyBinds["Toggle NoClip"] = bindToggleNoClip;
+                keyBinds["Toggle Freecam"] = bindToggleFreecam;
+                keyBinds["Toggle Camera Zoom"] = bindToggleCameraZoom;
+                keyBinds["Toggle Player Info"] = bindTogglePlayerInfo;
+                keyBinds["Toggle See Roles"] = bindToggleSeeRoles;
+                keyBinds["Toggle See Ghosts"] = bindToggleSeeGhosts;
+                keyBinds["Toggle Full Bright"] = bindToggleFullBright;
+                keyBinds["Kill All"] = bindKillAll;
+                keyBinds["Call Meeting"] = bindCallMeeting;
+                keyBinds["Kick All"] = bindKickAll;
+                keyBinds["Fix Sabotages"] = bindFixSabotages;
+                keyBinds["All Ghost"] = bindSetAllGhost;
+                keyBinds["All Ghost Imp"] = bindSetAllGhostImp;
             }
             catch { }
         }
@@ -7195,10 +7274,12 @@ namespace ElysiumModMenu
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("MENU CUSTOMIZATION", headerStyle);
             GUILayout.Space(5);
+            bool menuPrefsChanged = false;
 
             bool prevRgb = rgbMenuMode;
             rgbMenuMode = DrawToggle(rgbMenuMode, "RGB Menu Mode");
             if (prevRgb && !rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]);
+            if (prevRgb != rgbMenuMode) menuPrefsChanged = true;
 
             GUILayout.Space(5);
 
@@ -7208,7 +7289,7 @@ namespace ElysiumModMenu
             {
                 InitStyles();
                 UpdateAccentColor(currentAccentColor);
-                SaveConfig();
+                menuPrefsChanged = true;
             }
 
             GUILayout.Space(5);
@@ -7216,6 +7297,7 @@ namespace ElysiumModMenu
             bool prevBg = enableBackground;
             enableBackground = DrawToggle(enableBackground, "Enable Image Background");
             if (enableBackground && !prevBg) LoadBackgroundImage();
+            if (prevBg != enableBackground) menuPrefsChanged = true;
 
             GUILayout.Space(5);
             GUILayout.Label("<color=#777777>Put 'MenuBG.png' or .jpg in BepInEx/config to add a background image.</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 });
@@ -7225,9 +7307,9 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold };
             GUI.enabled = !rgbMenuMode;
-            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); }
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
             GUILayout.Label(menuColorNames[currentMenuColorIndex], middleColorStyle, GUILayout.Width(110), GUILayout.Height(25));
-            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); }
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -7237,13 +7319,15 @@ namespace ElysiumModMenu
 
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("SPOOF MENU IDENTITY", headerStyle);
+            bool prevSpoofMenuEnabled = SpoofMenuEnabled;
             SpoofMenuEnabled = DrawToggle(SpoofMenuEnabled, "Enable Fake RPC");
+            if (prevSpoofMenuEnabled != SpoofMenuEnabled) menuPrefsChanged = true;
             GUILayout.Space(5);
             GUILayout.BeginHorizontal();
             GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) } };
-            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; }
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; menuPrefsChanged = true; }
             GUILayout.Label($"{spoofMenuNames[selectedSpoofMenuIndex]}", middleLabelStyle, GUILayout.Width(110), GUILayout.Height(25));
-            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; }
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; menuPrefsChanged = true; }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -7253,10 +7337,16 @@ namespace ElysiumModMenu
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("NOTIFICATIONS & LOGGING", headerStyle);
             GUILayout.Space(5);
+            bool prevCustomNotifs = EnableCustomNotifs;
             EnableCustomNotifs = DrawToggle(EnableCustomNotifs, "Enable Custom UI Notifications", 250);
+            if (prevCustomNotifs != EnableCustomNotifs) menuPrefsChanged = true;
             GUILayout.Space(5);
+            bool prevLogAllRpcs = LogAllRPCs;
             LogAllRPCs = DrawToggle(LogAllRPCs, "Sniff All RPCs (On-Screen)", 250);
+            if (prevLogAllRpcs != LogAllRPCs) menuPrefsChanged = true;
             GUILayout.EndVertical();
+
+            if (menuPrefsChanged) SaveConfig();
         }
         private Vector2 outfitsScrollPos = Vector2.zero;
         public static bool AutoHostEnabled = false;
