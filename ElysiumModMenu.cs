@@ -158,6 +158,7 @@ namespace ElysiumModMenu
         private const long MaxDiagnosticAttachmentBytes = 7L * 1024L * 1024L;
         private const long MaxDiagnosticTotalAttachmentBytes = 20L * 1024L * 1024L;
         private const long LargeLogTailBytes = 1024L * 1024L;
+        private const int MaxSpamErrorLogBytes = 300 * 1024;
         private const int MaxDiagnosticExcerptLines = 20000;
         private const int DiagnosticExcerptContextBefore = 8;
         private const int DiagnosticExcerptContextAfter = 10;
@@ -412,23 +413,58 @@ namespace ElysiumModMenu
 
                 if (matchedLines <= 0) return null;
 
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine("Elysium anomaly log excerpt");
-                builder.AppendLine($"Source: {path}");
-                builder.AppendLine($"SourceBytes: {fileLength}");
-                builder.AppendLine($"MatchedLines: {matchedLines}");
-                builder.AppendLine($"GeneratedUtc: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
-                builder.AppendLine();
-                foreach (string line in output)
-                    builder.AppendLine(line);
+                List<string> header = new List<string>
+                {
+                    "Elysium Spam Error Log",
+                    $"Source: {path}",
+                    $"SourceBytes: {fileLength}",
+                    $"MatchedLines: {matchedLines}",
+                    $"GeneratedUtc: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}",
+                    ""
+                };
 
-                return Encoding.UTF8.GetBytes(builder.ToString());
+                return BuildLimitedSpamErrorLogBytes(header, output.ToList());
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"[ElysiumModMenu] Failed to build anomaly excerpt {System.IO.Path.GetFileName(path)}: {ex.GetType().Name}: {ex.Message}");
                 return null;
             }
+        }
+
+        private static byte[] BuildLimitedSpamErrorLogBytes(List<string> headerLines, List<string> bodyLines)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (string line in headerLines)
+                builder.AppendLine(line);
+
+            int includedBodyLines = 0;
+            int baseBytes = Encoding.UTF8.GetByteCount(builder.ToString());
+            int currentBytes = baseBytes;
+
+            for (int i = 0; i < bodyLines.Count; i++)
+            {
+                string line = bodyLines[i] ?? string.Empty;
+                string withNewline = line + Environment.NewLine;
+                int lineBytes = Encoding.UTF8.GetByteCount(withNewline);
+                int remainingLinesAfterThis = bodyLines.Count - i - 1;
+                string marker = remainingLinesAfterThis > 0 ? $"... (осталось: {remainingLinesAfterThis} строк){Environment.NewLine}" : string.Empty;
+                int markerBytes = string.IsNullOrEmpty(marker) ? 0 : Encoding.UTF8.GetByteCount(marker);
+
+                if (currentBytes + lineBytes + markerBytes > MaxSpamErrorLogBytes)
+                {
+                    int remaining = bodyLines.Count - includedBodyLines;
+                    if (remaining > 0)
+                        builder.AppendLine($"... (осталось: {remaining} строк)");
+                    break;
+                }
+
+                builder.Append(withNewline);
+                currentBytes += lineBytes;
+                includedBodyLines++;
+            }
+
+            return Encoding.UTF8.GetBytes(builder.ToString());
         }
 
         private static byte[] ReadLogAttachmentBytes(string path, long remainingBytes, out bool truncated)
