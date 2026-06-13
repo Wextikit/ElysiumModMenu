@@ -1,52 +1,80 @@
 # ✦ ElysiumModMenu — Among Us
 
-A BepInEx IL2CPP mod menu for Among Us.
-Host tools, ESP, anti-cheat protection, spoofing, chat improvements, and lobby automation — all in one place.
+♡ **ElysiumModMenu** is a BepInEx IL2CPP mod menu for **Among Us**, designed as an all-in-one menu for private lobbies, testing, host-side controls, visual tools, chat improvements, cosmetics, and lobby management.
 
-> ⚠️ **Heads up.**
-> This menu includes powerful host-side and network tools. Use them in private lobbies with friends.
-> Don't ruin other people's games.
+The menu includes account/local spoof options, ESP tools, anti-cheat protection, chat utilities, sabotage and door controls, outfit presets, host tools, keybinds, customization options, and multilingual UI support.
 
----
-
-## ⬇️ Download
-
-Current version: **v1.3.5** — [ElysiumModMenu.dll](#)
+> ⚠️ **Warning**
+> ElysiumModMenu includes powerful host-side and network-related features.
+> Use it only in private lobbies, testing environments, or with friends who agreed to play with mods.
+> Do not use it to ruin public games, crash lobbies, harass players, or abuse random users.
 
 ---
 
-## ✨ What's New in v1.3.5
+## 𖤐 Version
 
-* ⭐ Favorite Outfits system — save and restore up to 4 cosmetic loadouts
-* 🎞️ FPS limiter with a configurable cap
-* 👻 Auto Ghost After Start — become a ghost automatically when the game begins
-* 🎨 Allow Duplicate Colors — lets multiple players use the same color
-* 🛡️ Platform Ban from TXT — host-ban players based on custom platform tokens loaded from a file
-* 🤖 Bot ban list with persistent storage (`ElysiumBotBanList.txt`)
-* 🛰️ ESP Friend Code display toggle — can be hidden per-player via ignore list
-* 👁️ Friend ESP ignore list — specific players won't show ESP info above their names
-* 🌙 Dark chat theme toggle
-* 💬 Custom ghost chat color — hex, configurable
-* 🌍 Multi-language menu support — EN, DE, FR, ES, IT, PT, PL, NL, TR, CS, RO, HU, SV
-* ✍️ Spell check — basic
-* 📄 Anomaly log reports — opt-in diagnostic reporting for faster anti-cheat fixes
-* 🌈 RGB menu color mode
-* 🪪 Menu watermark toggle
-* 🔐 Removed plaintext webhook config from older versions — auto-migrated on launch
+**Current version:** `v1.3.5`
+
+♡ Download: [ElysiumModMenu.dll](#)
 
 ---
 
-## 👤 Account / Local Spoof
+## ✦ Main Menu Sections
 
-Everything here is client-side only unless noted otherwise.
+The menu is organized into multiple tabs for quick access:
+
+* `GENERAL`
+* `SELF`
+* `VISUALS`
+* `PLAYERS`
+* `SABOTAGES`
+* `HOST ONLY`
+* `OUTFITS`
+* `VOTEKICK`
+* `MENU`
+* `MAPS`
+* `ANIMATIONS`
+* `INFORMATION`
+* `KEYBINDS`
+* `WELCOME`
+* `CREDITS`
+
+---
+
+## ♡ General
+
+The **General** section contains useful global features and quality-of-life options.
+
+Main features:
+
+* FPS limiter with configurable cap
+* Unlock cosmetics
+* More lobby info in the public game list
+* Auto Ghost After Start
+* Allow duplicate player colors
+* Menu watermark toggle
+* RGB menu color mode
+* Custom menu colors
+* Multi-language menu support
+* Basic spell check
+* Anomaly log reports for diagnostic and anti-cheat fixes
+
+---
+
+## ✦ Self / Account
+
+The **Self** section focuses on local player options, profile display, spoofing, and client-side changes.
+
+Main features:
 
 * Level spoof
 * Platform spoof with selectable platform
-* Local name spoof — no RPC broadcast, only visible on your screen
-* Local fake Friend Code — no symbol limit, client-only
-* Network Friend Code spoof in serialized player data
-* Unlock cosmetics
+* Local name spoof
+* Local fake Friend Code
+* Network Friend Code spoof
 * Guest name unlock
+* Cosmetic unlocks
+* Client-side visual name effects
 
 Name effect examples:
 
@@ -58,41 +86,68 @@ shimmer:Elysium
 
 ---
 
-## 👁️ Visuals / ESP
+## 𖤐 Visuals / ESP
+
+The **Visuals** section adds extra information and visibility options during gameplay.
+
+Main features:
 
 * See ghosts
 * See player roles
-* Player info above nameplates: Host · Lv:X · Platform · FriendCode
-* `spf` next to platform means platform spoof is active on that player
+* Show player info above nameplates
+* Show Host, level, platform, and Friend Code
+* Hide Friend Code display if needed
+* Friend ESP ignore list
 * Reveal roles during meetings
 * Reveal votes
 * See players inside vents
 * Full Bright
 * Tracers
-* Free camera — WASD + scroll wheel to zoom
+* Free camera with WASD movement and scroll zoom
 * Always show chat
 * Read ghost chat
 
+The `spf` marker near a platform means that platform spoofing is active on that player.
+
 ---
 
-## 🛡️ Anti-Cheat / Protection
+## ♡ Players
+
+The **Players** section is used for player-related actions and quick player management.
+
+Main features:
+
+* Select players from the lobby or match
+* View player information
+* Apply actions to selected players
+* Save selected player outfit
+* Use selected player data with other menu tools
+* Manage player-related ESP visibility
+
+---
+
+## ✦ Anti-Cheat / Protection
+
+The menu includes protection tools for hosts and private lobbies.
+
+Main features:
 
 * RPC protection with configurable rate limit
 * Block spoof RPC
-* Block sabotage and meeting abuse
+* Block sabotage abuse
+* Block meeting abuse
 * Block game RPC in lobby
 * Block chat flood
 * Block meeting flood
 * RPC sniffer with known mod menu IDs
-* Pet Spam Shield — auto-ban pet spammers when you are host
 * Anti vote-kick
 * Auto-kick Fortegreen and bugged color players
-* Auto-ban platform spoofers — host only
-* Platform ban from TXT — block players by custom platform token
+* Auto-ban platform spoofers as host
 * Broken Friend Code detector
-* Bot ban list with persistent storage
+* Pet Spam Shield
 * Local persistent ban list
-* Friend ESP ignore list — hide ESP info for specific players
+* Bot ban list with persistent storage
+* Friend ESP ignore list
 
 Config files:
 
@@ -105,35 +160,54 @@ ElysiumFriendEspIgnore.txt
 
 ---
 
-## 💬 Chat
+## 𖤐 Chat
+
+The **Chat** section improves the in-game chat and adds more flexible input options.
+
+Main features:
 
 * Extended chat length
 * Fast chat
 * Links, email, and symbol support
-* Chat history — Up / Down arrows
-* Clipboard support — Ctrl+V, Ctrl+C, etc.
+* Chat history with Up / Down arrows
+* Clipboard support
 * Local chat log
 * Whisper / private messages
 * `/color` command
 * Dark chat theme
-* Custom ghost chat color — hex
-* Spell check — basic
+* Custom ghost chat color
+* Basic spell check
 * Host filters for rainbow names and Fortegreen abuse
 * Allow duplicate player colors
 
-Chat log file: `ChatLog.txt`
+Chat log file:
+
+```text
+ChatLog.txt
+```
 
 ---
 
-## 👕 Cosmetics / Outfits
+## ♡ Outfits
 
-* Favorite Outfits — 4 slots to save and restore full cosmetic loadouts
-* Apply any saved slot with one click
-* Save your current outfit or the selected player's outfit
+The **Outfits** section lets you save and restore cosmetic loadouts.
+
+Main features:
+
+* Favorite Outfits system
+* 4 outfit slots
+* Save your current outfit
+* Save the selected player's outfit
+* Restore saved outfit slots with one click
+* Full cosmetic loadout support
 
 ---
 
-## 🧰 Host / Lobby Tools
+## ✦ Host / Lobby Tools
+
+The **Host Only** section contains tools designed for hosts and private lobby control.
+
+Main features:
 
 * Auto Host
 * Auto return after matches
@@ -143,7 +217,6 @@ Chat log file: `ChatLog.txt`
 * Pre-game role manager
 * Force impostors
 * Force roles
-* Kill all
 * Kick all
 * Report / eject / revive
 * Morph / mass morph
@@ -154,40 +227,82 @@ Chat log file: `ChatLog.txt`
 * No setting limits
 * Auto Ghost After Start
 
+> ⚠️ Host tools should only be used in private lobbies with consent from other players.
+
 ---
 
-## 🚪 Sabotage / Doors
+## 𖤐 Sabotage / Doors
 
-* Trigger Reactor, O2, Comms, Lights — individually or all at once
+The **Sabotage** section provides quick sabotage and door controls.
+
+Main features:
+
+* Trigger Reactor
+* Trigger O2
+* Trigger Comms
+* Trigger Lights
+* Trigger all sabotages
 * Fix all sabotages
-* Close / open all doors
-* Lock / unlock doors by room
+* Close all doors
+* Open all doors
+* Lock doors by room
+* Unlock doors by room
 
 ---
 
-## ⚙️ General / Misc
+## ♡ VoteKick
 
-* FPS limiter
-* Allow duplicate player colors
-* More lobby info in the game list — host name, lobby age, platform, game code
-* Multi-language menu — 13 languages
+The **VoteKick** section includes tools related to vote-kick behavior and lobby protection.
+
+Main features:
+
+* Anti vote-kick
+* Disable vote kicks as host
+* Protection against abusive vote-kick behavior
+* Host-side control for private lobbies
+
+---
+
+## ✦ Menu Customization
+
+The **Menu** section contains customization and interface options.
+
+Main features:
+
 * RGB menu color mode
+* Custom menu color selection
 * Menu watermark toggle
-* Custom keybinds for everything
+* Custom menu background
+* Dark chat theme toggle
+* Custom keybinds
+* Multi-language interface
+* Menu language auto-detection
+
+Supported menu languages include:
+
+```text
+English, Русский, Deutsch, Français, Español, Italiano, Português,
+Polski, Nederlands, Türkçe, Čeština, Română, Magyar, Svenska,
+Dansk, Suomi, Norsk, Українська, Ελληνικά, 中文, 日本語, 한국어
+```
 
 ---
 
-## ⌨️ Menu Controls
+## 𖤐 Keybinds
 
-Default toggle key: `Insert`
+Default toggle key:
 
-Rebind it inside the menu under Keybinds.
+```text
+Insert
+```
+
+You can rebind the menu key inside the menu under the **Keybinds** section.
 
 ---
 
-## 📝 Text Fields
+## ♡ Text Fields
 
-The menu uses custom input fields. Long values are clipped visually, but you can keep typing normally.
+The menu uses custom input fields. Long values may be visually clipped, but typing still works normally.
 
 | Key                       | Action                |
 | ------------------------- | --------------------- |
@@ -199,39 +314,9 @@ The menu uses custom input fields. Long values are clipped visually, but you can
 
 ---
 
-## 📦 Installation
+## ✦ Custom Menu Background
 
-You need BepInEx IL2CPP first.
-
-1. Download BepInEx IL2CPP.
-2. Extract it into your Among Us folder, next to `Among Us.exe`.
-3. Run the game once, then close it.
-4. Download `ElysiumModMenu.dll`.
-5. Drop it here:
-
-```text
-Among Us/BepInEx/plugins/
-```
-
-6. Launch Among Us.
-
----
-
-## 📁 Finding Your Among Us Folder
-
-**Steam:** Library → Among Us → Manage → Browse local files
-
-**Epic Games:** Library → Among Us → Manage → Open install folder
-
-**Xbox App:** Manage → Files → Browse
-
-**Itch.io:** Manage → Open folder in Explorer
-
----
-
-## 🖼️ Custom Menu Background
-
-Place your image here:
+Place your background image here:
 
 ```text
 Among Us/BepInEx/config/ElysiumModMenu/MenuBG.png
@@ -241,9 +326,43 @@ Among Us/BepInEx/config/ElysiumModMenu/MenuBG.png
 
 ---
 
-## 🧱 Build
+## 𖤐 Installation
 
-The project targets .NET 6:
+You need **BepInEx IL2CPP** first.
+
+1. Download BepInEx IL2CPP.
+2. Extract it into your Among Us folder, next to `Among Us.exe`.
+3. Run the game once, then close it.
+4. Download `ElysiumModMenu.dll`.
+5. Drop it into:
+
+```text
+Among Us/BepInEx/plugins/
+```
+
+6. Launch Among Us.
+
+---
+
+## ♡ Finding Your Among Us Folder
+
+**Steam:**
+Library → Among Us → Manage → Browse local files
+
+**Epic Games:**
+Library → Among Us → Manage → Open install folder
+
+**Xbox App:**
+Manage → Files → Browse
+
+**Itch.io:**
+Manage → Open folder in Explorer
+
+---
+
+## ✦ Build
+
+The project targets `.NET 6`.
 
 ```powershell
 dotnet build .\NjordMenu.csproj
@@ -257,7 +376,7 @@ bin/Debug/net6.0/ElysiumModMenu.dll
 
 ---
 
-## 📸 Screenshots
+## 𖤐 Screenshots
 
 ![Anti-cheat and protections](https://github.com/user-attachments/assets/c4a2a364-bd2f-44e4-a27c-8d299ddd8415)
 
@@ -267,9 +386,10 @@ bin/Debug/net6.0/ElysiumModMenu.dll
 
 ---
 
-## ⚠️ Disclaimer
+## ♡ Disclaimer
 
 ElysiumModMenu is not affiliated with Innersloth and is not officially supported by Among Us.
-Use it at your own risk.
 
-Don't crash public lobbies, grief random players, or abuse people with it. Support won't be given if you do.
+Use it at your own risk.
+Do not crash public lobbies, grief random players, abuse people, or ruin games for others.
+Support will not be provided for abusive use.
