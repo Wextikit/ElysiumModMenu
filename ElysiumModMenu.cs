@@ -37,7 +37,7 @@ using Vector3 = UnityEngine.Vector3;
 using System.Runtime.CompilerServices;
 namespace ElysiumModMenu
 {
-    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.2.7")]
+    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.3.4")]
     public class Plugin : BasePlugin
     {
         public static Plugin Instance { get; private set; } = null!;
@@ -75,6 +75,12 @@ namespace ElysiumModMenu
             if (!System.IO.File.Exists(banFile))
             {
                 System.IO.File.Create(banFile).Dispose();
+            }
+
+            string platformBanFile = System.IO.Path.Combine(ElysiumFolder, "ElysiumPlatformBanList.txt");
+            if (!System.IO.File.Exists(platformBanFile))
+            {
+                System.IO.File.WriteAllText(platformBanFile, "# One custom platform token per line. Matching PlatformName values are host-banned when enabled.\n# Example: github\n");
             }
 
             string friendEspFile = System.IO.Path.Combine(ElysiumFolder, "ElysiumFriendEspIgnore.txt");
@@ -150,12 +156,71 @@ namespace ElysiumModMenu
     }
 
 
-
     public class ElysiumModMenuGUI : MonoBehaviour
     {
         public static string[] spoofMenuNames = { "ElysiumModMenu", "HostGuard/TOH", "Polar", "BanMod", "Better Among Us", "Sicko Menu", "GNC", "KillNetwork (V1)", "KillNetwork (V2)", "KNM" };
         public static byte[] spoofMenuRPCs = { 89, 176, 204, 212, 151, 164, 154, 85, 150, 162 };
         public static float rpcSpoofDelay = 4f;
+        public static readonly string[] menuLanguageNames = { "Auto", "English", "Русский", "Deutsch", "Français", "Español", "Italiano", "Português", "Polski", "Nederlands", "Türkçe", "Čeština", "Română", "Magyar", "Svenska", "Dansk", "Suomi", "Norsk", "Українська", "Ελληνικά", "中文", "日本語", "한국어" };
+        public static readonly string[] menuLanguageCodes = { "auto", "en", "ru", "de", "fr", "es", "it", "pt", "pl", "nl", "tr", "cs", "ro", "hu", "sv", "da", "fi", "no", "uk", "el", "zh", "ja", "ko" };
+        public static int currentMenuLanguageIndex = 0;
+        private static readonly Dictionary<string, Dictionary<string, string>> menuTranslations = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["de"] = new Dictionary<string, string> { ["GENERAL"]="ALLGEMEIN",["SELF"]="SPIELER",["VISUALS"]="VISUELL",["PLAYERS"]="SPIELER",["SABOTAGES"]="SABOTAGEN",["HOST ONLY"]="NUR HOST",["OUTFITS"]="OUTFITS",["VOTEKICK"]="ABSTIMMUNG",["MENU"]="MENÜ",["MAPS"]="KARTEN",["ANIMATIONS"]="ANIMATIONEN",["INFORMATION"]="INFORMATION",["KEYBINDS"]="TASTEN",["WELCOME"]="WILLKOMMEN",["CREDITS"]="CREDITS",["Menu language:"]="Menüsprache:",["FPS Limit"]="FPS-Limit",["Chat History"]="Chat-Verlauf",["History:"]="Verlauf:",["History size:"]="Verlaufgröße:",["CHAT UTILITY"]="CHAT-TOOLS",["Always Show Chat"]="Chat immer anzeigen",["Read Ghost Chat"]="Geisterchat lesen",["Extended Chat"]="Erweiterter Chat",["Fast Chat"]="Schneller Chat",["Unlock Extra Characters"]="Alle Zeichen erlauben",["Spell Check"]="Rechtschreibprüfung",["Clipboard"]="Zwischenablage",["Save Chat Log"]="Chatlog speichern",["Dark Chat Theme"]="Dunkles Chat-Thema",["Enable /color"]="Aktiviere /color",["Block Fortegreen"]="Fortegreen blockieren",["Allow Duplicate Colors"]="Doppelte Farben erlauben",["Auto Ghost After Start"]="Auto-Geist nach Start",["FAVORITE OUTFITS"]="FAVORITEN-OUTFITS",["Slot"]="Slot",["Empty"]="Leer",["Apply"]="Anwenden",["Save Mine"]="Meins speichern",["Save Selected"]="Auswahl speichern",["Saved slot"]="Slot gespeichert",["Applied slot"]="Slot angewendet",["Cleared slot"]="Slot gelöscht",["Auto-Ban Platform Spoof (Host)"]="Auto-Ban Plattform-Spoof (Host)",["Ban Custom Platforms From TXT"]="Custom-Plattformen aus TXT bannen",["RPC Anti-Cheat"]="RPC-Anti-Cheat",["RPC limit:"]="RPC-Limit:",["RPC Local Drop"]="RPC lokal droppen",["RPC Host Ban"]="RPC Host-Ban" },
+            ["fr"] = new Dictionary<string, string> { ["GENERAL"]="GÉNÉRAL",["SELF"]="JOUEUR",["VISUALS"]="VISUELS",["PLAYERS"]="JOUEURS",["SABOTAGES"]="SABOTAGES",["HOST ONLY"]="HÔTE",["OUTFITS"]="TENUES",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="CARTES",["ANIMATIONS"]="ANIMATIONS",["INFORMATION"]="INFORMATION",["KEYBINDS"]="TOUCHES",["WELCOME"]="ACCUEIL",["CREDITS"]="CRÉDITS",["Menu language:"]="Langue du menu :",["FPS Limit"]="Limite FPS",["Chat History"]="Historique du chat",["History:"]="Historique :",["History size:"]="Taille historique :",["CHAT UTILITY"]="OUTILS CHAT",["Always Show Chat"]="Toujours afficher le chat",["Read Ghost Chat"]="Lire le chat fantôme",["Extended Chat"]="Chat étendu",["Fast Chat"]="Chat rapide",["Unlock Extra Characters"]="Autoriser tous les caractères",["Spell Check"]="Correction",["Clipboard"]="Presse-papiers",["Save Chat Log"]="Sauver le log chat",["Dark Chat Theme"]="Thème chat sombre",["Enable /color"]="Activer /color",["Block Fortegreen"]="Bloquer Fortegreen",["Allow Duplicate Colors"]="Autoriser les couleurs doubles",["Auto Ghost After Start"]="Fantôme auto après départ",["FAVORITE OUTFITS"]="TENUES FAVORITES",["Slot"]="Empl.",["Empty"]="Vide",["Apply"]="Appliquer",["Save Mine"]="Sauver mien",["Save Selected"]="Sauver sélection",["Saved slot"]="Emplacement sauvé",["Applied slot"]="Emplacement appliqué",["Cleared slot"]="Emplacement vidé",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof plateforme (Hôte)",["Ban Custom Platforms From TXT"]="Ban plateformes custom TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Limite RPC :",["RPC Local Drop"]="Drop RPC local",["RPC Host Ban"]="Ban RPC hôte" },
+            ["es"] = new Dictionary<string, string> { ["GENERAL"]="GENERAL",["SELF"]="JUGADOR",["VISUALS"]="VISUALES",["PLAYERS"]="JUGADORES",["SABOTAGES"]="SABOTAJES",["HOST ONLY"]="HOST",["OUTFITS"]="ATUENDOS",["VOTEKICK"]="VOTOKICK",["MENU"]="MENÚ",["MAPS"]="MAPAS",["ANIMATIONS"]="ANIMACIONES",["INFORMATION"]="INFORMACIÓN",["KEYBINDS"]="TECLAS",["WELCOME"]="BIENVENIDA",["CREDITS"]="CRÉDITOS",["Menu language:"]="Idioma del menú:",["FPS Limit"]="Límite FPS",["Chat History"]="Historial de chat",["History:"]="Historial:",["History size:"]="Tamaño historial:",["CHAT UTILITY"]="UTILIDAD CHAT",["Always Show Chat"]="Mostrar chat siempre",["Read Ghost Chat"]="Leer chat fantasma",["Extended Chat"]="Chat extendido",["Fast Chat"]="Chat rápido",["Unlock Extra Characters"]="Permitir caracteres extra",["Spell Check"]="Ortografía",["Clipboard"]="Portapapeles",["Save Chat Log"]="Guardar log chat",["Dark Chat Theme"]="Tema chat oscuro",["Enable /color"]="Activar /color",["Block Fortegreen"]="Bloquear Fortegreen",["Allow Duplicate Colors"]="Permitir colores duplicados",["Auto Ghost After Start"]="Fantasma auto al iniciar",["FAVORITE OUTFITS"]="ATUENDOS FAVORITOS",["Slot"]="Ranura",["Empty"]="Vacío",["Apply"]="Aplicar",["Save Mine"]="Guardar mío",["Save Selected"]="Guardar selección",["Saved slot"]="Ranura guardada",["Applied slot"]="Ranura aplicada",["Cleared slot"]="Ranura borrada",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof plataforma (Host)",["Ban Custom Platforms From TXT"]="Ban plataformas TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Límite RPC:",["RPC Local Drop"]="Drop RPC local",["RPC Host Ban"]="Ban RPC host" },
+            ["it"] = new Dictionary<string, string> { ["GENERAL"]="GENERALE",["SELF"]="GIOCATORE",["VISUALS"]="VISIVI",["PLAYERS"]="GIOCATORI",["SABOTAGES"]="SABOTAGGI",["HOST ONLY"]="HOST",["OUTFITS"]="OUTFIT",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="MAPPE",["ANIMATIONS"]="ANIMAZIONI",["INFORMATION"]="INFO",["KEYBINDS"]="TASTI",["WELCOME"]="BENVENUTO",["CREDITS"]="CREDITI",["Menu language:"]="Lingua menu:",["FPS Limit"]="Limite FPS",["Chat History"]="Cronologia chat",["History:"]="Cronologia:",["History size:"]="Dim. cronologia:",["CHAT UTILITY"]="UTILITÀ CHAT",["Always Show Chat"]="Mostra sempre chat",["Read Ghost Chat"]="Leggi chat fantasmi",["Extended Chat"]="Chat estesa",["Fast Chat"]="Chat veloce",["Unlock Extra Characters"]="Sblocca caratteri extra",["Spell Check"]="Correttore",["Clipboard"]="Appunti",["Save Chat Log"]="Salva log chat",["Dark Chat Theme"]="Tema chat scuro",["Enable /color"]="Abilita /color",["Block Fortegreen"]="Blocca Fortegreen",["Allow Duplicate Colors"]="Consenti colori doppi",["Auto Ghost After Start"]="Fantasma auto dopo start",["FAVORITE OUTFITS"]="OUTFIT PREFERITI",["Slot"]="Slot",["Empty"]="Vuoto",["Apply"]="Applica",["Save Mine"]="Salva mio",["Save Selected"]="Salva selez.",["Saved slot"]="Slot salvato",["Applied slot"]="Slot applicato",["Cleared slot"]="Slot pulito",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof piattaforma",["Ban Custom Platforms From TXT"]="Ban piattaforme custom TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Limite RPC:",["RPC Local Drop"]="Drop RPC locale",["RPC Host Ban"]="Ban RPC host" },
+            ["pt"] = new Dictionary<string, string> { ["GENERAL"]="GERAL",["SELF"]="JOGADOR",["VISUALS"]="VISUAIS",["PLAYERS"]="JOGADORES",["SABOTAGES"]="SABOTAGENS",["HOST ONLY"]="HOST",["OUTFITS"]="VISUAIS",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="MAPAS",["ANIMATIONS"]="ANIMAÇÕES",["INFORMATION"]="INFORMAÇÃO",["KEYBINDS"]="TECLAS",["WELCOME"]="BOAS-VINDAS",["CREDITS"]="CRÉDITOS",["Menu language:"]="Idioma do menu:",["FPS Limit"]="Limite FPS",["Chat History"]="Histórico do chat",["History:"]="Histórico:",["History size:"]="Tamanho histórico:",["CHAT UTILITY"]="UTILIDADE CHAT",["Always Show Chat"]="Sempre mostrar chat",["Read Ghost Chat"]="Ler chat fantasma",["Extended Chat"]="Chat estendido",["Fast Chat"]="Chat rápido",["Unlock Extra Characters"]="Liberar caracteres extra",["Spell Check"]="Ortografia",["Clipboard"]="Área de transferência",["Save Chat Log"]="Salvar log chat",["Dark Chat Theme"]="Tema chat escuro",["Enable /color"]="Ativar /color",["Block Fortegreen"]="Bloquear Fortegreen",["Allow Duplicate Colors"]="Permitir cores duplicadas",["Auto Ghost After Start"]="Fantasma auto após iniciar",["FAVORITE OUTFITS"]="VISUAIS FAVORITOS",["Slot"]="Slot",["Empty"]="Vazio",["Apply"]="Aplicar",["Save Mine"]="Salvar meu",["Save Selected"]="Salvar seleção",["Saved slot"]="Slot salvo",["Applied slot"]="Slot aplicado",["Cleared slot"]="Slot limpo",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof plataforma",["Ban Custom Platforms From TXT"]="Ban plataformas TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Limite RPC:",["RPC Local Drop"]="Drop RPC local",["RPC Host Ban"]="Ban RPC host" },
+            ["pl"] = new Dictionary<string, string> { ["GENERAL"]="OGÓLNE",["SELF"]="GRACZ",["VISUALS"]="WIZUALNE",["PLAYERS"]="GRACZE",["SABOTAGES"]="SABOTAŻE",["HOST ONLY"]="HOST",["OUTFITS"]="STROJE",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="MAPY",["ANIMATIONS"]="ANIMACJE",["INFORMATION"]="INFORMACJE",["KEYBINDS"]="KLAWISZE",["WELCOME"]="WITAJ",["CREDITS"]="AUTORZY",["Menu language:"]="Język menu:",["FPS Limit"]="Limit FPS",["Chat History"]="Historia czatu",["History:"]="Historia:",["History size:"]="Rozmiar historii:",["CHAT UTILITY"]="NARZĘDZIA CZATU",["Always Show Chat"]="Zawsze pokazuj czat",["Read Ghost Chat"]="Czytaj czat duchów",["Extended Chat"]="Rozszerzony czat",["Fast Chat"]="Szybki czat",["Unlock Extra Characters"]="Odblokuj znaki",["Spell Check"]="Pisownia",["Clipboard"]="Schowek",["Save Chat Log"]="Zapisz log czatu",["Dark Chat Theme"]="Ciemny czat",["Enable /color"]="Włącz /color",["Block Fortegreen"]="Blokuj Fortegreen",["Allow Duplicate Colors"]="Zezwól na duplikaty kolorów",["Auto Ghost After Start"]="Auto duch po starcie",["FAVORITE OUTFITS"]="ULUBIONE STROJE",["Slot"]="Slot",["Empty"]="Pusty",["Apply"]="Zastosuj",["Save Mine"]="Zapisz mój",["Save Selected"]="Zapisz wybrany",["Saved slot"]="Slot zapisany",["Applied slot"]="Slot użyty",["Cleared slot"]="Slot wyczyszczony",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof platformy",["Ban Custom Platforms From TXT"]="Ban platform z TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Limit RPC:",["RPC Local Drop"]="Lokalny drop RPC",["RPC Host Ban"]="Ban RPC hosta" },
+            ["nl"] = new Dictionary<string, string> { ["GENERAL"]="ALGEMEEN",["SELF"]="SPELER",["VISUALS"]="VISUEEL",["PLAYERS"]="SPELERS",["SABOTAGES"]="SABOTAGES",["HOST ONLY"]="HOST",["OUTFITS"]="OUTFITS",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="KAARTEN",["ANIMATIONS"]="ANIMATIES",["INFORMATION"]="INFORMATIE",["KEYBINDS"]="TOETSEN",["WELCOME"]="WELKOM",["CREDITS"]="CREDITS",["Menu language:"]="Menutaal:",["FPS Limit"]="FPS-limiet",["Chat History"]="Chatgeschiedenis",["History:"]="Geschiedenis:",["History size:"]="Geschiedenisgrootte:",["CHAT UTILITY"]="CHAT-HULP",["Always Show Chat"]="Chat altijd tonen",["Read Ghost Chat"]="Geestenchat lezen",["Extended Chat"]="Uitgebreide chat",["Fast Chat"]="Snelle chat",["Unlock Extra Characters"]="Extra tekens toestaan",["Spell Check"]="Spelling",["Clipboard"]="Klembord",["Save Chat Log"]="Chatlog opslaan",["Dark Chat Theme"]="Donker chatthema",["Enable /color"]="/color inschakelen",["Block Fortegreen"]="Fortegreen blokkeren",["Allow Duplicate Colors"]="Dubbele kleuren toestaan",["Auto Ghost After Start"]="Auto-geest na start",["FAVORITE OUTFITS"]="FAVORIETE OUTFITS",["Slot"]="Slot",["Empty"]="Leeg",["Apply"]="Toepassen",["Save Mine"]="Mijn opslaan",["Save Selected"]="Selectie opslaan",["Saved slot"]="Slot opgeslagen",["Applied slot"]="Slot toegepast",["Cleared slot"]="Slot gewist",["Auto-Ban Platform Spoof (Host)"]="Auto-ban platform-spoof",["Ban Custom Platforms From TXT"]="Ban custom platforms uit TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC-limiet:",["RPC Local Drop"]="RPC lokale drop",["RPC Host Ban"]="RPC host-ban" },
+            ["tr"] = new Dictionary<string, string> { ["GENERAL"]="GENEL",["SELF"]="OYUNCU",["VISUALS"]="GÖRSEL",["PLAYERS"]="OYUNCULAR",["SABOTAGES"]="SABOTAJLAR",["HOST ONLY"]="HOST",["OUTFITS"]="KIYAFETLER",["VOTEKICK"]="VOTEKICK",["MENU"]="MENÜ",["MAPS"]="HARİTALAR",["ANIMATIONS"]="ANİMASYONLAR",["INFORMATION"]="BİLGİ",["KEYBINDS"]="TUŞLAR",["WELCOME"]="HOŞ GELDİN",["CREDITS"]="KREDİLER",["Menu language:"]="Menü dili:",["FPS Limit"]="FPS sınırı",["Chat History"]="Sohbet geçmişi",["History:"]="Geçmiş:",["History size:"]="Geçmiş boyutu:",["CHAT UTILITY"]="SOHBET ARAÇLARI",["Always Show Chat"]="Sohbeti hep göster",["Read Ghost Chat"]="Hayalet sohbetini oku",["Extended Chat"]="Geniş sohbet",["Fast Chat"]="Hızlı sohbet",["Unlock Extra Characters"]="Ek karakterleri aç",["Spell Check"]="Yazım denetimi",["Clipboard"]="Pano",["Save Chat Log"]="Sohbet kaydını sakla",["Dark Chat Theme"]="Koyu sohbet teması",["Enable /color"]="/color aç",["Block Fortegreen"]="Fortegreen engelle",["Allow Duplicate Colors"]="Aynı renklere izin ver",["Auto Ghost After Start"]="Başlangıçtan sonra oto hayalet",["FAVORITE OUTFITS"]="FAVORİ KIYAFETLER",["Slot"]="Slot",["Empty"]="Boş",["Apply"]="Uygula",["Save Mine"]="Benimkini kaydet",["Save Selected"]="Seçileni kaydet",["Saved slot"]="Slot kaydedildi",["Applied slot"]="Slot uygulandı",["Cleared slot"]="Slot temizlendi",["Auto-Ban Platform Spoof (Host)"]="Platform spoof oto-ban",["Ban Custom Platforms From TXT"]="TXT özel platform ban",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC sınırı:",["RPC Local Drop"]="RPC yerel drop",["RPC Host Ban"]="RPC host ban" },
+            ["cs"] = new Dictionary<string, string> { ["GENERAL"]="OBECNÉ",["SELF"]="HRÁČ",["VISUALS"]="VIZUÁLY",["PLAYERS"]="HRÁČI",["SABOTAGES"]="SABOTÁŽE",["HOST ONLY"]="HOST",["OUTFITS"]="OUTFITY",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="MAPY",["ANIMATIONS"]="ANIMACE",["INFORMATION"]="INFORMACE",["KEYBINDS"]="KLÁVESY",["WELCOME"]="VÍTEJ",["CREDITS"]="AUTOŘI",["Menu language:"]="Jazyk menu:",["FPS Limit"]="Limit FPS",["Chat History"]="Historie chatu",["History:"]="Historie:",["History size:"]="Velikost historie:",["CHAT UTILITY"]="NÁSTROJE CHATU",["Always Show Chat"]="Vždy zobrazit chat",["Read Ghost Chat"]="Číst chat duchů",["Extended Chat"]="Rozšířený chat",["Fast Chat"]="Rychlý chat",["Unlock Extra Characters"]="Povolit další znaky",["Spell Check"]="Kontrola pravopisu",["Clipboard"]="Schránka",["Save Chat Log"]="Uložit log chatu",["Dark Chat Theme"]="Tmavý chat",["Enable /color"]="Zapnout /color",["Block Fortegreen"]="Blokovat Fortegreen",["Allow Duplicate Colors"]="Povolit duplicitní barvy",["Auto Ghost After Start"]="Auto duch po startu",["FAVORITE OUTFITS"]="OBLÍBENÉ OUTFITY",["Slot"]="Slot",["Empty"]="Prázdné",["Apply"]="Použít",["Save Mine"]="Uložit můj",["Save Selected"]="Uložit vybraný",["Saved slot"]="Slot uložen",["Applied slot"]="Slot použit",["Cleared slot"]="Slot vymazán",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof platformy",["Ban Custom Platforms From TXT"]="Ban platforem z TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="Limit RPC:",["RPC Local Drop"]="Místní drop RPC",["RPC Host Ban"]="RPC host ban" },
+            ["ro"] = new Dictionary<string, string> { ["GENERAL"]="GENERAL",["SELF"]="JUCĂTOR",["VISUALS"]="VIZUAL",["PLAYERS"]="JUCĂTORI",["SABOTAGES"]="SABOTAJE",["HOST ONLY"]="HOST",["OUTFITS"]="ȚINUTE",["VOTEKICK"]="VOTEKICK",["MENU"]="MENIU",["MAPS"]="HĂRȚI",["ANIMATIONS"]="ANIMAȚII",["INFORMATION"]="INFORMAȚII",["KEYBINDS"]="TASTE",["WELCOME"]="BUN VENIT",["CREDITS"]="CREDITE",["Menu language:"]="Limba meniului:",["FPS Limit"]="Limită FPS",["Chat History"]="Istoric chat",["History:"]="Istoric:",["History size:"]="Mărime istoric:",["CHAT UTILITY"]="UTILITARE CHAT",["Always Show Chat"]="Arată chat mereu",["Read Ghost Chat"]="Citește chat fantome",["Extended Chat"]="Chat extins",["Fast Chat"]="Chat rapid",["Unlock Extra Characters"]="Permite caractere extra",["Spell Check"]="Ortografie",["Clipboard"]="Clipboard",["Save Chat Log"]="Salvează log chat",["Dark Chat Theme"]="Temă chat întunecată",["Enable /color"]="Activează /color",["Block Fortegreen"]="Blochează Fortegreen",["Allow Duplicate Colors"]="Permite culori duplicate",["Auto Ghost After Start"]="Fantoma auto după start",["FAVORITE OUTFITS"]="ȚINUTE FAVORITE",["Slot"]="Slot",["Empty"]="Gol",["Apply"]="Aplică",["Save Mine"]="Salvează al meu",["Save Selected"]="Salvează selectat",["Saved slot"]="Slot salvat",["Applied slot"]="Slot aplicat",["Cleared slot"]="Slot golit",["Auto-Ban Platform Spoof (Host)"]="Auto-ban spoof platformă",["Ban Custom Platforms From TXT"]="Ban platforme din TXT",["RPC Anti-Cheat"]="Anti-cheat RPC",["RPC limit:"]="Limită RPC:",["RPC Local Drop"]="Drop RPC local",["RPC Host Ban"]="Ban RPC host" },
+            ["hu"] = new Dictionary<string, string> { ["GENERAL"]="ÁLTALÁNOS",["SELF"]="JÁTÉKOS",["VISUALS"]="LÁTVÁNY",["PLAYERS"]="JÁTÉKOSOK",["SABOTAGES"]="SZABOTÁZS",["HOST ONLY"]="HOST",["OUTFITS"]="RUHÁK",["VOTEKICK"]="VOTEKICK",["MENU"]="MENÜ",["MAPS"]="PÁLYÁK",["ANIMATIONS"]="ANIMÁCIÓK",["INFORMATION"]="INFORMÁCIÓ",["KEYBINDS"]="BILLENTYŰK",["WELCOME"]="ÜDV",["CREDITS"]="KÉSZÍTŐK",["Menu language:"]="Menü nyelve:",["FPS Limit"]="FPS limit",["Chat History"]="Chat előzmények",["History:"]="Előzmény:",["History size:"]="Előzmény méret:",["CHAT UTILITY"]="CHAT ESZKÖZÖK",["Always Show Chat"]="Chat mindig látszik",["Read Ghost Chat"]="Szellem chat olvasás",["Extended Chat"]="Bővített chat",["Fast Chat"]="Gyors chat",["Unlock Extra Characters"]="Extra karakterek engedélyezése",["Spell Check"]="Helyesírás",["Clipboard"]="Vágólap",["Save Chat Log"]="Chat log mentése",["Dark Chat Theme"]="Sötét chat téma",["Enable /color"]="/color bekapcsolása",["Block Fortegreen"]="Fortegreen tiltása",["Allow Duplicate Colors"]="Dupla színek engedése",["Auto Ghost After Start"]="Auto szellem start után",["FAVORITE OUTFITS"]="KEDVENC RUHÁK",["Slot"]="Slot",["Empty"]="Üres",["Apply"]="Alkalmaz",["Save Mine"]="Saját mentése",["Save Selected"]="Kiválasztott mentése",["Saved slot"]="Slot mentve",["Applied slot"]="Slot alkalmazva",["Cleared slot"]="Slot törölve",["Auto-Ban Platform Spoof (Host)"]="Platform spoof auto-ban",["Ban Custom Platforms From TXT"]="Platform ban TXT-ből",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC limit:",["RPC Local Drop"]="RPC helyi drop",["RPC Host Ban"]="RPC host ban" },
+            ["sv"] = new Dictionary<string, string> { ["GENERAL"]="ALLMÄNT",["SELF"]="SPELARE",["VISUALS"]="VISUELLT",["PLAYERS"]="SPELARE",["SABOTAGES"]="SABOTAGE",["HOST ONLY"]="HOST",["OUTFITS"]="OUTFITS",["VOTEKICK"]="VOTEKICK",["MENU"]="MENY",["MAPS"]="KARTOR",["ANIMATIONS"]="ANIMATIONER",["INFORMATION"]="INFO",["KEYBINDS"]="TANGENTER",["WELCOME"]="VÄLKOMMEN",["CREDITS"]="CREDITS",["Menu language:"]="Menyspråk:",["FPS Limit"]="FPS-gräns",["Chat History"]="Chatthistorik",["History:"]="Historik:",["History size:"]="Historikstorlek:",["CHAT UTILITY"]="CHATTVERKTYG",["Always Show Chat"]="Visa alltid chatt",["Read Ghost Chat"]="Läs spökchatt",["Extended Chat"]="Utökad chatt",["Fast Chat"]="Snabb chatt",["Unlock Extra Characters"]="Tillåt extra tecken",["Spell Check"]="Stavning",["Clipboard"]="Urklipp",["Save Chat Log"]="Spara chattlogg",["Dark Chat Theme"]="Mörkt chatt-tema",["Enable /color"]="Aktivera /color",["Block Fortegreen"]="Blockera Fortegreen",["Allow Duplicate Colors"]="Tillåt dubbla färger",["Auto Ghost After Start"]="Auto-spöke efter start",["FAVORITE OUTFITS"]="FAVORITOUTFITS",["Slot"]="Slot",["Empty"]="Tom",["Apply"]="Använd",["Save Mine"]="Spara min",["Save Selected"]="Spara vald",["Saved slot"]="Slot sparad",["Applied slot"]="Slot använd",["Cleared slot"]="Slot rensad",["Auto-Ban Platform Spoof (Host)"]="Auto-ban plattformsspoof",["Ban Custom Platforms From TXT"]="Ban plattformar från TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC-gräns:",["RPC Local Drop"]="RPC lokal drop",["RPC Host Ban"]="RPC host-ban" },
+            ["da"] = new Dictionary<string, string> { ["GENERAL"]="GENERELT",["SELF"]="SPILLER",["VISUALS"]="VISUELT",["PLAYERS"]="SPILLERE",["SABOTAGES"]="SABOTAGER",["HOST ONLY"]="HOST",["OUTFITS"]="OUTFITS",["VOTEKICK"]="VOTEKICK",["MENU"]="MENU",["MAPS"]="BANER",["ANIMATIONS"]="ANIMATIONER",["INFORMATION"]="INFO",["KEYBINDS"]="TASTER",["WELCOME"]="VELKOMMEN",["CREDITS"]="CREDITS",["Menu language:"]="Menusprog:",["FPS Limit"]="FPS-grænse",["Chat History"]="Chathistorik",["History:"]="Historik:",["History size:"]="Historikstørrelse:",["CHAT UTILITY"]="CHATVÆRKTØJ",["Always Show Chat"]="Vis altid chat",["Read Ghost Chat"]="Læs spøgelses-chat",["Extended Chat"]="Udvidet chat",["Fast Chat"]="Hurtig chat",["Unlock Extra Characters"]="Tillad ekstra tegn",["Spell Check"]="Stavekontrol",["Clipboard"]="Udklipsholder",["Save Chat Log"]="Gem chatlog",["Dark Chat Theme"]="Mørkt chattema",["Enable /color"]="Aktiver /color",["Block Fortegreen"]="Bloker Fortegreen",["Allow Duplicate Colors"]="Tillad dubletfarver",["Auto Ghost After Start"]="Auto-spøgelse efter start",["FAVORITE OUTFITS"]="FAVORITOUTFITS",["Slot"]="Slot",["Empty"]="Tom",["Apply"]="Anvend",["Save Mine"]="Gem min",["Save Selected"]="Gem valgt",["Saved slot"]="Slot gemt",["Applied slot"]="Slot anvendt",["Cleared slot"]="Slot ryddet",["Auto-Ban Platform Spoof (Host)"]="Auto-ban platform spoof",["Ban Custom Platforms From TXT"]="Ban platforme fra TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC-grænse:",["RPC Local Drop"]="RPC lokal drop",["RPC Host Ban"]="RPC host-ban" },
+            ["fi"] = new Dictionary<string, string> { ["GENERAL"]="YLEISET",["SELF"]="PELAAJA",["VISUALS"]="VISUAALIT",["PLAYERS"]="PELAAJAT",["SABOTAGES"]="SABOTAASIT",["HOST ONLY"]="HOST",["OUTFITS"]="ASUT",["VOTEKICK"]="VOTEKICK",["MENU"]="VALIKKO",["MAPS"]="KARTAT",["ANIMATIONS"]="ANIMAATIOT",["INFORMATION"]="TIEDOT",["KEYBINDS"]="NÄPPÄIMET",["WELCOME"]="TERVETULOA",["CREDITS"]="TEKIJÄT",["Menu language:"]="Valikon kieli:",["FPS Limit"]="FPS-raja",["Chat History"]="Chat-historia",["History:"]="Historia:",["History size:"]="Historian koko:",["CHAT UTILITY"]="CHAT-TYÖKALUT",["Always Show Chat"]="Näytä chat aina",["Read Ghost Chat"]="Lue haamuchat",["Extended Chat"]="Laajennettu chat",["Fast Chat"]="Nopea chat",["Unlock Extra Characters"]="Salli lisämerkit",["Spell Check"]="Oikoluku",["Clipboard"]="Leikepöytä",["Save Chat Log"]="Tallenna chat-loki",["Dark Chat Theme"]="Tumma chat-teema",["Enable /color"]="Ota /color käyttöön",["Block Fortegreen"]="Estä Fortegreen",["Allow Duplicate Colors"]="Salli samat värit",["Auto Ghost After Start"]="Auto-haamu alun jälkeen",["FAVORITE OUTFITS"]="SUOSIKKIASUT",["Slot"]="Paikka",["Empty"]="Tyhjä",["Apply"]="Käytä",["Save Mine"]="Tallenna oma",["Save Selected"]="Tallenna valittu",["Saved slot"]="Paikka tallennettu",["Applied slot"]="Paikka käytetty",["Cleared slot"]="Paikka tyhjennetty",["Auto-Ban Platform Spoof (Host)"]="Auto-ban platform spoof",["Ban Custom Platforms From TXT"]="Ban alustat TXT:stä",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC-raja:",["RPC Local Drop"]="RPC paikallinen drop",["RPC Host Ban"]="RPC host-ban" },
+            ["no"] = new Dictionary<string, string> { ["GENERAL"]="GENERELT",["SELF"]="SPILLER",["VISUALS"]="VISUELT",["PLAYERS"]="SPILLERE",["SABOTAGES"]="SABOTASJER",["HOST ONLY"]="HOST",["OUTFITS"]="ANTREKK",["VOTEKICK"]="VOTEKICK",["MENU"]="MENY",["MAPS"]="KART",["ANIMATIONS"]="ANIMASJONER",["INFORMATION"]="INFO",["KEYBINDS"]="TASTER",["WELCOME"]="VELKOMMEN",["CREDITS"]="CREDITS",["Menu language:"]="Menyspråk:",["FPS Limit"]="FPS-grense",["Chat History"]="Chat-historikk",["History:"]="Historikk:",["History size:"]="Historikkstørrelse:",["CHAT UTILITY"]="CHAT-VERKTØY",["Always Show Chat"]="Vis alltid chat",["Read Ghost Chat"]="Les spøkelseschat",["Extended Chat"]="Utvidet chat",["Fast Chat"]="Rask chat",["Unlock Extra Characters"]="Tillat ekstra tegn",["Spell Check"]="Stavekontroll",["Clipboard"]="Utklippstavle",["Save Chat Log"]="Lagre chatlogg",["Dark Chat Theme"]="Mørkt chattema",["Enable /color"]="Aktiver /color",["Block Fortegreen"]="Blokker Fortegreen",["Allow Duplicate Colors"]="Tillat like farger",["Auto Ghost After Start"]="Auto-spøkelse etter start",["FAVORITE OUTFITS"]="FAVORITTANTREKK",["Slot"]="Slot",["Empty"]="Tom",["Apply"]="Bruk",["Save Mine"]="Lagre min",["Save Selected"]="Lagre valgt",["Saved slot"]="Slot lagret",["Applied slot"]="Slot brukt",["Cleared slot"]="Slot tømt",["Auto-Ban Platform Spoof (Host)"]="Auto-ban platform spoof",["Ban Custom Platforms From TXT"]="Ban plattformer fra TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="RPC-grense:",["RPC Local Drop"]="RPC lokal drop",["RPC Host Ban"]="RPC host-ban" },
+            ["uk"] = new Dictionary<string, string> { ["GENERAL"]="ЗАГАЛЬНЕ",["SELF"]="ГРАВЕЦЬ",["VISUALS"]="ВІЗУАЛ",["PLAYERS"]="ГРАВЦІ",["SABOTAGES"]="САБОТАЖІ",["HOST ONLY"]="ХОСТ",["OUTFITS"]="ОДЯГ",["VOTEKICK"]="КІК",["MENU"]="МЕНЮ",["MAPS"]="КАРТИ",["ANIMATIONS"]="АНІМАЦІЇ",["INFORMATION"]="ІНФОРМАЦІЯ",["KEYBINDS"]="БІНДИ",["WELCOME"]="ВІТАННЯ",["CREDITS"]="АВТОРИ",["Menu language:"]="Мова меню:",["FPS Limit"]="Ліміт FPS",["Chat History"]="Історія чату",["History:"]="Історія:",["History size:"]="Розмір історії:",["CHAT UTILITY"]="УТИЛІТИ ЧАТУ",["Always Show Chat"]="Завжди показувати чат",["Read Ghost Chat"]="Читати чат привидів",["Extended Chat"]="Розширений чат",["Fast Chat"]="Швидкий чат",["Unlock Extra Characters"]="Дозволити всі символи",["Spell Check"]="Перевірка орфографії",["Clipboard"]="Буфер обміну",["Save Chat Log"]="Зберігати лог чату",["Dark Chat Theme"]="Темна тема чату",["Enable /color"]="Увімкнути /color",["Block Fortegreen"]="Блок Fortegreen",["Allow Duplicate Colors"]="Дозволити однакові кольори",["Auto Ghost After Start"]="Авто-привид після старту",["FAVORITE OUTFITS"]="УЛЮБЛЕНІ ОБРАЗИ",["Slot"]="Слот",["Empty"]="Пусто",["Apply"]="Надіти",["Save Mine"]="Зберегти мій",["Save Selected"]="Зберегти вибраний",["Saved slot"]="Слот збережено",["Applied slot"]="Слот застосовано",["Cleared slot"]="Слот очищено",["Auto-Ban Platform Spoof (Host)"]="Авто-бан Platform Spoof",["Ban Custom Platforms From TXT"]="Бан платформ з TXT",["RPC Anti-Cheat"]="RPC античит",["RPC limit:"]="RPC ліміт:",["RPC Local Drop"]="RPC локальний дроп",["RPC Host Ban"]="RPC бан хоста" },
+            ["el"] = new Dictionary<string, string> { ["GENERAL"]="ΓΕΝΙΚΑ",["SELF"]="ΠΑΙΚΤΗΣ",["VISUALS"]="ΟΠΤΙΚΑ",["PLAYERS"]="ΠΑΙΚΤΕΣ",["SABOTAGES"]="ΣΑΜΠΟΤΑΖ",["HOST ONLY"]="HOST",["OUTFITS"]="ΣΤΟΛΕΣ",["VOTEKICK"]="VOTEKICK",["MENU"]="ΜΕΝΟΥ",["MAPS"]="ΧΑΡΤΕΣ",["ANIMATIONS"]="ANIMATIONS",["INFORMATION"]="ΠΛΗΡΟΦΟΡΙΕΣ",["KEYBINDS"]="ΠΛΗΚΤΡΑ",["WELCOME"]="ΚΑΛΩΣ ΗΡΘΕΣ",["CREDITS"]="CREDITS",["Menu language:"]="Γλώσσα μενού:",["FPS Limit"]="Όριο FPS",["Chat History"]="Ιστορικό chat",["History:"]="Ιστορικό:",["History size:"]="Μέγεθος ιστορικού:",["CHAT UTILITY"]="ΕΡΓΑΛΕΙΑ CHAT",["Always Show Chat"]="Πάντα εμφάνιση chat",["Read Ghost Chat"]="Ανάγνωση ghost chat",["Extended Chat"]="Εκτεταμένο chat",["Fast Chat"]="Γρήγορο chat",["Unlock Extra Characters"]="Επιπλέον χαρακτήρες",["Spell Check"]="Ορθογραφία",["Clipboard"]="Πρόχειρο",["Save Chat Log"]="Αποθήκευση chat log",["Dark Chat Theme"]="Σκούρο chat",["Enable /color"]="Ενεργοποίηση /color",["Block Fortegreen"]="Block Fortegreen",["Allow Duplicate Colors"]="Να επιτρέπονται ίδια χρώματα",["Auto Ghost After Start"]="Auto ghost μετά την έναρξη",["FAVORITE OUTFITS"]="ΑΓΑΠΗΜΕΝΕΣ ΣΤΟΛΕΣ",["Slot"]="Θέση",["Empty"]="Άδειο",["Apply"]="Εφαρμογή",["Save Mine"]="Αποθ. δικό μου",["Save Selected"]="Αποθ. επιλογής",["Saved slot"]="Θέση αποθηκεύτηκε",["Applied slot"]="Θέση εφαρμόστηκε",["Cleared slot"]="Θέση καθαρίστηκε",["Auto-Ban Platform Spoof (Host)"]="Auto-ban platform spoof",["Ban Custom Platforms From TXT"]="Ban platforms από TXT",["RPC Anti-Cheat"]="RPC anti-cheat",["RPC limit:"]="Όριο RPC:",["RPC Local Drop"]="RPC local drop",["RPC Host Ban"]="RPC host ban" },
+            ["zh"] = new Dictionary<string, string> { ["GENERAL"]="常规",["SELF"]="玩家",["VISUALS"]="视觉",["PLAYERS"]="玩家",["SABOTAGES"]="破坏",["HOST ONLY"]="房主",["OUTFITS"]="装扮",["VOTEKICK"]="投票踢人",["MENU"]="菜单",["MAPS"]="地图",["ANIMATIONS"]="动画",["INFORMATION"]="信息",["KEYBINDS"]="按键",["WELCOME"]="欢迎",["CREDITS"]="鸣谢",["Menu language:"]="菜单语言:",["FPS Limit"]="FPS 限制",["Chat History"]="聊天历史",["History:"]="历史:",["History size:"]="历史大小:",["CHAT UTILITY"]="聊天工具",["Always Show Chat"]="始终显示聊天",["Read Ghost Chat"]="读取幽灵聊天",["Extended Chat"]="扩展聊天",["Fast Chat"]="快速聊天",["Unlock Extra Characters"]="允许额外字符",["Spell Check"]="拼写检查",["Clipboard"]="剪贴板",["Save Chat Log"]="保存聊天日志",["Dark Chat Theme"]="深色���天主题",["Enable /color"]="启用 /color",["Block Fortegreen"]="阻止 Fortegreen",["Allow Duplicate Colors"]="允许重复颜色",["Auto Ghost After Start"]="开始后自动幽灵",["FAVORITE OUTFITS"]="收藏装扮",["Slot"]="槽位",["Empty"]="空",["Apply"]="应用",["Save Mine"]="保存自己",["Save Selected"]="保存选中",["Saved slot"]="槽位已保存",["Applied slot"]="槽位已应用",["Cleared slot"]="槽位已清空",["Auto-Ban Platform Spoof (Host)"]="自动封禁平台伪装",["Ban Custom Platforms From TXT"]="从 TXT 封禁自定义平台",["RPC Anti-Cheat"]="RPC 反作弊",["RPC limit:"]="RPC 限制:",["RPC Local Drop"]="RPC 本地丢弃",["RPC Host Ban"]="RPC 房主封禁" },
+            ["ja"] = new Dictionary<string, string> { ["GENERAL"]="一般",["SELF"]="プレイヤー",["VISUALS"]="表示",["PLAYERS"]="プレイヤー",["SABOTAGES"]="サボタージュ",["HOST ONLY"]="ホスト",["OUTFITS"]="衣装",["VOTEKICK"]="投票キック",["MENU"]="メニュー",["MAPS"]="マップ",["ANIMATIONS"]="アニメーション",["INFORMATION"]="情報",["KEYBINDS"]="キー設定",["WELCOME"]="ようこそ",["CREDITS"]="クレジット",["Menu language:"]="メニュー言語:",["FPS Limit"]="FPS制限",["Chat History"]="チャット履歴",["History:"]="履歴:",["History size:"]="履歴サイズ:",["CHAT UTILITY"]="チャット機能",["Always Show Chat"]="常にチャット表示",["Read Ghost Chat"]="ゴーストチャット読む",["Extended Chat"]="拡張チャット",["Fast Chat"]="高速チャット",["Unlock Extra Characters"]="追加文字を許可",["Spell Check"]="スペルチェック",["Clipboard"]="クリップボード",["Save Chat Log"]="チャットログ保存",["Dark Chat Theme"]="ダークチャット",["Enable /color"]="/color 有効",["Block Fortegreen"]="Fortegreen ブロック",["Allow Duplicate Colors"]="同じ色を許可",["Auto Ghost After Start"]="開始後に自動ゴースト",["FAVORITE OUTFITS"]="お気に入り衣装",["Slot"]="スロット",["Empty"]="空",["Apply"]="適用",["Save Mine"]="自分を保存",["Save Selected"]="選択を保存",["Saved slot"]="スロット保存",["Applied slot"]="スロット適用",["Cleared slot"]="スロット消去",["Auto-Ban Platform Spoof (Host)"]="平台偽装を自動BAN",["Ban Custom Platforms From TXT"]="TXTから平台BAN",["RPC Anti-Cheat"]="RPCアンチチート",["RPC limit:"]="RPC制限:",["RPC Local Drop"]="RPCローカル破棄",["RPC Host Ban"]="RPCホストBAN" },
+            ["ko"] = new Dictionary<string, string> { ["GENERAL"]="일반",["SELF"]="플레이어",["VISUALS"]="비주얼",["PLAYERS"]="플레이어",["SABOTAGES"]="사보타주",["HOST ONLY"]="호스트",["OUTFITS"]="의상",["VOTEKICK"]="투표킥",["MENU"]="메뉴",["MAPS"]="맵",["ANIMATIONS"]="애니메이션",["INFORMATION"]="정보",["KEYBINDS"]="키 설정",["WELCOME"]="환영",["CREDITS"]="크레딧",["Menu language:"]="메뉴 언어:",["FPS Limit"]="FPS 제한",["Chat History"]="채팅 기록",["History:"]="기록:",["History size:"]="기록 크기:",["CHAT UTILITY"]="채팅 도구",["Always Show Chat"]="항상 채팅 표시",["Read Ghost Chat"]="유령 채팅 읽기",["Extended Chat"]="확장 채팅",["Fast Chat"]="빠른 채팅",["Unlock Extra Characters"]="추가 문자 허용",["Spell Check"]="맞춤법 검사",["Clipboard"]="클립보드",["Save Chat Log"]="채팅 로그 저장",["Dark Chat Theme"]="어두운 채팅 테마",["Enable /color"]="/color 활성화",["Block Fortegreen"]="Fortegreen 차단",["Allow Duplicate Colors"]="중복 색상 허용",["Auto Ghost After Start"]="시작 후 자동 유령",["FAVORITE OUTFITS"]="즐겨찾기 의상",["Slot"]="슬롯",["Empty"]="비어 있음",["Apply"]="적용",["Save Mine"]="내 것 저장",["Save Selected"]="선택 저장",["Saved slot"]="슬롯 저장됨",["Applied slot"]="슬롯 적용됨",["Cleared slot"]="슬롯 삭제됨",["Auto-Ban Platform Spoof (Host)"]="플랫폼 위장 자동 밴",["Ban Custom Platforms From TXT"]="TXT 커스텀 플랫폼 밴",["RPC Anti-Cheat"]="RPC 안티치트",["RPC limit:"]="RPC 제한:",["RPC Local Drop"]="RPC 로컬 드롭",["RPC Host Ban"]="RPC 호스트 밴" }
+        };
+
+        private static readonly string[] menuTranslationFixKeys =
+        {
+            "ANTI CHEAT", "AUTO HOST", "LOBBY CONTROLS", "ROLE MANAGER", "PUNISHMENT SYSTEM", "Mode:",
+            "RPC PROTECTIONS", "Block Spoof RPC", "Block Sabotage & Meetings", "Block Game RPC in Lobby",
+            "Auto-Ban Platform Spoof (Host)", "Ban Custom Platforms From TXT", "Block Meeting RPC Flood",
+            "Block Chat RPC Flood", "OTHER PROTECTIONS", "Disable Vote Kicks (Host)", "Auto-Kick Fortegreen",
+            "Auto-Ban Broken FriendCode (Host)", "BAN LIST", "Auto-Ban Blacklisted Players", "Enter Friend Code",
+            "ADD", "Ban list is empty."
+        };
+
+        private static readonly Dictionary<string, string[]> menuTranslationFixes = new Dictionary<string, string[]>
+        {
+            ["de"] = new[] { "ANTI-CHEAT", "AUTO-HOST", "LOBBY-STEUERUNG", "ROLLENMANAGER", "STRAFSYSTEM", "Modus:", "RPC-SCHUTZ", "Spoof-RPC blockieren", "Sabotage & Meetings blockieren", "Spiel-RPC in Lobby blockieren", "Plattform-Spoof auto-bannen (Host)", "Custom-Plattformen aus TXT bannen", "Meeting-RPC-Flood blockieren", "Chat-RPC-Flood blockieren", "WEITERER SCHUTZ", "Vote-Kicks deaktivieren (Host)", "Fortegreen automatisch kicken", "Defekten FriendCode auto-bannen (Host)", "BAN-LISTE", "Spieler aus Ban-Liste auto-bannen", "Friend Code eingeben", "HINZUFÜGEN", "Ban-Liste ist leer." },
+            ["fr"] = new[] { "ANTI-TRICHE", "HÔTE AUTO", "CONTRÔLES LOBBY", "GESTION DES RÔLES", "SYSTÈME DE SANCTIONS", "Mode :", "PROTECTIONS RPC", "Bloquer RPC spoof", "Bloquer sabotages et meetings", "Bloquer RPC de jeu en lobby", "Auto-ban spoof plateforme (Hôte)", "Ban plateformes custom TXT", "Bloquer flood RPC meeting", "Bloquer flood RPC chat", "AUTRES PROTECTIONS", "Désactiver vote-kicks (Hôte)", "Auto-kick Fortegreen", "Auto-ban FriendCode cassé (Hôte)", "LISTE DE BAN", "Auto-ban joueurs listés", "Entrer Friend Code", "AJOUTER", "La liste de ban est vide." },
+            ["es"] = new[] { "ANTI-CHEAT", "HOST AUTO", "CONTROLES DE LOBBY", "GESTOR DE ROLES", "SISTEMA DE SANCIONES", "Modo:", "PROTECCIONES RPC", "Bloquear RPC spoof", "Bloquear sabotajes y reuniones", "Bloquear RPC de juego en lobby", "Auto-ban spoof de plataforma (Host)", "Ban de plataformas custom desde TXT", "Bloquear flood RPC de reunión", "Bloquear flood RPC de chat", "OTRAS PROTECCIONES", "Desactivar vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban FriendCode roto (Host)", "LISTA DE BAN", "Auto-ban jugadores en lista", "Introducir Friend Code", "AÑADIR", "La lista de ban está vacía." },
+            ["it"] = new[] { "ANTI-CHEAT", "HOST AUTO", "CONTROLLI LOBBY", "GESTORE RUOLI", "SISTEMA PUNIZIONI", "Modalità:", "PROTEZIONI RPC", "Blocca RPC spoof", "Blocca sabotaggi e meeting", "Blocca RPC di gioco in lobby", "Auto-ban spoof piattaforma (Host)", "Ban piattaforme custom da TXT", "Blocca flood RPC meeting", "Blocca flood RPC chat", "ALTRE PROTEZIONI", "Disattiva vote-kick (Host)", "Auto-kick Fortegreen", "Auto-ban FriendCode rotto (Host)", "LISTA BAN", "Auto-ban giocatori in lista", "Inserisci Friend Code", "AGGIUNGI", "La lista ban è vuota." },
+            ["pt"] = new[] { "ANTI-CHEAT", "HOST AUTO", "CONTROLES DO LOBBY", "GERENCIADOR DE FUNÇÕES", "SISTEMA DE PUNIÇÕES", "Modo:", "PROTEÇÕES RPC", "Bloquear RPC spoof", "Bloquear sabotagens e reuniões", "Bloquear RPC de jogo no lobby", "Auto-ban spoof de plataforma (Host)", "Ban plataformas custom do TXT", "Bloquear flood RPC de reunião", "Bloquear flood RPC de chat", "OUTRAS PROTEÇÕES", "Desativar vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban FriendCode quebrado (Host)", "LISTA DE BAN", "Auto-ban jogadores listados", "Inserir Friend Code", "ADICIONAR", "A lista de ban está vazia." },
+            ["pl"] = new[] { "ANTI-CHEAT", "AUTO HOST", "KONTROLA LOBBY", "MENEDŻER RÓL", "SYSTEM KAR", "Tryb:", "OCHRONA RPC", "Blokuj spoof RPC", "Blokuj sabotaże i spotkania", "Blokuj RPC gry w lobby", "Auto-ban spoof platformy (Host)", "Ban platform custom z TXT", "Blokuj flood RPC spotkania", "Blokuj flood RPC czatu", "INNA OCHRONA", "Wyłącz vote-kicki (Host)", "Auto-kick Fortegreen", "Auto-ban uszkodzony FriendCode (Host)", "LISTA BANÓW", "Auto-ban graczy z listy", "Wpisz Friend Code", "DODAJ", "Lista banów jest pusta." },
+            ["nl"] = new[] { "ANTI-CHEAT", "AUTO-HOST", "LOBBYBEDIENING", "ROLLENBEHEER", "STRAFSYSTEEM", "Modus:", "RPC-BESCHERMING", "Spoof-RPC blokkeren", "Sabotage & meetings blokkeren", "Game-RPC in lobby blokkeren", "Platform-spoof auto-bannen (Host)", "Custom platforms uit TXT bannen", "Meeting-RPC-flood blokkeren", "Chat-RPC-flood blokkeren", "ANDERE BESCHERMING", "Vote-kicks uitschakelen (Host)", "Fortegreen automatisch kicken", "Kapotte FriendCode auto-bannen (Host)", "BANLIJST", "Spelers op banlijst auto-bannen", "Friend Code invoeren", "TOEVOEGEN", "Banlijst is leeg." },
+            ["tr"] = new[] { "ANTI-CHEAT", "OTO HOST", "LOBI KONTROLLERİ", "ROL YÖNETİCİSİ", "CEZA SİSTEMİ", "Mod:", "RPC KORUMALARI", "Spoof RPC engelle", "Sabotaj ve toplantıları engelle", "Lobide oyun RPC engelle", "Platform spoof oto-ban (Host)", "TXT özel platform ban", "Toplantı RPC flood engelle", "Sohbet RPC flood engelle", "DİĞER KORUMALAR", "Vote-kick kapat (Host)", "Fortegreen oto-kick", "Bozuk FriendCode oto-ban (Host)", "BAN LİSTESİ", "Listedeki oyuncuları oto-ban", "Friend Code gir", "EKLE", "Ban listesi boş." },
+            ["cs"] = new[] { "ANTI-CHEAT", "AUTO HOST", "OVLÁDÁNÍ LOBBY", "SPRÁVCE ROLÍ", "SYSTÉM TRESTŮ", "Režim:", "OCHRANA RPC", "Blokovat spoof RPC", "Blokovat sabotáže a meetingy", "Blokovat herní RPC v lobby", "Auto-ban spoof platformy (Host)", "Ban custom platforem z TXT", "Blokovat meeting RPC flood", "Blokovat chat RPC flood", "DALŠÍ OCHRANA", "Vypnout vote-kicky (Host)", "Auto-kick Fortegreen", "Auto-ban rozbitý FriendCode (Host)", "BAN LIST", "Auto-ban hráčů z listu", "Zadej Friend Code", "PŘIDAT", "Ban list je prázdný." },
+            ["ro"] = new[] { "ANTI-CHEAT", "HOST AUTO", "CONTROALE LOBBY", "MANAGER ROLURI", "SISTEM DE PEDEPSE", "Mod:", "PROTECȚII RPC", "Blochează RPC spoof", "Blochează sabotaje și meetinguri", "Blochează RPC de joc în lobby", "Auto-ban spoof platformă (Host)", "Ban platforme custom din TXT", "Blochează flood RPC meeting", "Blochează flood RPC chat", "ALTE PROTECȚII", "Dezactivează vote-kick (Host)", "Auto-kick Fortegreen", "Auto-ban FriendCode stricat (Host)", "LISTĂ BAN", "Auto-ban jucători listați", "Introdu Friend Code", "ADAUGĂ", "Lista de ban este goală." },
+            ["hu"] = new[] { "ANTI-CHEAT", "AUTO HOST", "LOBBI VEZÉRLÉS", "SZEREPKEZELŐ", "BÜNTETÉSI RENDSZER", "Mód:", "RPC VÉDELEM", "Spoof RPC blokkolása", "Szabotázsok és meetingek blokkolása", "Játék RPC blokkolása lobbyban", "Platform spoof auto-ban (Host)", "Custom platformok bannolása TXT-ből", "Meeting RPC flood blokkolása", "Chat RPC flood blokkolása", "EGYÉB VÉDELEM", "Vote-kick tiltása (Host)", "Fortegreen auto-kick", "Hibás FriendCode auto-ban (Host)", "BAN LISTA", "Listás játékosok auto-banja", "Friend Code megadása", "HOZZÁAD", "A ban lista üres." },
+            ["sv"] = new[] { "ANTI-CHEAT", "AUTO HOST", "LOBBYKONTROLLER", "ROLLHANTERARE", "STRAFFSYSTEM", "Läge:", "RPC-SKYDD", "Blockera spoof-RPC", "Blockera sabotage och möten", "Blockera spel-RPC i lobby", "Auto-ban plattformsspoof (Host)", "Ban custom-plattformar från TXT", "Blockera meeting RPC-flood", "Blockera chat RPC-flood", "ANNAT SKYDD", "Inaktivera vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban trasig FriendCode (Host)", "BANLISTA", "Auto-ban spelare på lista", "Ange Friend Code", "LÄGG TILL", "Banlistan är tom." },
+            ["da"] = new[] { "ANTI-CHEAT", "AUTO HOST", "LOBBYKONTROL", "ROLLEMANAGER", "STRAFSYSTEM", "Tilstand:", "RPC-BESKYTTELSE", "Bloker spoof-RPC", "Bloker sabotager og møder", "Bloker spil-RPC i lobby", "Auto-ban platform spoof (Host)", "Ban custom-platforme fra TXT", "Bloker meeting RPC-flood", "Bloker chat RPC-flood", "ANDEN BESKYTTELSE", "Deaktiver vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban defekt FriendCode (Host)", "BANLISTE", "Auto-ban spillere på liste", "Indtast Friend Code", "TILFØJ", "Banlisten er tom." },
+            ["fi"] = new[] { "ANTI-CHEAT", "AUTO HOST", "LOBBYN HALLINTA", "ROOLIEN HALLINTA", "RANGAISTUSJÄRJESTELMÄ", "Tila:", "RPC-SUOJAUKSET", "Estä spoof RPC", "Estä sabotaasit ja kokoukset", "Estä peli-RPC lobbyssa", "Auto-ban platform spoof (Host)", "Ban custom-alustat TXT:stä", "Estä meeting RPC flood", "Estä chat RPC flood", "MUUT SUOJAUKSET", "Poista vote-kickit käytöstä (Host)", "Auto-kick Fortegreen", "Auto-ban rikkinäinen FriendCode (Host)", "BAN-LISTA", "Auto-ban listatut pelaajat", "Syötä Friend Code", "LISÄÄ", "Ban-lista on tyhjä." },
+            ["no"] = new[] { "ANTI-CHEAT", "AUTO HOST", "LOBBYKONTROLLER", "ROLLEBEHANDLER", "STRAFFESYSTEM", "Modus:", "RPC-BESKYTTELSE", "Blokker spoof-RPC", "Blokker sabotasje og møter", "Blokker spill-RPC i lobby", "Auto-ban platform spoof (Host)", "Ban custom-plattformer fra TXT", "Blokker meeting RPC-flood", "Blokker chat RPC-flood", "ANNEN BESKYTTELSE", "Deaktiver vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban ødelagt FriendCode (Host)", "BANLISTE", "Auto-ban spillere på liste", "Skriv Friend Code", "LEGG TIL", "Banlisten er tom." },
+            ["uk"] = new[] { "АНТИЧИТ", "АВТО ХОСТ", "КЕРУВАННЯ ЛОБІ", "МЕНЕДЖЕР РОЛЕЙ", "СИСТЕМА ПОКАРАНЬ", "Режим:", "ЗАХИСТ RPC", "Блокувати spoof RPC", "Блокувати саботажі та зустрічі", "Блокувати ігрові RPC у лобі", "Авто-бан spoof платформи (Хост)", "Бан кастомних платформ з TXT", "Блокувати flood RPC зустрічі", "Блокувати flood RPC чату", "ІНШИЙ ЗАХИСТ", "Вимкнути vote-kick (Хост)", "Авто-кік Fortegreen", "Авто-бан зламаного FriendCode (Хост)", "БАН-ЛИСТ", "Авто-бан гравців зі списку", "Введіть Friend Code", "ДОДАТИ", "Бан-лист порожній." },
+            ["el"] = new[] { "ANTI-CHEAT", "AUTO HOST", "ΕΛΕΓΧΟΙ LOBBY", "ΔΙΑΧΕΙΡΙΣΗ ΡΟΛΩΝ", "ΣΥΣΤΗΜΑ ΠΟΙΝΩΝ", "Λειτουργία:", "ΠΡΟΣΤΑΣΙΕΣ RPC", "Μπλοκ spoof RPC", "Μπλοκ σαμποτάζ και meetings", "Μπλοκ game RPC στο lobby", "Auto-ban platform spoof (Host)", "Ban custom platforms από TXT", "Μπλοκ meeting RPC flood", "Μπλοκ chat RPC flood", "ΑΛΛΕΣ ΠΡΟΣΤΑΣΙΕΣ", "Απενεργοποίηση vote-kicks (Host)", "Auto-kick Fortegreen", "Auto-ban χαλασμένο FriendCode (Host)", "ΛΙΣΤΑ BAN", "Auto-ban παικτών στη λίστα", "Εισαγωγή Friend Code", "ΠΡΟΣΘΗΚΗ", "Η λίστα ban είναι άδεια." },
+            ["zh"] = new[] { "反作弊", "自动房主", "大厅控制", "身份管理", "处罚系统", "模式:", "RPC 防护", "阻止 Spoof RPC", "阻止破坏和会议", "阻止大厅内游戏 RPC", "自动封禁平台伪装 (房主)", "从 TXT 封禁自定义平台", "阻止会议 RPC 洪泛", "阻止聊天 RPC 洪泛", "其他防护", "禁用投票踢人 (房主)", "自动踢出 Fortegreen", "自动封禁损坏 FriendCode (房主)", "封禁列表", "自动封禁列表玩家", "输入 Friend Code", "添加", "封禁列表为空。" },
+            ["ja"] = new[] { "アンチチート", "自動ホスト", "ロビー制御", "����ル管理", "処罰システム", "モード:", "RPC保護", "Spoof RPCをブロック", "サボタージュと会議をブロック", "ロビー中のゲームRPCをブロック", "プラットフォーム偽装を自動BAN (ホスト)", "TXTのカスタムプラットフォームをBAN", "会議RPCフラッドをブロック", "チャットRPCフラッドをブロック", "その他の保護", "投票キックを無効化 (ホスト)", "Fortegreenを自動キック", "壊れたFriendCodeを自動BAN (ホスト)", "BANリスト", "BANリストのプレイヤーを自動BAN", "Friend Codeを入力", "追加", "BANリストは空です。" },
+            ["ko"] = new[] { "안티치트", "자동 호스트", "로비 컨트롤", "역할 관리자", "처벌 시스템", "모드:", "RPC 보호", "Spoof RPC 차단", "사보타주와 회의 차단", "로비에서 게임 RPC 차단", "플랫폼 위장 자동 밴 (호스트)", "TXT 커스텀 플랫폼 밴", "회의 RPC 플러드 차단", "채팅 RPC 플러드 차단", "기타 보호", "투표 킥 비활성화 (호스트)", "Fortegreen 자동 킥", "손상된 FriendCode 자동 밴 (호스트)", "밴 목록", "목록의 플레이어 자동 밴", "Friend Code 입력", "추가", "밴 목록이 비어 있습니다." }
+        };
 
         public static byte selectedMorphTargetId = 255;
         public static bool unlockCosmetics = true;
@@ -168,6 +233,12 @@ namespace ElysiumModMenu
         {
             try
             {
+                string configuredLanguage = CurrentMenuLanguageCode();
+                if (configuredLanguage == "ru" || configuredLanguage == "uk")
+                    return TryTranslateMenuText(configuredLanguage, eng, configuredLanguage == "ru" ? rus : null);
+                if (configuredLanguage != "auto")
+                    return TryTranslateMenuText(configuredLanguage, eng, eng);
+
                 if (DestroyableSingleton<TranslationController>.InstanceExists)
                 {
                     string currentLang = DestroyableSingleton<TranslationController>.Instance.currentLanguage.ToString().ToLower();
@@ -177,6 +248,45 @@ namespace ElysiumModMenu
             }
             catch { }
             return eng;
+        }
+
+        private static string TryTranslateMenuText(string languageCode, string englishText, string fallback)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(languageCode) || string.IsNullOrEmpty(englishText))
+                    return fallback ?? englishText;
+
+                if (languageCode == "en")
+                    return englishText;
+
+                if (menuTranslationFixes.TryGetValue(languageCode, out string[] fixedTranslations))
+                {
+                    int fixedIndex = Array.IndexOf(menuTranslationFixKeys, englishText);
+                    if (fixedIndex >= 0 && fixedIndex < fixedTranslations.Length && !string.IsNullOrWhiteSpace(fixedTranslations[fixedIndex]))
+                        return fixedTranslations[fixedIndex];
+                }
+
+                if (menuTranslations.TryGetValue(languageCode, out Dictionary<string, string> translations) &&
+                    translations.TryGetValue(englishText, out string translated) &&
+                    !string.IsNullOrWhiteSpace(translated))
+                    return translated;
+            }
+            catch { }
+
+            return fallback ?? englishText;
+        }
+
+        public static string CurrentMenuLanguageCode()
+        {
+            try
+            {
+                int index = Mathf.Clamp(currentMenuLanguageIndex, 0, menuLanguageCodes.Length - 1);
+                return menuLanguageCodes[index];
+            }
+            catch { }
+
+            return "auto";
         }
 
         private int currentGeneralSubTab = 0;
@@ -314,6 +424,7 @@ namespace ElysiumModMenu
         public static bool rgbMenuMode = false;
         private float rgbMenuHue = 0f;
         public static bool enableBackground = false;
+        public static bool hardMenu = false;
         public static Texture2D customMenuBg = null;
         private bool wasShowMenu = false;
         private int currentMenuColorIndex = 10;
@@ -351,13 +462,13 @@ namespace ElysiumModMenu
         private float customChatSpamTimer = 0f;
 
         public static float autoMeetingTimer = 0f;
-        private string[] tabNames => new string[] { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("OUTFITS", "ОДЕЖДА"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ"), L("MAPS", "КАРТЫ"), L("ANIMATIONS", "АНИМАЦИИ") };
+        private string[] tabNames => new string[] { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ"), L("ANIMATIONS", "АНИМАЦИИ") };
         public static float speedMultiplier = 1f;
         public static bool noSettingLimit = false;
         public static float globalRoomColorId = 0f;
 
         private int currentHostOnlySubTab = 0;
-        private string[] hostOnlySubTabs => new string[] { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ") };
+        private string[] hostOnlySubTabs => new string[] { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), L("MAPS", "КАРТЫ") };
         public static bool UseSnapToRPC = true;
         private static bool isSkeldFlipped = false;
         public static float selectedMapSpawnIdx = 0f;
@@ -697,7 +808,8 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             for (int i = 0; i < autoHostSubTabs.Length; i++)
             {
-                if (GUILayout.Button(autoHostSubTabs[i], currentAutoHostSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
+                string subTabLabel = i < hostOnlySubTabs.Length ? hostOnlySubTabs[i] : autoHostSubTabs[i];
+                if (GUILayout.Button(subTabLabel, currentAutoHostSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
                 {
                     currentAutoHostSubTab = i;
                     scrollPosition = Vector2.zero;
@@ -714,9 +826,9 @@ namespace ElysiumModMenu
 
         private void DrawMapsTab()
         {
-            GUILayout.BeginVertical(boxStyle);
+            GUILayout.BeginVertical(menuCardStyle);
 
-            GUILayout.Label(L("LOBBY CONTROL", "КОНТРОЛЬ ЛОББИ"), headerStyle);
+            DrawMenuSectionHeader(L("LOBBY CONTROL", "КОНТРОЛЬ ЛОББИ"));
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(L("Spawn Lobby", "Создать лобби"), btnStyle, GUILayout.Height(30))) SpawnLobby();
             if (GUILayout.Button(L("Despawn Lobby", "Удалить лобби"), btnStyle, GUILayout.Height(30))) DespawnLobby();
@@ -724,7 +836,7 @@ namespace ElysiumModMenu
 
             GUILayout.Space(15);
 
-            GUILayout.Label(L("MAP CONTROL", "КОНТРОЛЬ КАРТЫ"), headerStyle);
+            DrawMenuSectionHeader(L("MAP CONTROL", "КОНТРОЛЬ КАРТЫ"));
             isManualMapSpawn = DrawToggle(isManualMapSpawn, L("Manual Map Spawn Mode", "Ручной спавн карты"), 250);
             GUILayout.Space(10);
 
@@ -743,7 +855,7 @@ namespace ElysiumModMenu
 
             GUILayout.Space(15);
 
-            GUILayout.Label(L("ROOM TELEPORTS (IN-GAME)", "ТЕЛЕПОРТЫ ПО КОМНАТАМ (В ИГРЕ)"), headerStyle);
+            DrawMenuSectionHeader(L("ROOM TELEPORTS (IN-GAME)", "ТЕЛЕПОРТЫ ПО КОМНАТАМ (В ИГРЕ)"));
             if (ShipStatus.Instance != null && PlayerControl.LocalPlayer != null)
             {
                 mapsScrollPos = GUILayout.BeginScrollView(mapsScrollPos, GUILayout.Height(160));
@@ -810,6 +922,12 @@ namespace ElysiumModMenu
             GUILayout.Label($"<b><color=#{hexColor}>{L("UTILITY OPTIONS", "УТИЛИТЫ")}</color></b>", toggleLabelStyle);
             GUILayout.Space(6);
             enableChatHistory = DrawToggle(enableChatHistory, L("Chat History (Up/Down)", "История чата (Стрелочки)"), 280);
+            GUILayout.Space(2);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"{L("History size:", "Размер истории:")} <color=#{hexColor}>{chatHistoryLimit}</color>", new GUIStyle(toggleLabelStyle) { richText = true }, GUILayout.Height(22), GUILayout.Width(130));
+            chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 80f, sliderStyle, sliderThumbStyle, GUILayout.Width(145)), 5, 80);
+            TrimChatHistoryToLimit();
+            GUILayout.EndHorizontal();
             GUILayout.Space(2);
             enableClipboard = DrawToggle(enableClipboard, L("Clipboard (Ctrl+C/V)", "Буфер обмена (Ctrl+C/V)"), 280);
             GUILayout.Space(2);
@@ -938,7 +1056,7 @@ namespace ElysiumModMenu
             GUILayout.Space(12);
 
             GUILayout.BeginHorizontal(GUILayout.Height(24));
-            GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(122));
+            GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Height(22), GUILayout.Width(122));
             customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(300));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -1288,14 +1406,14 @@ namespace ElysiumModMenu
 
         private void DrawAntiCheatTab()
         {
-            float antiCheatColumnWidth = (windowRect.width - 220f) / 2f;
-            if (antiCheatColumnWidth < 250f) antiCheatColumnWidth = 250f;
+            float antiCheatColumnWidth = (windowRect.width - 186f) / 2f;
+            if (antiCheatColumnWidth < 282f) antiCheatColumnWidth = 282f;
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(antiCheatColumnWidth));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(antiCheatColumnWidth));
 
-            GUILayout.Label(L("PUNISHMENT SYSTEM", "СИСТЕМА НАКАЗАНИЙ"), headerStyle);
+            DrawMenuSectionHeader(L("PUNISHMENT SYSTEM", "СИСТЕМА НАКАЗАНИЙ"));
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
@@ -1307,6 +1425,7 @@ namespace ElysiumModMenu
             {
                 punishmentMode--;
                 if (punishmentMode < 0) punishmentMode = punishmentNames.Length - 1;
+                settingsDirty = true;
             }
 
             GUILayout.Label(punishmentNames[punishmentMode], middleLabelStyle, GUILayout.ExpandWidth(true), GUILayout.Height(25));
@@ -1315,6 +1434,7 @@ namespace ElysiumModMenu
             {
                 punishmentMode++;
                 if (punishmentMode >= punishmentNames.Length) punishmentMode = 0;
+                settingsDirty = true;
             }
             GUILayout.EndHorizontal();
 
@@ -1328,39 +1448,53 @@ namespace ElysiumModMenu
             };
             GUILayout.Label(modeDesc, new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
 
-            GUILayout.Space(15);
-            GUILayout.Label(L("RPC PROTECTIONS", "ЗАЩИТА RPC"), headerStyle);
+            GUILayout.Space(12);
+            DrawMenuSectionHeader(L("RPC PROTECTIONS", "ЗАЩИТА RPC"));
 
-            blockSpoofRPC = DrawToggle(blockSpoofRPC, "Block Spoof RPC", 250);
+            blockSpoofRPC = DrawToggle(blockSpoofRPC, L("Block Spoof RPC", "Блокировать spoof RPC"), 250);
             GUILayout.Space(5);
-            blockSabotageRPC = DrawToggle(blockSabotageRPC, "Block Sabotage & Meetings", 250);
+            blockSabotageRPC = DrawToggle(blockSabotageRPC, L("Block Sabotage & Meetings", "Блокировать саботажи и митинги"), 250);
             GUILayout.Space(5);
-            blockGameRpcInLobby = DrawToggle(blockGameRpcInLobby, "Block Game RPC in Lobby", 250);
+            blockGameRpcInLobby = DrawToggle(blockGameRpcInLobby, L("Block Game RPC in Lobby", "Блокировать игровые RPC в лобби"), 250);
             GUILayout.Space(5);
-            blockMeetingFloodRpc = DrawToggle(blockMeetingFloodRpc, "Block Meeting RPC Flood", 250);
+
+            autoBanPlatformSpoof = DrawToggle(autoBanPlatformSpoof, L("Auto-Ban Platform Spoof (Host)", "Авто-бан Platform Spoof (Хост)"), 250);
             GUILayout.Space(5);
-            blockChatFloodRpc = DrawToggle(blockChatFloodRpc, "Block Chat RPC Flood", 250);
+            banCustomPlatformsFromTxt = DrawToggle(banCustomPlatformsFromTxt, L("Ban Custom Platforms From TXT", "Бан кастом платформ из TXT"), 250);
             GUILayout.Space(5);
-            enablePasosLimit = DrawToggle(enablePasosLimit, "Message Block Freeze", 250);
+
+            blockMeetingFloodRpc = DrawToggle(blockMeetingFloodRpc, L("Block Meeting RPC Flood", "Блокировать флуд RPC митинга"), 250);
             GUILayout.Space(5);
-            enableLocalPasosBan = DrawToggle(enableLocalPasosBan, "Message Block Freeze Local Ban", 250);
+            blockChatFloodRpc = DrawToggle(blockChatFloodRpc, L("Block Chat RPC Flood", "Блокировать флуд RPC чата"), 250);
             GUILayout.Space(5);
-            enableHostPasosBan = DrawToggle(enableHostPasosBan, "Message Block Freeze Host Ban", 250);
+            enablePasosLimit = DrawToggle(enablePasosLimit, L("RPC Anti-Cheat", "RPC Античит"), 250);
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("RPC limit:", "Лимит RPC:"), new GUIStyle(toggleLabelStyle), GUILayout.Height(22), GUILayout.Width(76));
+            rpcSpamLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(rpcSpamLimit, 10f, 250f, sliderStyle, sliderThumbStyle, GUILayout.Width(116)), 10, 250);
+            GUILayout.Space(8);
+            GUILayout.Label(rpcSpamLimit.ToString(), menuBadgeStyle, GUILayout.Width(46), GUILayout.Height(22));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            enableLocalPasosBan = DrawToggle(enableLocalPasosBan, L("RPC Local Drop", "RPC локальный дроп"), 250);
+            GUILayout.Space(5);
+            enableHostPasosBan = DrawToggle(enableHostPasosBan, L("RPC Host Ban", "RPC бан на хосте"), 250);
             GUILayout.Space(15);
-            GUILayout.Label(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"), headerStyle);
+            DrawMenuSectionHeader(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"));
 
             disableVoteKicks = DrawToggle(disableVoteKicks, L("Disable Vote Kicks (Host)", "Запрет кика голосованием (Хост)"), 250);
-            GUILayout.Space(5);
-            enableLocalPetSpamDrop = DrawToggle(enableLocalPetSpamDrop, L("Block Pet Spam (Local)", "Блок спама питомцем (Локально)"), 250);
-            GUILayout.Space(5);
-            enableHostPetSpamBan = DrawToggle(enableHostPetSpamBan, L("Auto-Ban Pet Spammers", "Авто-бан за спам питомцем"), 250);
             GUILayout.Space(5);
 
             autoKickBugs = DrawToggle(autoKickBugs, L("Auto-Kick Fortegreen", "Авто-кик багнутых игроков"), 250);
             if (autoKickBugs)
             {
                 GUILayout.BeginHorizontal();
-                autoKickTimer = GUILayout.HorizontalSlider(autoKickTimer, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(170));
+                GUILayout.Label(L("Timer:", "Таймер:"), new GUIStyle(toggleLabelStyle), GUILayout.Height(22), GUILayout.Width(62));
+                autoKickTimer = GUILayout.HorizontalSlider(autoKickTimer, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(112));
+                GUILayout.Space(8);
+                GUILayout.Label(autoKickTimer.ToString("0.0") + "s", menuBadgeStyle, GUILayout.Width(46), GUILayout.Height(22));
+                GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
             }
             GUILayout.Space(5);
@@ -1369,8 +1503,8 @@ namespace ElysiumModMenu
             GUILayout.EndVertical();
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(antiCheatColumnWidth), GUILayout.ExpandHeight(true));
-            GUILayout.Label(L("BAN LIST", "БАН ЛИСТ"), headerStyle);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(antiCheatColumnWidth), GUILayout.ExpandHeight(true));
+            DrawMenuSectionHeader(L("BAN LIST", "БАН ЛИСТ"));
             autoBanEnabled = DrawToggle(autoBanEnabled, L("Auto-Ban Blacklisted Players", "Авто-бан игроков из списка"), 250);
             GUILayout.Space(5);
 
@@ -1510,6 +1644,13 @@ namespace ElysiumModMenu
 
             public static bool Prefix(PlayerControl __instance, byte callId, Hazel.MessageReader reader)
             {
+                if (__instance != null && __instance != PlayerControl.LocalPlayer && __instance.Data != null && ElysiumModMenuGUI.enablePasosLimit)
+                {
+                    int clientId = Shield_PasosLimit_Patch.GetKickClientId(__instance, -1);
+                    if (Shield_PasosLimit_Patch.RecordDrop(clientId, __instance, $"PlayerControl RPC {callId} spam"))
+                        return false;
+                }
+
                 if (!ElysiumModMenuGUI.blockSpoofRPC &&
                     !ElysiumModMenuGUI.blockSabotageRPC &&
                     !ElysiumModMenuGUI.blockGameRpcInLobby &&
@@ -1670,17 +1811,49 @@ namespace ElysiumModMenu
         }
         public static bool autoChatEveryone = false;
         public static bool pendingAutoMeeting = false;
+
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckColor))]
+        public static class AllowDuplicateColors_CheckColor_Patch
+        {
+            private static bool applyingDuplicateColor;
+
+            public static bool Prefix(PlayerControl __instance, byte bodyColor)
+            {
+                if (applyingDuplicateColor || !ElysiumModMenuGUI.allowDuplicateColors ||
+                    __instance == null || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost ||
+                    bodyColor == byte.MaxValue)
+                    return true;
+
+                try
+                {
+                    applyingDuplicateColor = true;
+                    __instance.RpcSetColor(bodyColor);
+                    return false;
+                }
+                catch { return true; }
+                finally { applyingDuplicateColor = false; }
+            }
+        }
+
         [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Start))]
         public static class Anticheat_Platform_Check
         {
             public static void Postfix(PlayerControl __instance)
             {
-                if (!ElysiumModMenuGUI.blockSpoofRPC || __instance == null || __instance == PlayerControl.LocalPlayer) return;
+                if ((!ElysiumModMenuGUI.blockSpoofRPC && !ElysiumModMenuGUI.autoBanPlatformSpoof && !ElysiumModMenuGUI.banCustomPlatformsFromTxt) ||
+                    __instance == null || __instance == PlayerControl.LocalPlayer) return;
 
                 try
                 {
                     var clientData = AmongUsClient.Instance.GetClientFromCharacter(__instance);
                     if (clientData == null || clientData.PlatformData == null) return;
+
+                    if (ElysiumModMenuGUI.banCustomPlatformsFromTxt &&
+                        MatchesPlatformBanTxt(clientData, out string customPlatformName, out string token))
+                    {
+                        HostBanForPlatform(__instance, $"Custom platform TXT match '{token}' ({customPlatformName})");
+                        return;
+                    }
 
                     var platform = clientData.PlatformData;
                     string pName = platform.PlatformName;
@@ -1715,7 +1888,11 @@ namespace ElysiumModMenu
 
                     if (!isValid)
                     {
-                        ElysiumAnticheat.Flag(__instance, $"Platform Spoof detected ({platform.Platform})");
+                        string reason = $"Platform Spoof detected ({platform.Platform})";
+                        if (ElysiumModMenuGUI.autoBanPlatformSpoof)
+                            HostBanForPlatform(__instance, reason);
+                        else if (ElysiumModMenuGUI.blockSpoofRPC)
+                            ElysiumAnticheat.Flag(__instance, reason);
                     }
                 }
                 catch { }
@@ -2451,7 +2628,7 @@ namespace ElysiumModMenu
             private static float LoadGraceRemaining => loadWaitStartedAt < 0f || ElysiumModMenuGUI.AutoHostLoadGraceSeconds <= 0 ? 0f : Mathf.Clamp(ElysiumModMenuGUI.AutoHostLoadGraceSeconds - (Time.unscaledTime - loadWaitStartedAt), 0f, 90f);
         }
         private int currentVisualsSubTab = 0;
-        private string[] visualsSubTabs = { "IN-GAME" };
+        private string[] visualsSubTabs => new string[] { L("IN-GAME", "В ИГРЕ"), L("OUTFITS", "ОДЕЖДА") };
         private int currentSelfSubTab = 0;
         private string[] selfSubTabs = { "SPOOF", "MOVEMENT", "ROLES", "CHAT" };
         private string[] selfOtherTabs = { "MOVEMENT", "ROLES", "CHAT" };
@@ -2504,12 +2681,29 @@ namespace ElysiumModMenu
         public static bool enablePlatformSpoof = true;
         public static bool enableAnomalyLogReports = true;
         public static bool showEspFriendCode = true;
+        public static bool allowDuplicateColors = false;
+        public static bool autoGhostAfterStart = false;
+        public static bool autoBanPlatformSpoof = false;
+        public static bool banCustomPlatformsFromTxt = false;
+        public static int fpsLimit = 60;
+        public static int chatHistoryLimit = 20;
         public static int currentPlatformIndex = 1;
         private static float localNameRefreshTimer = 0f;
         private static float localFriendCodeRefreshTimer = 0f;
+        private static float platformBanScanTimer = 0f;
+        private static int lastAppliedFpsLimit = -1;
+        private static bool autoGhostAppliedThisGame = false;
+        private static bool wasGameStartedForAutoGhost = false;
         private static string originalLocalFriendCode = null;
+        private static string originalLocalName = null;
         private static float friendEspIgnoreNextLoadAt = 0f;
         private static readonly HashSet<string> friendEspIgnoreTokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static string platformBanListPath = "";
+        private static float platformBanListNextLoadAt = 0f;
+        private static readonly HashSet<string> customPlatformBanTokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<int> platformSpoofPunishedOwners = new HashSet<int>();
+        private const int FavoriteOutfitSlotCount = 4;
+        private static readonly string[] favoriteOutfitSlots = new string[FavoriteOutfitSlotCount];
         private float brokenFcScanTimer = 0f;
         private static readonly HashSet<int> brokenFcPunishedOwners = new HashSet<int>();
 
@@ -2690,6 +2884,8 @@ namespace ElysiumModMenu
         public GUIStyle inputBlockStyle;
         private Texture2D texWindowBg, texBoxBg, texBtnBg, texAccent, texSidebarBg;
         private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn, texScrollThumb;
+        private Texture2D texMenuCard;
+        private GUIStyle menuCardStyle, menuSectionTitleStyle, menuDescStyle, menuBadgeStyle, menuAccentBarStyle, menuSwatchStyle;
         private void DrawHostOnlyTab()
         {
             GUILayout.BeginHorizontal();
@@ -2708,13 +2904,14 @@ namespace ElysiumModMenu
             else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
             else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
             else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
+            else if (currentHostOnlySubTab == 4) DrawMapsTab();
         }
 
 
         private void DrawVisualsInGame()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label(L("VISIBILITY", "ВИДИМОСТЬ"), headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("VISIBILITY", "ВИДИМОСТЬ"));
 
             GUILayout.BeginHorizontal();
             seeGhosts = DrawToggle(seeGhosts, L("See Ghosts", "Видеть призраков"), 210);
@@ -2779,13 +2976,12 @@ namespace ElysiumModMenu
         [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadMessage))]
         public static class Shield_PasosLimit_Patch
         {
+            private const byte DataGameDataTag = 1;
             private const byte RpcGameDataTag = 2;
             private const byte DroppedGameDataTag = 0;
-            private const int PasosBanPacketThreshold = 3;
-            private const float PasosWindow = 0.25f;
             private const float PasosNotifyCooldown = 2f;
-            private static readonly Queue<float> emptyRpcDrops = new Queue<float>();
-            private static readonly Dictionary<int, Queue<float>> pasosDropTrackers = new Dictionary<int, Queue<float>>();
+            private const float RpcSpamWindow = 1f;
+            private static readonly Dictionary<int, Queue<float>> rpcSpamTrackers = new Dictionary<int, Queue<float>>();
             private static readonly HashSet<int> pasosBlockedClientIds = new HashSet<int>();
             private static readonly HashSet<int> pasosHostBannedClientIds = new HashSet<int>();
             private static float lastPasosNotify;
@@ -2799,6 +2995,11 @@ namespace ElysiumModMenu
             public static bool IsClientBlocked(int clientId)
             {
                 return ElysiumModMenuGUI.enableLocalPasosBan && IsValidClientId(clientId) && pasosBlockedClientIds.Contains(clientId);
+            }
+
+            public static bool IsPlayerBlocked(PlayerControl player)
+            {
+                return player != null && IsClientBlocked(GetKickClientId(player, -1));
             }
 
             public static bool IsEmptyGameDataReader(MessageReader reader)
@@ -2819,54 +3020,55 @@ namespace ElysiumModMenu
                 return clientId >= 0 && clientId < 256;
             }
 
-            public static void RecordDrop(int clientId = -1)
+            public static bool RecordDrop(int clientId = -1, PlayerControl player = null, string reason = "RPC spam")
             {
                 float now = UnityEngine.Time.time;
-                while (emptyRpcDrops.Count > 0 && emptyRpcDrops.Peek() < now - PasosWindow)
-                    emptyRpcDrops.Dequeue();
-
-                emptyRpcDrops.Enqueue(now);
-
-                int resolvedClientId = IsValidClientId(clientId) ? clientId : currentPasosClientId;
+                int resolvedClientId = IsValidClientId(clientId) ? clientId : GetKickClientId(player, -1);
+                if (!IsValidClientId(resolvedClientId))
+                    resolvedClientId = currentPasosClientId;
                 if (!IsValidClientId(resolvedClientId))
                     resolvedClientId = ResolveSingleRemoteClientId();
+                if (!IsValidClientId(resolvedClientId))
+                    return false;
 
-                int clientDropCount = 0;
-                if (IsValidClientId(resolvedClientId))
+                int clientDropCount = TrackRpcSpam(resolvedClientId, now);
+                bool overLimit = clientDropCount >= ElysiumModMenuGUI.rpcSpamLimit;
+                if (overLimit)
                 {
-                    clientDropCount = TrackPasosClientDrop(resolvedClientId, now);
-                    if (clientDropCount >= PasosBanPacketThreshold)
-                        BlockPasosClient(resolvedClientId, clientDropCount);
+                    BlockPasosClient(resolvedClientId, player, clientDropCount, reason);
+                    if (now - lastPasosNotify > PasosNotifyCooldown)
+                        lastPasosNotify = now;
                 }
 
-                if (emptyRpcDrops.Count >= PasosBanPacketThreshold && now - lastPasosNotify > PasosNotifyCooldown)
-                    lastPasosNotify = now;
+                return overLimit || (ElysiumModMenuGUI.enableLocalPasosBan && pasosBlockedClientIds.Contains(resolvedClientId));
             }
 
-            private static int TrackPasosClientDrop(int clientId, float now)
+            private static int TrackRpcSpam(int clientId, float now)
             {
                 if (!IsValidClientId(clientId)) return 0;
 
-                if (!pasosDropTrackers.TryGetValue(clientId, out Queue<float> drops))
+                if (!rpcSpamTrackers.TryGetValue(clientId, out Queue<float> drops))
                 {
                     drops = new Queue<float>();
-                    pasosDropTrackers[clientId] = drops;
+                    rpcSpamTrackers[clientId] = drops;
                 }
 
-                while (drops.Count > 0 && drops.Peek() < now - PasosWindow)
+                while (drops.Count > 0 && drops.Peek() < now - RpcSpamWindow)
                     drops.Dequeue();
 
                 drops.Enqueue(now);
                 return drops.Count;
             }
 
-            private static void BlockPasosClient(int clientId, int packetCount)
+            private static void BlockPasosClient(int clientId, PlayerControl player, int packetCount, string reason)
             {
                 try
                 {
                     if (!IsValidClientId(clientId) || (AmongUsClient.Instance != null && clientId == AmongUsClient.Instance.ClientId)) return;
 
-                    PlayerControl player = FindPlayerByClientId(clientId);
+                    if (player == null)
+                        player = FindPlayerByClientId(clientId);
+
                     string pName = player?.Data?.PlayerName ?? $"Client {clientId}";
                     int banClientId = GetKickClientId(player, clientId);
                     string fc = string.IsNullOrEmpty(player?.Data?.FriendCode) ? "Unknown" : player.Data.FriendCode;
@@ -2884,14 +3086,14 @@ namespace ElysiumModMenu
 
                     if (ElysiumModMenuGUI.enableLocalPasosBan && pasosBlockedClientIds.Add(clientId))
                     {
-                        ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Local Message Block Freeze blacklist after {packetCount} packets");
+                        ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Local RPC drop: {reason} after {packetCount} packets/s");
                     }
 
                     if (!ElysiumModMenuGUI.enableHostPasosBan || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
                     if (!pasosHostBannedClientIds.Add(clientId)) return;
                     if (!IsValidClientId(banClientId)) return;
 
-                    ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Host auto-ban for Message Block Freeze empty RPC spam after {packetCount} packets");
+                    ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Host RPC auto-ban: {reason} after {packetCount} packets/s");
                     AmongUsClient.Instance.KickPlayer(banClientId, true);
                 }
                 catch { }
@@ -3065,23 +3267,51 @@ namespace ElysiumModMenu
 
             public static void Postfix(MessageReader __result)
             {
-                DropEmptyRpcMessage(__result);
+                DropSuspiciousGameDataMessage(__result);
             }
 
-            public static void DropEmptyRpcMessage(MessageReader reader)
+            public static void DropSuspiciousGameDataMessage(MessageReader reader)
             {
                 if (!ElysiumModMenuGUI.enablePasosLimit || reader == null) return;
 
                 try
                 {
-                    if (reader.Tag != RpcGameDataTag || reader.BytesRemaining > 0 || reader.Length > 0) return;
+                    if (reader.BytesRemaining > 0 || reader.Length > 0) return;
+
+                    string reason = null;
+                    if (reader.Tag == RpcGameDataTag)
+                        reason = "empty StartMessage RPC";
+                    else if (reader.Tag == DataGameDataTag)
+                        reason = "empty SDF/data message";
+                    else if (IsBadGameDataTag(reader.Tag))
+                        reason = $"bad data tag {reader.Tag}";
+
+                    if (reason == null) return;
 
                     reader.Tag = DroppedGameDataTag;
                     reader.Position = reader.Length;
 
-                    RecordDrop();
+                    RecordDrop(-1, null, reason);
                 }
                 catch { }
+            }
+
+            private static bool IsBadGameDataTag(byte tag)
+            {
+                switch (tag)
+                {
+                    case DroppedGameDataTag:
+                    case DataGameDataTag:
+                    case RpcGameDataTag:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                        return false;
+                    default:
+                        return true;
+                }
             }
         }
 
@@ -3291,13 +3521,9 @@ namespace ElysiumModMenu
         [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.HandleRpc))]
         public static class Shield_PetSpam_Patch
         {
-            public static System.Collections.Generic.HashSet<byte> petSpamBlockedPlayers = new System.Collections.Generic.HashSet<byte>();
-
-            public static System.Collections.Generic.Dictionary<byte, System.Collections.Generic.Queue<float>> petSpamTrackers = new System.Collections.Generic.Dictionary<byte, System.Collections.Generic.Queue<float>>();
-
             public static bool Prefix(PlayerPhysics __instance, byte callId, Hazel.MessageReader reader)
             {
-                if (!ElysiumModMenuGUI.enableLocalPetSpamDrop && !ElysiumModMenuGUI.enableHostPetSpamBan) return true;
+                if (!ElysiumModMenuGUI.enablePasosLimit) return true;
 
                 if (callId == 49 || callId == 50)
                 {
@@ -3307,51 +3533,12 @@ namespace ElysiumModMenu
 
                         if (__instance.myPlayer == PlayerControl.LocalPlayer) return true;
 
-                        byte pId = __instance.myPlayer.PlayerId;
-
-                        if (petSpamBlockedPlayers.Contains(pId))
-                        {
-                            if (ElysiumModMenuGUI.enableLocalPetSpamDrop) return false;
-                        }
-
-                        float now = UnityEngine.Time.time;
-
-                        if (!petSpamTrackers.ContainsKey(pId))
-                            petSpamTrackers[pId] = new System.Collections.Generic.Queue<float>();
-
-                        var q = petSpamTrackers[pId];
-
-                        while (q.Count > 0 && q.Peek() < now - 0.75f)
-                            q.Dequeue();
-
-                        q.Enqueue(now);
-
-                        if (q.Count > 160)
-                        {
-                            petSpamBlockedPlayers.Add(pId);
-
-                            string pName = __instance.myPlayer.Data?.PlayerName ?? "Unknown";
-
-                            if (ElysiumModMenuGUI.enableHostPetSpamBan && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
-                            {
-                                string fc = string.IsNullOrEmpty(__instance.myPlayer.Data?.FriendCode) ? "Unknown" : __instance.myPlayer.Data.FriendCode;
-                                string puid = "Unknown";
-
-                                try
-                                {
-                                    var client = AmongUsClient.Instance.GetClientFromCharacter(__instance.myPlayer);
-                                    if (client != null) puid = GetClientPuid(client);
-                                }
-                                catch { }
-
-                                ElysiumModMenuGUI.AddToBanList(fc, puid, pName, "Auto-banned for Pet Spam");
-
-                                AmongUsClient.Instance.KickPlayer(__instance.myPlayer.OwnerId, true);
-
-                            }
-
+                        if (Shield_PasosLimit_Patch.IsPlayerBlocked(__instance.myPlayer))
                             return false;
-                        }
+
+                        int clientId = Shield_PasosLimit_Patch.GetKickClientId(__instance.myPlayer, -1);
+                        if (Shield_PasosLimit_Patch.RecordDrop(clientId, __instance.myPlayer, "pet RPC spam"))
+                            return false;
                     }
                     catch { }
                 }
@@ -3555,15 +3742,15 @@ namespace ElysiumModMenu
                 }
 
                 string renderName = BuildLocalNameRenderText(newName);
-
-                TryInvokeStringMethod(local, "SetName", renderName);
-
-                try
+                if (originalLocalName == null)
                 {
-                    if (local.cosmetics != null)
-                        local.cosmetics.SetName(renderName);
+                    originalLocalName = local.CurrentOutfit != null && !string.IsNullOrWhiteSpace(local.CurrentOutfit.PlayerName)
+                        ? local.CurrentOutfit.PlayerName
+                        : local.Data?.PlayerName;
                 }
-                catch { }
+
+                if (local.cosmetics != null)
+                    local.cosmetics.SetName(renderName);
 
                 TrySetPlayerNameObject(local.Data, renderName);
                 if (local.Data != null)
@@ -3574,6 +3761,32 @@ namespace ElysiumModMenu
 
                 if (notify)
                     ShowNotification($"<color=#00FFAA>[LOCAL NAME]</color> {L("Applied locally:", "Локально применен:")} <b>{newName}</b>");
+            }
+            catch { }
+        }
+
+        private static void RestoreLocalNameSelf()
+        {
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local == null || local.cosmetics == null) return;
+
+                string baseName = !string.IsNullOrWhiteSpace(originalLocalName)
+                    ? originalLocalName
+                    : (local.Data?.PlayerName ?? local.CurrentOutfit?.PlayerName);
+                if (!string.IsNullOrWhiteSpace(baseName))
+                {
+                    local.cosmetics.SetName(baseName);
+                    TrySetPlayerNameObject(local.Data, baseName);
+                    if (local.Data != null)
+                    {
+                        TrySetPlayerNameObject(local.Data.DefaultOutfit, baseName);
+                        TrySetPlayerNameObject(local.CurrentOutfit, baseName);
+                    }
+                }
+
+                originalLocalName = null;
             }
             catch { }
         }
@@ -3676,6 +3889,16 @@ namespace ElysiumModMenu
             return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) == 1 : defaultValue;
         }
 
+        private static int LoadInt(string key, int defaultValue)
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetInt(key) : defaultValue;
+        }
+
+        private static float LoadFloat(string key, float defaultValue)
+        {
+            return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetFloat(key) : defaultValue;
+        }
+
         private void SaveConfig()
         {
             try
@@ -3701,6 +3924,26 @@ namespace ElysiumModMenu
                 Plugin.MenuKeybind.Value = menuToggleKey;
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
                 SaveBool("M_WhiteTheme", whiteMenuTheme);
+                PlayerPrefs.SetInt("M_MenuLanguageIndex", currentMenuLanguageIndex);
+                PlayerPrefs.SetInt("M_FpsLimit", fpsLimit);
+                SaveBool("M_EnableBackground", enableBackground);
+                SaveBool("M_HardMenu", hardMenu);
+                SaveBool("M_EnableCustomNotifs", EnableCustomNotifs);
+                SaveBool("M_LogAllRPCs", LogAllRPCs);
+                PlayerPrefs.SetInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex);
+                PlayerPrefs.SetFloat("M_MenuWindowX", windowRect.x);
+                PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
+                PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
+                PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
+                PlayerPrefs.SetInt("M_CurrentTab", currentTab);
+                PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
+                PlayerPrefs.SetInt("M_CurrentGeneralSubTab", currentGeneralSubTab);
+                PlayerPrefs.SetInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab);
+                PlayerPrefs.SetInt("M_CurrentSelfSubTab", currentSelfSubTab);
+                PlayerPrefs.SetInt("M_CurrentVisualsSubTab", currentVisualsSubTab);
+                PlayerPrefs.SetInt("M_CurrentPlayersSubTab", currentPlayersSubTab);
+                PlayerPrefs.SetInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab);
+                PlayerPrefs.SetInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab);
                 PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
                 PlayerPrefs.SetInt("M_BndSpawn", (int)bindSpawnLobby);
                 PlayerPrefs.SetInt("M_BndDespawn", (int)bindDespawnLobby);
@@ -3747,6 +3990,7 @@ namespace ElysiumModMenu
                 SaveBool("M_EnableFastChat", enableFastChat);
                 SaveBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 SaveBool("M_EnableChatHistory", enableChatHistory);
+                PlayerPrefs.SetInt("M_ChatHistoryLimit", chatHistoryLimit);
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatLog", enableChatLog);
                 SaveBool("M_EnableColorCommand", enableColorCommand);
@@ -3766,12 +4010,17 @@ namespace ElysiumModMenu
                 SaveBool("M_RemovePenalty", removePenalty);
                 SaveBool("M_AlwaysShowLobbyTimer", alwaysShowLobbyTimer);
                 SaveBool("M_AutoBanEnabled", autoBanEnabled);
+                SaveBool("M_AllowDuplicateColors", allowDuplicateColors);
                 SaveBool("M_BlockSpoofRPC", blockSpoofRPC);
+                SaveBool("M_AutoBanPlatformSpoof", autoBanPlatformSpoof);
+                SaveBool("M_BanCustomPlatformsFromTxt", banCustomPlatformsFromTxt);
                 SaveBool("M_BlockSabotageRPC", blockSabotageRPC);
+                PlayerPrefs.SetInt("M_PunishmentMode", punishmentMode);
                 SaveBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 SaveBool("M_BlockChatFloodRpc", blockChatFloodRpc);
                 SaveBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
                 SaveBool("M_PasosLimit", enablePasosLimit);
+                PlayerPrefs.SetInt("M_RpcSpamLimit", rpcSpamLimit);
                 SaveBool("M_AntiPasosLocalBan", enableLocalPasosBan);
                 SaveBool("M_AntiPasosHostBan", enableHostPasosBan);
                 SaveBool("M_AutoHostEnabled", AutoHostEnabled);
@@ -3781,6 +4030,7 @@ namespace ElysiumModMenu
                 SaveBool("M_AutoHostWaitLoadedPlayers", AutoHostWaitLoadedPlayers);
                 SaveBool("M_AutoHostCancelBelowMin", AutoHostCancelBelowMin);
                 SaveBool("M_AutoHostInstantStart", AutoHostInstantStart);
+                SaveBool("M_AutoGhostAfterStart", autoGhostAfterStart);
                 PlayerPrefs.SetInt("M_AutoHostMinPlayers", AutoHostMinPlayers);
                 PlayerPrefs.SetFloat("M_AutoHostStartDelaySeconds", AutoHostStartDelaySeconds);
                 PlayerPrefs.SetInt("M_AutoHostFastStartPlayers", AutoHostFastStartPlayers);
@@ -3791,14 +4041,16 @@ namespace ElysiumModMenu
                 Plugin.MenuConfig.Save();
 
                 PlayerPrefs.SetString("M_SpoofName", customNameInput);
+                for (int i = 0; i < favoriteOutfitSlots.Length; i++)
+                    PlayerPrefs.SetString($"M_FavoriteOutfit_{i}", favoriteOutfitSlots[i] ?? string.Empty);
                 PlayerPrefs.Save();
             }
             catch { }
         }
         private void DrawAutoHostTab()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label(L("AUTO HOST SYSTEM", "СИСТЕМА АВТО-ХОСТА"), headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("AUTO HOST SYSTEM", "СИСТЕМА АВТО-ХОСТА"));
 
             var snapshot = ElysiumAutoHostService.GetStatusSnapshot();
             GUILayout.Label($"<color=#aaaaaa>{L("Status:", "Статус:")}</color> <color=#FFAC1C>{snapshot.State}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
@@ -3815,6 +4067,8 @@ namespace ElysiumModMenu
             AutoHostCancelBelowMin = DrawToggle(AutoHostCancelBelowMin, L("Cancel Countdown If Player Leaves", "Отмена отсчета, если игрок вышел"), 250);
             GUILayout.Space(5);
             AutoHostInstantStart = DrawToggle(AutoHostInstantStart, L("Instant Start (No 5s Wait)", "Мгновенный старт (Без 5с)"), 250);
+            GUILayout.Space(5);
+            autoGhostAfterStart = DrawToggle(autoGhostAfterStart, L("Auto Ghost After Start", "Авто-призрак после старта"), 250);
             GUILayout.Space(5);
             AutoHostForceLastMinute = DrawToggle(AutoHostForceLastMinute, L("Force Start Last Minute", "Форс-старт на последней минуте"), 250);
 
@@ -3869,6 +4123,9 @@ namespace ElysiumModMenu
                 currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
                 rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
                 whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
+                currentMenuLanguageIndex = Mathf.Clamp(LoadInt("M_MenuLanguageIndex", currentMenuLanguageIndex), 0, menuLanguageNames.Length - 1);
+                fpsLimit = Mathf.Clamp(LoadInt("M_FpsLimit", fpsLimit), 60, 240);
+                ApplyFpsLimit();
                 autoKickBugs = LoadBool("M_AutoKickBugs", autoKickBugs);
                 if (PlayerPrefs.HasKey("M_AutoKickTimer")) autoKickTimer = PlayerPrefs.GetFloat("M_AutoKickTimer");
                 disableVoteKicks = LoadBool("M_DisableVoteKicks", disableVoteKicks);
@@ -3924,6 +4181,7 @@ namespace ElysiumModMenu
                 enableFastChat = LoadBool("M_EnableFastChat", enableFastChat);
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
+                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 80);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatLog = LoadBool("M_EnableChatLog", enableChatLog);
                 enableColorCommand = LoadBool("M_EnableColorCommand", enableColorCommand);
@@ -3943,12 +4201,17 @@ namespace ElysiumModMenu
                 removePenalty = LoadBool("M_RemovePenalty", removePenalty);
                 alwaysShowLobbyTimer = LoadBool("M_AlwaysShowLobbyTimer", alwaysShowLobbyTimer);
                 autoBanEnabled = LoadBool("M_AutoBanEnabled", autoBanEnabled);
+                allowDuplicateColors = LoadBool("M_AllowDuplicateColors", allowDuplicateColors);
                 blockSpoofRPC = LoadBool("M_BlockSpoofRPC", blockSpoofRPC);
+                autoBanPlatformSpoof = LoadBool("M_AutoBanPlatformSpoof", autoBanPlatformSpoof);
+                banCustomPlatformsFromTxt = LoadBool("M_BanCustomPlatformsFromTxt", banCustomPlatformsFromTxt);
                 blockSabotageRPC = LoadBool("M_BlockSabotageRPC", blockSabotageRPC);
+                punishmentMode = Mathf.Clamp(LoadInt("M_PunishmentMode", punishmentMode), 0, punishmentNames.Length - 1);
                 blockGameRpcInLobby = LoadBool("M_BlockGameRpcInLobby", blockGameRpcInLobby);
                 blockChatFloodRpc = LoadBool("M_BlockChatFloodRpc", blockChatFloodRpc);
                 blockMeetingFloodRpc = LoadBool("M_BlockMeetingFloodRpc", blockMeetingFloodRpc);
                 enablePasosLimit = LoadBool("M_PasosLimit", enablePasosLimit);
+                if (PlayerPrefs.HasKey("M_RpcSpamLimit")) rpcSpamLimit = Mathf.Clamp(PlayerPrefs.GetInt("M_RpcSpamLimit"), 10, 250);
                 enableLocalPasosBan = LoadBool("M_AntiPasosLocalBan", enableLocalPasosBan);
                 enableHostPasosBan = LoadBool("M_AntiPasosHostBan", enableHostPasosBan);
                 AutoHostEnabled = LoadBool("M_AutoHostEnabled", AutoHostEnabled);
@@ -3958,14 +4221,96 @@ namespace ElysiumModMenu
                 AutoHostWaitLoadedPlayers = LoadBool("M_AutoHostWaitLoadedPlayers", AutoHostWaitLoadedPlayers);
                 AutoHostCancelBelowMin = LoadBool("M_AutoHostCancelBelowMin", AutoHostCancelBelowMin);
                 AutoHostInstantStart = LoadBool("M_AutoHostInstantStart", AutoHostInstantStart);
+                autoGhostAfterStart = LoadBool("M_AutoGhostAfterStart", autoGhostAfterStart);
                 if (PlayerPrefs.HasKey("M_AutoHostMinPlayers")) AutoHostMinPlayers = PlayerPrefs.GetInt("M_AutoHostMinPlayers");
                 if (PlayerPrefs.HasKey("M_AutoHostStartDelaySeconds")) AutoHostStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostStartDelaySeconds");
                 if (PlayerPrefs.HasKey("M_AutoHostFastStartPlayers")) AutoHostFastStartPlayers = PlayerPrefs.GetInt("M_AutoHostFastStartPlayers");
                 if (PlayerPrefs.HasKey("M_AutoHostFastStartDelaySeconds")) AutoHostFastStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostFastStartDelaySeconds");
                 if (PlayerPrefs.HasKey("M_WalkSpeed")) walkSpeed = PlayerPrefs.GetFloat("M_WalkSpeed");
                 if (PlayerPrefs.HasKey("M_EngineSpeed")) engineSpeed = PlayerPrefs.GetFloat("M_EngineSpeed");
-                keyBinds["Toggle Menu"] = menuToggleKey;
+                for (int i = 0; i < favoriteOutfitSlots.Length; i++)
+                    favoriteOutfitSlots[i] = PlayerPrefs.GetString($"M_FavoriteOutfit_{i}", string.Empty);
+                enableBackground = LoadBool("M_EnableBackground", enableBackground);
+                hardMenu = LoadBool("M_HardMenu", hardMenu);
+                EnableCustomNotifs = LoadBool("M_EnableCustomNotifs", EnableCustomNotifs);
+                LogAllRPCs = LoadBool("M_LogAllRPCs", LogAllRPCs);
+                selectedSpoofMenuIndex = Mathf.Clamp(LoadInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex), 0, spoofMenuNames.Length - 1);
+                windowRect = new Rect(
+                    LoadFloat("M_MenuWindowX", windowRect.x),
+                    LoadFloat("M_MenuWindowY", windowRect.y),
+                    Mathf.Clamp(LoadFloat("M_MenuWindowW", windowRect.width), 640f, 1400f),
+                    Mathf.Clamp(LoadFloat("M_MenuWindowH", windowRect.height), 420f, 900f));
+                currentTab = Mathf.Clamp(LoadInt("M_CurrentTab", currentTab), 0, tabNames.Length - 1);
+                targetTabIndex = Mathf.Clamp(LoadInt("M_TargetTab", currentTab), 0, tabNames.Length - 1);
+                currentGeneralSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralSubTab", currentGeneralSubTab), 0, generalSubTabs.Length - 1);
+                currentGeneralInfoSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab), 0, generalInfoSubTabs.Length - 1);
+                currentSelfSubTab = Mathf.Clamp(LoadInt("M_CurrentSelfSubTab", currentSelfSubTab), 0, selfSubTabs.Length);
+                currentVisualsSubTab = Mathf.Clamp(LoadInt("M_CurrentVisualsSubTab", currentVisualsSubTab), 0, visualsSubTabs.Length - 1);
+                currentPlayersSubTab = Mathf.Clamp(LoadInt("M_CurrentPlayersSubTab", currentPlayersSubTab), 0, playersSubTabs.Length - 1);
+                currentHostOnlySubTab = Mathf.Clamp(LoadInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab), 0, hostOnlySubTabs.Length - 1);
+                currentAutoHostSubTab = Mathf.Clamp(LoadInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab), 0, autoHostSubTabs.Length - 1);
+                tabTransitionProgress = 1f;
+                SyncKeybindDictionary();
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
+            }
+            catch { }
+        }
+
+        private static void ApplyFpsLimit()
+        {
+            try
+            {
+                fpsLimit = Mathf.Clamp(fpsLimit, 60, 240);
+                if (lastAppliedFpsLimit == fpsLimit) return;
+                Application.targetFrameRate = fpsLimit;
+                QualitySettings.vSyncCount = 0;
+                lastAppliedFpsLimit = fpsLimit;
+            }
+            catch { }
+        }
+
+        private static void TrimChatHistoryToLimit()
+        {
+            try
+            {
+                chatHistoryLimit = Mathf.Clamp(chatHistoryLimit, 5, 80);
+                while (ChatHistory.sentMessages.Count > chatHistoryLimit)
+                    ChatHistory.sentMessages.RemoveAt(0);
+
+                ChatHistory.HistoryIndex = Mathf.Clamp(ChatHistory.HistoryIndex, 0, ChatHistory.sentMessages.Count);
+            }
+            catch { }
+        }
+
+        private static void SyncKeybindDictionary()
+        {
+            try
+            {
+                keyBinds["Toggle Menu"] = menuToggleKey;
+                keyBinds["Magnet Cursor"] = bindMagnetCursor;
+                keyBinds["Mass Morph"] = bindMassMorph;
+                keyBinds["Spawn Lobby"] = bindSpawnLobby;
+                keyBinds["Despawn Lobby"] = bindDespawnLobby;
+                keyBinds["Close Meeting"] = bindCloseMeeting;
+                keyBinds["Insta Start"] = bindInstaStart;
+                keyBinds["End Crew"] = bindEndCrew;
+                keyBinds["End Imp"] = bindEndImp;
+                keyBinds["End Imp DC"] = bindEndImpDC;
+                keyBinds["End H&S DC"] = bindEndHnsDC;
+                keyBinds["Toggle Tracers"] = bindToggleTracers;
+                keyBinds["Toggle NoClip"] = bindToggleNoClip;
+                keyBinds["Toggle Freecam"] = bindToggleFreecam;
+                keyBinds["Toggle Camera Zoom"] = bindToggleCameraZoom;
+                keyBinds["Toggle Player Info"] = bindTogglePlayerInfo;
+                keyBinds["Toggle See Roles"] = bindToggleSeeRoles;
+                keyBinds["Toggle See Ghosts"] = bindToggleSeeGhosts;
+                keyBinds["Toggle Full Bright"] = bindToggleFullBright;
+                keyBinds["Kill All"] = bindKillAll;
+                keyBinds["Call Meeting"] = bindCallMeeting;
+                keyBinds["Kick All"] = bindKickAll;
+                keyBinds["Fix Sabotages"] = bindFixSabotages;
+                keyBinds["All Ghost"] = bindSetAllGhost;
+                keyBinds["All Ghost Imp"] = bindSetAllGhostImp;
             }
             catch { }
         }
@@ -4122,6 +4467,8 @@ namespace ElysiumModMenu
             if (texToggleOn != null) UpdateSwitchTex(texToggleOn, true, effectiveColor);
             if (windowStyle != null) windowStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : color;
             if (headerStyle != null) headerStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
+            if (menuSectionTitleStyle != null) menuSectionTitleStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
+            if (menuBadgeStyle != null) menuBadgeStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
             if (activeSidebarBtnStyle != null) { activeSidebarBtnStyle.normal.textColor = effectiveColor; activeSidebarBtnStyle.hover.textColor = effectiveColor; }
             if (activeTabStyle != null) activeTabStyle.normal.background = texAccent;
             if (activeSubTabStyle != null) activeSubTabStyle.normal.background = texAccent;
@@ -4153,6 +4500,44 @@ namespace ElysiumModMenu
             texSliderThumb = MakeRoundedTex(20, accent, 10f);
             texInputBg = MakeRoundedTex(64, inputBgCol, 6f);
             texColorBtn = MakeRoundedTex(64, Color.white, 12f);
+
+            texMenuCard = MakeRoundedTex(64, isLightTheme ? new Color(1f, 1f, 1f, 0.55f) : new Color(1f, 1f, 1f, 0.045f), 12f);
+
+            menuCardStyle = new GUIStyle();
+            menuCardStyle.normal.background = texMenuCard;
+            menuCardStyle.border = CreateRectOffset(12, 12, 12, 12);
+            menuCardStyle.padding = CreateRectOffset(14, 14, 12, 14);
+            menuCardStyle.margin = CreateRectOffset(0, 0, 0, 10);
+
+            menuAccentBarStyle = new GUIStyle();
+            menuAccentBarStyle.normal.background = texAccent;
+
+            menuSectionTitleStyle = new GUIStyle();
+            menuSectionTitleStyle.normal.textColor = headerText;
+            menuSectionTitleStyle.fontStyle = FontStyle.Bold;
+            menuSectionTitleStyle.fontSize = 13;
+            menuSectionTitleStyle.alignment = TextAnchor.MiddleLeft;
+            menuSectionTitleStyle.richText = true;
+
+            menuDescStyle = new GUIStyle();
+            menuDescStyle.normal.textColor = textMuted;
+            menuDescStyle.fontSize = 11;
+            menuDescStyle.richText = true;
+            menuDescStyle.wordWrap = true;
+            menuDescStyle.padding = CreateRectOffset(2, 0, 2, 0);
+
+            menuBadgeStyle = new GUIStyle();
+            menuBadgeStyle.normal.background = texInputBg;
+            menuBadgeStyle.normal.textColor = headerText;
+            menuBadgeStyle.fontStyle = FontStyle.Bold;
+            menuBadgeStyle.fontSize = 12;
+            menuBadgeStyle.alignment = TextAnchor.MiddleCenter;
+            menuBadgeStyle.border = CreateRectOffset(6, 6, 6, 6);
+            menuBadgeStyle.padding = CreateRectOffset(8, 8, 3, 3);
+
+            menuSwatchStyle = new GUIStyle();
+            menuSwatchStyle.normal.background = texColorBtn;
+            menuSwatchStyle.border = CreateRectOffset(8, 8, 8, 8);
 
             texToggleOff = new Texture2D(30, 16, TextureFormat.RGBA32, false);
             texToggleOff.hideFlags = HideFlags.HideAndDontSave;
@@ -4186,15 +4571,21 @@ namespace ElysiumModMenu
             btnStyle.border = CreateRectOffset(6, 6, 6, 6);
             btnStyle.fontSize = 12;
             btnStyle.fontStyle = FontStyle.Bold;
+            btnStyle.clipping = TextClipping.Overflow;
+            btnStyle.wordWrap = false;
 
             activeTabStyle = new GUIStyle(btnStyle);
             activeTabStyle.normal.background = texAccent;
             activeTabStyle.normal.textColor = Color.black;
 
             subTabStyle = new GUIStyle(btnStyle);
-            subTabStyle.padding = CreateRectOffset(6, 6, 2, 2);
+            subTabStyle.padding = CreateRectOffset(8, 8, 2, 2);
+            subTabStyle.clipping = TextClipping.Overflow;
+            subTabStyle.wordWrap = false;
             activeSubTabStyle = new GUIStyle(activeTabStyle);
-            activeSubTabStyle.padding = CreateRectOffset(6, 6, 2, 2);
+            activeSubTabStyle.padding = CreateRectOffset(8, 8, 2, 2);
+            activeSubTabStyle.clipping = TextClipping.Overflow;
+            activeSubTabStyle.wordWrap = false;
 
             inputBlockStyle = new GUIStyle(btnStyle);
             inputBlockStyle.normal.background = texInputBg;
@@ -4212,6 +4603,8 @@ namespace ElysiumModMenu
             headerStyle.padding = CreateRectOffset(6, 6, 4, 4);
             headerStyle.margin = CreateRectOffset(0, 0, 4, 4);
             headerStyle.fontSize = 13;
+            headerStyle.clipping = TextClipping.Overflow;
+            headerStyle.wordWrap = false;
 
             sidebarStyle = new GUIStyle();
             sidebarStyle.normal.background = texSidebarBg;
@@ -4240,6 +4633,9 @@ namespace ElysiumModMenu
             toggleLabelStyle.padding = CreateRectOffset(4, 0, 0, 0);
             toggleLabelStyle.fontSize = 12;
             toggleLabelStyle.fontStyle = FontStyle.Bold;
+            toggleLabelStyle.clipping = TextClipping.Overflow;
+            toggleLabelStyle.wordWrap = false;
+            toggleLabelStyle.richText = true;
 
             sliderStyle = new GUIStyle();
             sliderStyle.normal.background = texSliderBg;
@@ -4347,16 +4743,34 @@ namespace ElysiumModMenu
 
         private bool DrawToggle(bool value, string text, int width = 0)
         {
-            GUILayout.BeginHorizontal(GUILayout.Width(width > 0 ? width : 200));
+            GUILayout.BeginHorizontal(GUILayout.MinWidth(width > 0 ? width : 200), GUILayout.Height(20));
 
             bool clickedBox = GUILayout.Button("", value ? toggleOnStyle : toggleOffStyle, GUILayout.Width(30), GUILayout.Height(16));
 
             GUILayout.Space(6);
 
-            bool clickedText = GUILayout.Button(text, toggleLabelStyle);
+            GUIStyle toggleTextStyle = new GUIStyle(toggleLabelStyle)
+            {
+                clipping = TextClipping.Overflow,
+                wordWrap = false,
+                richText = true,
+                stretchWidth = false,
+                alignment = TextAnchor.MiddleLeft
+            };
+
+            GUIContent toggleContent = new GUIContent(text);
+            float toggleTextWidth = Mathf.Ceil(toggleTextStyle.CalcSize(toggleContent).x) + 8f;
+            Rect textRect = GUILayoutUtility.GetRect(toggleTextWidth, 18f, GUILayout.Width(toggleTextWidth), GUILayout.Height(18f));
+            GUI.Label(textRect, toggleContent, toggleTextStyle);
+
+            bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
+            if (clickedText) Event.current.Use();
+
+            GUILayout.FlexibleSpace();
 
             GUILayout.EndHorizontal();
 
+            if (clickedBox || clickedText) settingsDirty = true;
             return (clickedBox || clickedText) ? !value : value;
         }
 
@@ -4375,20 +4789,39 @@ namespace ElysiumModMenu
 
         private bool DrawHostToggle(bool value, string text, float totalWidth = 250f)
         {
-            GUILayout.BeginHorizontal(GUILayout.Width(totalWidth), GUILayout.Height(20));
+            GUILayout.BeginHorizontal(GUILayout.MinWidth(totalWidth), GUILayout.Height(20));
             bool clickedBox = GUILayout.Button("", value ? toggleOnStyle : toggleOffStyle, GUILayout.Width(30), GUILayout.Height(16));
             GUILayout.Space(6);
-            bool clickedText = GUILayout.Button(text, toggleLabelStyle, GUILayout.Width(totalWidth - 36f), GUILayout.Height(16));
+
+            GUIStyle hostToggleTextStyle = new GUIStyle(toggleLabelStyle)
+            {
+                clipping = TextClipping.Overflow,
+                wordWrap = false,
+                richText = true,
+                stretchWidth = false,
+                alignment = TextAnchor.MiddleLeft
+            };
+
+            GUIContent hostToggleContent = new GUIContent(text);
+            float hostToggleTextWidth = Mathf.Ceil(hostToggleTextStyle.CalcSize(hostToggleContent).x) + 8f;
+            Rect textRect = GUILayoutUtility.GetRect(hostToggleTextWidth, 16f, GUILayout.Width(hostToggleTextWidth), GUILayout.Height(16f));
+            GUI.Label(textRect, hostToggleContent, hostToggleTextStyle);
+
+            bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
+            if (clickedText) Event.current.Use();
+
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+            if (clickedBox || clickedText) settingsDirty = true;
             return (clickedBox || clickedText) ? !value : value;
         }
         private void DrawBindsTab()
         {
-            GUILayout.BeginVertical(boxStyle);
+            GUILayout.BeginVertical(menuCardStyle);
             try
             {
-                GUILayout.Label("CUSTOM KEYBINDS", headerStyle);
-                GUILayout.Label(L("Menu toggle is configurable. Right Shift stays disabled.", "Кнопку меню можно менять. Right Shift выключен."), safeLineStyle);
+                DrawMenuSectionHeader("CUSTOM KEYBINDS");
+                GUILayout.Label(L("Menu toggle is configurable. Right Shift stays disabled.", "Кнопку меню можно менять. Right Shift выключен."), menuDescStyle);
                 GUILayout.Space(10);
 
                 DrawKeybindRow("Menu Toggle:", ref menuToggleKey, ref isWaitingForBind);
@@ -4480,6 +4913,10 @@ namespace ElysiumModMenu
 
         private void DrawGeneralTab()
         {
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("GENERAL", "ГЛАВНОЕ"));
+            GUILayout.Space(4);
+
             GUILayout.BeginHorizontal();
             for (int i = 0; i < generalSubTabs.Length; i++)
             {
@@ -4490,7 +4927,9 @@ namespace ElysiumModMenu
                 }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(10);
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8);
 
             if (currentGeneralSubTab == 0) DrawGeneralInfoTab();
             else if (currentGeneralSubTab == 1) DrawBindsTab();
@@ -4508,8 +4947,12 @@ namespace ElysiumModMenu
             style.hover.textColor = hoverColor;
             style.focused.textColor = themedColor;
             style.active.textColor = whiteMenuTheme ? Color.white : Color.black;
+            style.clipping = TextClipping.Overflow;
+            style.wordWrap = false;
 
-            return GUILayout.Button(text, style, GUILayout.Width(width), GUILayout.Height(height));
+            float minContentWidth = Mathf.Ceil(style.CalcSize(new GUIContent(text)).x) + 32f;
+            float finalButtonWidth = Mathf.Max(width, minContentWidth);
+            return GUILayout.Button(text, style, GUILayout.Width(finalButtonWidth), GUILayout.Height(height));
         }
 
         private bool DrawPseudoInputButton(string value, bool editing, float height = 28f, int maxChars = 52)
@@ -4560,13 +5003,37 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             for (int i = 0; i < generalInfoSubTabs.Length; i++)
             {
-                if (GUILayout.Button(generalInfoSubTabs[i], currentGeneralInfoSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Width(108), GUILayout.Height(24)))
+                GUIStyle tabStyle = currentGeneralInfoSubTab == i ? activeSubTabStyle : subTabStyle;
+                float tabWidth = Mathf.Max(116f, Mathf.Ceil(tabStyle.CalcSize(new GUIContent(generalInfoSubTabs[i])).x) + 28f);
+                if (GUILayout.Button(generalInfoSubTabs[i], tabStyle, GUILayout.Width(tabWidth), GUILayout.Height(24)))
                 {
                     currentGeneralInfoSubTab = i;
                 }
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Menu language:", "Язык меню:"), toggleLabelStyle, GUILayout.MinWidth(128), GUILayout.ExpandWidth(false));
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(26), GUILayout.Height(24)))
+            {
+                currentMenuLanguageIndex--;
+                if (currentMenuLanguageIndex < 0) currentMenuLanguageIndex = menuLanguageNames.Length - 1;
+                SaveConfig();
+            }
+            GUIStyle languageValueStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold, clipping = TextClipping.Overflow, wordWrap = false };
+            string languageValue = menuLanguageNames[Mathf.Clamp(currentMenuLanguageIndex, 0, menuLanguageNames.Length - 1)];
+            float languageValueWidth = Mathf.Max(132f, Mathf.Ceil(languageValueStyle.CalcSize(new GUIContent(languageValue)).x) + 24f);
+            GUILayout.Label(languageValue, languageValueStyle, GUILayout.Width(languageValueWidth), GUILayout.Height(24));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(26), GUILayout.Height(24)))
+            {
+                currentMenuLanguageIndex++;
+                if (currentMenuLanguageIndex >= menuLanguageNames.Length) currentMenuLanguageIndex = 0;
+                SaveConfig();
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8);
 
             string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
             string githubHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(26, 188, 156, 255)) : new Color32(26, 188, 156, 255));
@@ -4576,7 +5043,7 @@ namespace ElysiumModMenu
             string contributorHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(109, 138, 255, 255)) : new Color32(109, 138, 255, 255));
             string dangerHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(231, 76, 60, 255)) : new Color32(231, 76, 60, 255));
             string safeHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(57, 255, 20, 255)) : new Color32(57, 255, 20, 255));
-            string versionText = "1.2.7";
+            string versionText = "1.3.4";
 
             GUIStyle textStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
             textStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : new Color(0.85f, 0.85f, 0.85f, 1f);
@@ -4719,7 +5186,7 @@ namespace ElysiumModMenu
         {
             if (currentSelfSubTab == 0) currentSelfSubTab = 1;
 
-            float selfColumnWidth = Mathf.Max(270f, (windowRect.width - 170f) * 0.5f);
+            float selfColumnWidth = Mathf.Max(270f, (windowRect.width - 186f) * 0.5f);
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.Width(selfColumnWidth));
@@ -4728,8 +5195,8 @@ namespace ElysiumModMenu
 
             GUILayout.Space(8);
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(selfColumnWidth), GUILayout.ExpandHeight(false));
-            GUILayout.Label("SELF TOOLS", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(selfColumnWidth), GUILayout.ExpandHeight(false));
+            DrawMenuSectionHeader("SELF TOOLS");
             GUILayout.Space(4);
 
             GUILayout.BeginHorizontal();
@@ -4755,8 +5222,8 @@ namespace ElysiumModMenu
 
         private void DrawPlayerMovementCompact()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("MOVEMENT & TELEPORT", headerStyle);
+            GUILayout.BeginVertical();
+            DrawMenuSectionHeader("MOVEMENT & TELEPORT");
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"Engine: {Mathf.Round(engineSpeed)}x", toggleLabelStyle, GUILayout.Width(86));
@@ -4785,8 +5252,8 @@ namespace ElysiumModMenu
 
         private void DrawRolesCompact()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("ROLE TOOLS", headerStyle);
+            GUILayout.BeginVertical();
+            DrawMenuSectionHeader("ROLE TOOLS");
 
             GUIStyle roleMidStyle = new GUIStyle(btnStyle)
             {
@@ -4812,7 +5279,7 @@ namespace ElysiumModMenu
             GUILayout.EndHorizontal();
 
             GUILayout.Space(8);
-            GUILayout.Label("IMPOSTOR", headerStyle);
+            DrawMenuSectionHeader("IMPOSTOR");
             killReach = DrawToggle(killReach, "Kill Reach", 230);
             GUILayout.Space(3);
             killAnyone = DrawToggle(killAnyone, "Kill Anyone", 230);
@@ -4824,7 +5291,7 @@ namespace ElysiumModMenu
             spamReportBodies = DrawToggle(spamReportBodies, "Spam Report Bodies", 230);
 
             GUILayout.Space(8);
-            GUILayout.Label("SPECIAL ROLES", headerStyle);
+            DrawMenuSectionHeader("SPECIAL ROLES");
             NoShapeshiftAnim = DrawToggle(NoShapeshiftAnim, "No Ss Animation", 230);
             GUILayout.Space(3);
             endlessSsDuration = DrawToggle(endlessSsDuration, "Endless Ss Duration", 230);
@@ -4850,8 +5317,8 @@ namespace ElysiumModMenu
 
         private void DrawChatSettingsCompact()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label(L("CHAT SETTINGS", "НАСТРОЙКИ ЧАТА"), headerStyle);
+            GUILayout.BeginVertical();
+            DrawMenuSectionHeader(L("CHAT SETTINGS", "НАСТРОЙКИ ЧАТА"));
 
             alwaysChat = DrawToggle(alwaysChat, L("Always Show Chat", "Всегда показывать чат"), 230);
             GUILayout.Space(3);
@@ -4868,8 +5335,14 @@ namespace ElysiumModMenu
             enableSpellCheck = DrawToggle(enableSpellCheck, L("Spell Check", "Проверка орфографии"), 230);
 
             GUILayout.Space(8);
-            GUILayout.Label(L("CHAT UTILITY", "УТИЛИТЫ ЧАТА"), headerStyle);
+            DrawMenuSectionHeader(L("CHAT UTILITY", "УТИЛИТЫ ЧАТА"));
             enableChatHistory = DrawToggle(enableChatHistory, L("Chat History", "История чата"), 230);
+            GUILayout.Space(3);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"{L("History:", "История:")} {chatHistoryLimit}", toggleLabelStyle, GUILayout.MinWidth(106), GUILayout.ExpandWidth(false));
+            chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 80f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true)), 5, 80);
+            TrimChatHistoryToLimit();
+            GUILayout.EndHorizontal();
             GUILayout.Space(3);
             enableClipboard = DrawToggle(enableClipboard, L("Clipboard", "Буфер обмена"), 230);
             GUILayout.Space(3);
@@ -4890,7 +5363,7 @@ namespace ElysiumModMenu
             blockRainbowChat = DrawToggle(blockRainbowChat, L("Block Rainbow", "Блок Rainbow"), 230);
 
             GUILayout.Space(8);
-            GUILayout.Label(L("CHAT SENDER", "ОТПРАВКА ЧАТА"), headerStyle);
+            DrawMenuSectionHeader(L("CHAT SENDER", "ОТПРАВКА ЧАТА"));
             GUILayout.Space(4);
 
             GUIStyle fieldStyle = new GUIStyle(GUI.skin.textField)
@@ -4979,17 +5452,22 @@ namespace ElysiumModMenu
         private void DrawGhostChatColorControl(float width)
         {
             GUILayout.BeginHorizontal(GUILayout.Width(width));
-            GUILayout.Label(L("Ghost Chat:", "Ghost Chat:"), new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(88));
+            GUILayout.Label(L("Ghost Chat:", "Ghost Chat:"), new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(74));
             if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
             {
                 isEditingGhostChatColor = !isEditingGhostChatColor;
+                if (isEditingGhostChatColor)
+                {
+                    ghostChatColorHex = FilterHexInput(ghostChatColorHex, 7);
+                }
                 isEditingName = false;
                 isEditingLevel = false;
                 isEditingFriendCode = false;
                 isEditingLocalFriendCode = false;
                 isEditingBan = false;
+                ResetAllBindWaits();
             }
-            if (GUILayout.Button(L("Apply", "OK"), btnStyle, GUILayout.Width(52), GUILayout.Height(24)))
+            if (GUILayout.Button(L("Apply", "OK"), btnStyle, GUILayout.Width(48), GUILayout.Height(24)))
             {
                 isEditingGhostChatColor = false;
                 ghostChatColorHex = SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
@@ -4998,7 +5476,7 @@ namespace ElysiumModMenu
             GUILayout.EndHorizontal();
 
             string previewHex = GetGhostChatColorHex();
-            GUILayout.Label($"<size=90%><color={previewHex}>{L("Preview ghost chat color", "Пример цвета чата призраков")}</color></size>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 }, GUILayout.Width(width));
+            GUILayout.Label($"<color={previewHex}>{L("Preview ghost chat color", "Пример цвета чата призраков")}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = false, clipping = TextClipping.Clip }, GUILayout.Width(width), GUILayout.Height(16f));
         }
 
         private void DrawPlayerMovement()
@@ -5107,8 +5585,39 @@ namespace ElysiumModMenu
             return clean.Length == 6 ? "#" + clean : fallback;
         }
 
+        private static string FilterHexInput(string input, int maxChars)
+        {
+            string value = (input ?? string.Empty).Trim();
+            string clean = "";
+            bool hasHash = false;
+
+            foreach (char c in value)
+            {
+                if (c == '#' && clean.Length == 0 && !hasHash)
+                {
+                    hasHash = true;
+                    clean = "#";
+                    continue;
+                }
+
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+                {
+                    if (clean.Length == 0) clean = "#";
+                    clean += char.ToUpperInvariant(c);
+                    if (clean.Length >= maxChars) break;
+                }
+            }
+
+            return clean.Length == 0 ? "#" : clean;
+        }
+
         public static string GetGhostChatColorHex()
         {
+            if (isEditingGhostChatColor)
+            {
+                return SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
+            }
+
             ghostChatColorHex = SanitizeHexColor(ghostChatColorHex, "#D7B8FF");
             return ghostChatColorHex;
         }
@@ -5299,16 +5808,227 @@ namespace ElysiumModMenu
             catch { }
         }
 
+        private static void TryAutoGhostAfterStartTick()
+        {
+            try
+            {
+                bool gameStarted = AmongUsClient.Instance != null && AmongUsClient.Instance.IsGameStarted;
+                if (!gameStarted)
+                {
+                    wasGameStartedForAutoGhost = false;
+                    autoGhostAppliedThisGame = false;
+                    return;
+                }
+
+                if (!wasGameStartedForAutoGhost)
+                {
+                    wasGameStartedForAutoGhost = true;
+                    autoGhostAppliedThisGame = false;
+                }
+
+                if (!autoGhostAfterStart || autoGhostAppliedThisGame || PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null)
+                    return;
+
+                if (PlayerControl.LocalPlayer.Data.IsDead)
+                {
+                    autoGhostAppliedThisGame = true;
+                    return;
+                }
+
+                MakePlayerGhost(PlayerControl.LocalPlayer, false, false);
+                autoGhostAppliedThisGame = true;
+                ShowNotification($"<color=#AA88FF>[AUTO HOST]</color> {L("Auto ghost applied.", "Авто-призрак применен.")}");
+            }
+            catch { }
+        }
+
+        private static void EnsurePlatformBanListLoaded()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(platformBanListPath))
+                    platformBanListPath = System.IO.Path.Combine(Plugin.ElysiumFolder, "ElysiumPlatformBanList.txt");
+
+                if (!System.IO.File.Exists(platformBanListPath))
+                    System.IO.File.WriteAllText(platformBanListPath, "# One custom platform token per line. Matching PlatformName values are host-banned when enabled.\n# Example: github\n");
+
+                if (Time.unscaledTime < platformBanListNextLoadAt) return;
+                platformBanListNextLoadAt = Time.unscaledTime + 3f;
+
+                customPlatformBanTokens.Clear();
+                foreach (string rawLine in System.IO.File.ReadAllLines(platformBanListPath))
+                {
+                    string line = rawLine.Trim();
+                    if (line.Length == 0 || line.StartsWith("#")) continue;
+                    customPlatformBanTokens.Add(line);
+                }
+            }
+            catch { }
+        }
+
+        private static bool IsCustomPlatformName(ClientData client, out string platformName)
+        {
+            platformName = "";
+            try
+            {
+                if (client == null || client.PlatformData == null) return false;
+                platformName = client.PlatformData.PlatformName ?? "";
+                if (string.IsNullOrWhiteSpace(platformName)) return false;
+
+                string enumName = client.PlatformData.Platform.ToString();
+                if (platformName.Equals("TESTNAME", StringComparison.OrdinalIgnoreCase)) return false;
+                return !platformName.Equals(enumName, StringComparison.OrdinalIgnoreCase) &&
+                       !platformName.Equals(GetPlatform(client), StringComparison.OrdinalIgnoreCase);
+            }
+            catch { }
+
+            return false;
+        }
+
+        private static bool IsInvalidPlatformData(ClientData client, out string reason)
+        {
+            reason = "";
+            try
+            {
+                if (client == null || client.PlatformData == null) return false;
+
+                var platform = client.PlatformData;
+                string pName = platform.PlatformName ?? "";
+                ulong xuid = platform.XboxPlatformId;
+                ulong psid = platform.PsnPlatformId;
+                bool isValid = true;
+
+                switch (platform.Platform)
+                {
+                    case Platforms.StandaloneEpicPC:
+                    case Platforms.StandaloneSteamPC:
+                    case Platforms.StandaloneMac:
+                    case Platforms.StandaloneItch:
+                    case Platforms.IPhone:
+                    case Platforms.Android:
+                        isValid = (pName == "TESTNAME" && xuid == 0 && psid == 0);
+                        break;
+                    case Platforms.StandaloneWin10:
+                        isValid = (pName == "TESTNAME" && xuid != 0 && psid == 0);
+                        break;
+                    case Platforms.Xbox:
+                        isValid = (pName != "TESTNAME" && pName.Length >= 3 && xuid != 0 && psid == 0);
+                        break;
+                    case Platforms.Playstation:
+                        isValid = (pName != "TESTNAME" && xuid == 0 && psid != 0);
+                        break;
+                    case Platforms.Switch:
+                        isValid = (pName != "TESTNAME" && xuid == 0 && psid == 0);
+                        break;
+                }
+
+                if (!isValid)
+                {
+                    reason = $"Platform Spoof detected ({platform.Platform})";
+                    return true;
+                }
+            }
+            catch { }
+
+            return false;
+        }
+
+        private static bool MatchesPlatformBanTxt(ClientData client, out string platformName, out string matchedToken)
+        {
+            platformName = "";
+            matchedToken = "";
+            EnsurePlatformBanListLoaded();
+
+            if (!IsCustomPlatformName(client, out platformName) || customPlatformBanTokens.Count == 0)
+                return false;
+
+            foreach (string token in customPlatformBanTokens)
+            {
+                if (platformName.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    matchedToken = token;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void HostBanForPlatform(PlayerControl player, string reason)
+        {
+            try
+            {
+                if (player == null || player == PlayerControl.LocalPlayer || player.Data == null ||
+                    AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+                    return;
+
+                int owner = (int)player.OwnerId;
+                if (platformSpoofPunishedOwners.Contains(owner)) return;
+                platformSpoofPunishedOwners.Add(owner);
+
+                string name = string.IsNullOrWhiteSpace(player.Data.PlayerName) ? "Unknown" : player.Data.PlayerName;
+                string fc = string.IsNullOrWhiteSpace(player.Data.FriendCode) ? "Unknown" : player.Data.FriendCode;
+                string puid = "Unknown";
+                try
+                {
+                    var client = AmongUsClient.Instance.GetClientFromCharacter(player);
+                    if (client != null) puid = GetClientPuid(client);
+                }
+                catch { }
+
+                AddToBanList(fc, puid, name, reason);
+                AmongUsClient.Instance.KickPlayer(owner, true);
+                ShowNotification($"<color=#FF4444>[PLATFORM BAN]</color> <b>{name}</b>: {reason}");
+            }
+            catch { }
+        }
+
+        private static void TryAutoBanCustomPlatformsTick()
+        {
+            try
+            {
+                if ((!autoBanPlatformSpoof && !banCustomPlatformsFromTxt) ||
+                    AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.AllPlayerControls == null)
+                {
+                    platformBanScanTimer = 0f;
+                    return;
+                }
+
+                platformBanScanTimer += Time.deltaTime;
+                if (platformBanScanTimer < 1f) return;
+                platformBanScanTimer = 0f;
+
+                foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                {
+                    if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
+
+                    ClientData client = null;
+                    try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch { }
+                    if (client == null) continue;
+
+                    if (banCustomPlatformsFromTxt && MatchesPlatformBanTxt(client, out string platformName, out string token))
+                    {
+                        HostBanForPlatform(pc, $"Custom platform TXT match '{token}' ({platformName})");
+                        continue;
+                    }
+
+                    if (autoBanPlatformSpoof && IsInvalidPlatformData(client, out string reason))
+                        HostBanForPlatform(pc, reason);
+                }
+            }
+            catch { }
+        }
+
         private void DrawSelfSpoof()
         {
-            GUILayout.BeginVertical(boxStyle);
+            GUILayout.BeginVertical();
             GUIStyle greenHeader = new GUIStyle(headerStyle);
             greenHeader.normal.textColor = GetThemeAccentColor(currentAccentColor);
             GUILayout.Label("ACCOUNT SPOOFER", greenHeader);
 
             GUILayout.Space(4);
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("LEVEL SPOOF", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("LEVEL SPOOF");
             GUILayout.BeginHorizontal();
             GUILayout.Label("Fake Level", btnStyle, GUILayout.Width(86), GUILayout.Height(28));
             if (DrawPseudoInputButton(spoofLevelString, isEditingLevel, 28f, 32))
@@ -5334,13 +6054,14 @@ namespace ElysiumModMenu
 
             GUILayout.Space(6);
 
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("LOCAL NAME SPOOF", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("LOCAL NAME SPOOF");
             bool newLocalNameToggle = DrawToggle(enableLocalNameSpoof, "Keep Local Nick", 180);
             if (newLocalNameToggle != enableLocalNameSpoof)
             {
                 enableLocalNameSpoof = newLocalNameToggle;
                 if (enableLocalNameSpoof) ApplyLocalNameSelf(customNameInput, false);
+                else RestoreLocalNameSelf();
                 SaveConfig();
             }
             GUILayout.Space(2);
@@ -5366,8 +6087,8 @@ namespace ElysiumModMenu
 
             GUILayout.Space(6);
 
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("LOCAL FAKE FRIEND CODE", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("LOCAL FAKE FRIEND CODE");
             bool newLocalFcToggle = DrawToggle(enableLocalFriendCodeSpoof, "Keep Fake FC Local", 180);
             if (newLocalFcToggle != enableLocalFriendCodeSpoof)
             {
@@ -5399,8 +6120,8 @@ namespace ElysiumModMenu
 
             GUILayout.Space(6);
 
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("FRIEND CODE SPOOF", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("FRIEND CODE SPOOF");
             enableFriendCodeSpoof = DrawToggle(enableFriendCodeSpoof, "Enable FC Spoof", 180);
             GUILayout.Space(2);
             GUILayout.BeginHorizontal();
@@ -5424,8 +6145,8 @@ namespace ElysiumModMenu
 
             GUILayout.Space(6);
 
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("PLATFORM SPOOF", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("PLATFORM SPOOF");
             if (GUILayout.Button("Spoof Platform", enablePlatformSpoof ? activeTabStyle : btnStyle, GUILayout.Height(26)))
             {
                 enablePlatformSpoof = !enablePlatformSpoof;
@@ -5443,7 +6164,7 @@ namespace ElysiumModMenu
             GUILayout.EndVertical();
 
             GUILayout.Space(8);
-            GUILayout.Label("TASKS", headerStyle);
+            DrawMenuSectionHeader("TASKS");
             if (GUILayout.Button("Complete My Tasks", btnStyle, GUILayout.Height(30)))
             {
                 if (PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.myTasks != null)
@@ -5464,6 +6185,7 @@ namespace ElysiumModMenu
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
             if (currentVisualsSubTab == 0) DrawVisualsInGame();
+            else if (currentVisualsSubTab == 1) DrawOutfitsTab();
         }
 
 
@@ -5498,6 +6220,29 @@ namespace ElysiumModMenu
                 }
             }
         }
+        public static bool IsCursorOverMenu()
+        {
+            try
+            {
+                if (!showMenu || !hardMenu) return false;
+                Vector2 guiPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+                return windowRect.Contains(guiPos);
+            }
+            catch { return false; }
+        }
+
+        [HarmonyPatch(typeof(PassiveButton), nameof(PassiveButton.ReceiveClickDown))]
+        public static class HardMenu_BlockClickDown_Patch
+        {
+            public static bool Prefix() { return !ElysiumModMenuGUI.IsCursorOverMenu(); }
+        }
+
+        [HarmonyPatch(typeof(PassiveButton), nameof(PassiveButton.ReceiveClickUp))]
+        public static class HardMenu_BlockClickUp_Patch
+        {
+            public static bool Prefix() { return !ElysiumModMenuGUI.IsCursorOverMenu(); }
+        }
+
         private void DrawPlayersTab()
         {
             GUILayout.BeginHorizontal();
@@ -5515,7 +6260,7 @@ namespace ElysiumModMenu
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(200));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(200));
             playerListScrollPos = GUILayout.BeginScrollView(playerListScrollPos);
             if (lockedPlayersList.Count > 0)
             {
@@ -5542,7 +6287,7 @@ namespace ElysiumModMenu
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.ExpandWidth(true));
+            GUILayout.Space(8); GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandWidth(true));
             playerActionScrollPos = GUILayout.BeginScrollView(playerActionScrollPos);
 
             PlayerControl target = lockedPlayersList.FirstOrDefault(p => p.PlayerId == selectedAntiCheatPlayerId);
@@ -5606,7 +6351,7 @@ namespace ElysiumModMenu
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(10);
-                GUILayout.Label("TARGET ROLE CONTROL", headerStyle);
+                DrawMenuSectionHeader("TARGET ROLE CONTROL");
 
                 GUILayout.BeginHorizontal();
                 GUIStyle roleMidStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, alignment = TextAnchor.MiddleCenter };
@@ -5710,8 +6455,8 @@ namespace ElysiumModMenu
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(15);
-                GUILayout.Label("SET PLAYER COLOR", headerStyle);
-                GUILayout.BeginVertical(boxStyle);
+                DrawMenuSectionHeader("SET PLAYER COLOR");
+                GUILayout.BeginVertical();
 
                 GUIStyle roundedColorBtnStyle = new GUIStyle();
                 roundedColorBtnStyle.normal.background = texColorBtn;
@@ -5734,7 +6479,7 @@ namespace ElysiumModMenu
                 GUILayout.EndVertical();
 
                 GUILayout.Space(15);
-                GUILayout.Label("PRE-GAME ROLE (HOST)", headerStyle);
+                DrawMenuSectionHeader("PRE-GAME ROLE (HOST)");
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Impostor", btnStyle, GUILayout.Height(25))) { forcedPreGameRoles.Remove(target.PlayerId); forcedImpostors.Add(target.PlayerId); enablePreGameRoleForce = true; }
                 if (GUILayout.Button("Crewmate", btnStyle, GUILayout.Height(25))) { forcedImpostors.Remove(target.PlayerId); forcedPreGameRoles[target.PlayerId] = RoleTypes.Crewmate; enablePreGameRoleForce = true; }
@@ -5758,14 +6503,14 @@ namespace ElysiumModMenu
 
         private void DrawPlayersHistoryTab()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("PLAYER HISTORY", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("PLAYER HISTORY");
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Entries: {playerHistoryEntries.Count}", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(120));
-            GUILayout.Label("File: ElysiumPlayerHistory.txt", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(190));
+            GUILayout.Label($"Entries: {playerHistoryEntries.Count}", new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Overflow, wordWrap = false }, GUILayout.MinWidth(128), GUILayout.ExpandWidth(false));
+            GUILayout.Label("File: ElysiumPlayerHistory.txt", new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Overflow, wordWrap = false }, GUILayout.MinWidth(220), GUILayout.ExpandWidth(false));
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Clear History", btnStyle, GUILayout.Width(120), GUILayout.Height(24)))
+            if (GUILayout.Button("Clear History", btnStyle, GUILayout.Width(136), GUILayout.Height(24)))
             {
                 playerHistoryEntries.Clear();
                 playerHistoryKeysById.Clear();
@@ -5783,7 +6528,7 @@ namespace ElysiumModMenu
             {
                 foreach (var e in playerHistoryEntries.OrderByDescending(x => x.LastSeenUtc))
                 {
-                    GUILayout.BeginVertical(boxStyle);
+                    GUILayout.BeginVertical();
                     string status = e.IsOnline ? "<color=#55FF77>ONLINE</color>" : "<color=#aaaaaa>LEFT</color>";
                     GUILayout.Label($"{e.Name}  {status}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
                     GUILayout.Label($"Lv: {e.Level} | FC: {e.FriendCode} | PUID: {e.Puid}", new GUIStyle(GUI.skin.label) { fontSize = 11 });
@@ -6360,14 +7105,14 @@ namespace ElysiumModMenu
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(276), GUILayout.ExpandHeight(false));
-            GUILayout.Label("CRITICAL SABOTAGES", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(276), GUILayout.ExpandHeight(false));
+            DrawMenuSectionHeader("CRITICAL SABOTAGES");
             GUILayout.Space(4);
 
             GUILayout.BeginHorizontal();
-            if (DrawColoredActionButton("FIX ALL", new Color32(83, 231, 139, 255), 126f, 32f)) FixAllSabotages();
+            if (DrawColoredActionButton("FIX ALL", new Color32(83, 231, 139, 255), 116f, 32f)) FixAllSabotages();
             GUILayout.Space(6);
-            if (DrawColoredActionButton("TRIGGER ALL", new Color32(255, 74, 74, 255), 126f, 32f)) TriggerAllSabotages();
+            if (DrawColoredActionButton("TRIGGER ALL", new Color32(255, 74, 74, 255), 116f, 32f)) TriggerAllSabotages();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6);
@@ -6393,17 +7138,17 @@ namespace ElysiumModMenu
 
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.ExpandWidth(true));
-            GUILayout.Label("DOOR LOCKDOWN", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandWidth(true));
+            DrawMenuSectionHeader("DOOR LOCKDOWN");
             GUILayout.Space(4);
             GUILayout.Label("<b>Global controls</b>", miniLabelStyle);
 
             GUILayout.BeginHorizontal();
-            if (DrawColoredActionButton("CLOSE", new Color32(255, 106, 66, 255), 88f, 30f)) SabotageDoors();
+            if (DrawColoredActionButton("CLOSE", new Color32(255, 106, 66, 255), 82f, 30f)) SabotageDoors();
             GUILayout.Space(6);
-            if (DrawColoredActionButton("LOCK", new Color32(255, 184, 64, 255), 88f, 30f)) LockAllDoors();
+            if (DrawColoredActionButton("LOCK", new Color32(255, 184, 64, 255), 82f, 30f)) LockAllDoors();
             GUILayout.Space(6);
-            if (DrawColoredActionButton("OPEN", new Color32(89, 219, 146, 255), 88f, 30f)) OpenAllDoors();
+            if (DrawColoredActionButton("OPEN", new Color32(89, 219, 146, 255), 82f, 30f)) OpenAllDoors();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(8);
@@ -6688,8 +7433,8 @@ namespace ElysiumModMenu
 
         private void DrawPlayersRoles()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("PRE-GAME ROLE MANAGER", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("PRE-GAME ROLE MANAGER");
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Height(25))) enablePreGameRoleForce = !enablePreGameRoleForce;
             if (GUILayout.Button("Random 2 Imps", btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
@@ -6709,8 +7454,8 @@ namespace ElysiumModMenu
             GUILayout.EndVertical();
 
             GUILayout.Space(8);
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("LIVE ROLE DISTRIBUTOR (HOST)", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("LIVE ROLE DISTRIBUTOR (HOST)");
             GUILayout.BeginHorizontal();
 
             GUIStyle allRoleMidStyle = new GUIStyle(btnStyle)
@@ -6756,7 +7501,7 @@ namespace ElysiumModMenu
 
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(boxStyle, GUILayout.Width(200));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(170));
             preRolesListScrollPos = GUILayout.BeginScrollView(preRolesListScrollPos);
             foreach (var pc in lockedPlayersList)
             {
@@ -6772,7 +7517,8 @@ namespace ElysiumModMenu
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
 
-            GUILayout.BeginVertical(boxStyle, GUILayout.ExpandWidth(true));
+            GUILayout.Space(8);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandWidth(true));
             preRolesActionScrollPos = GUILayout.BeginScrollView(preRolesActionScrollPos);
             PlayerControl target = lockedPlayersList.FirstOrDefault(p => p.PlayerId == selectedPreRoleId);
             if (target != null && target.Data != null)
@@ -6785,7 +7531,7 @@ namespace ElysiumModMenu
                 if (forcedImpostors.Contains(target.PlayerId)) roleNameStr = "Impostor";
                 GUILayout.Label($"<color=#aaaaaa>Status:</color> {(isForced ? $"<color=#00FF00>Forced ({roleNameStr})</color>" : "<color=#FF0000>Not Forced (Random)</color>")}", infoStyle);
                 GUILayout.Space(15);
-                GUILayout.Label("IMPOSTOR ROLES (Red Team)", headerStyle);
+                DrawMenuSectionHeader("IMPOSTOR ROLES (Red Team)");
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Impostor", btnStyle, GUILayout.Height(30))) { forcedPreGameRoles.Remove(target.PlayerId); forcedImpostors.Add(target.PlayerId); }
                 if (GUILayout.Button("Shapeshifter", btnStyle, GUILayout.Height(30))) { forcedImpostors.Remove(target.PlayerId); forcedPreGameRoles[target.PlayerId] = RoleTypes.Shapeshifter; }
@@ -6793,7 +7539,7 @@ namespace ElysiumModMenu
                 if (GUILayout.Button("Viper", btnStyle, GUILayout.Height(30))) { forcedImpostors.Remove(target.PlayerId); forcedPreGameRoles[target.PlayerId] = (RoleTypes)18; }
                 GUILayout.EndHorizontal();
                 GUILayout.Space(10);
-                GUILayout.Label("CREWMATE ROLES (Blue Team)", headerStyle);
+                DrawMenuSectionHeader("CREWMATE ROLES (Blue Team)");
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Crewmate", btnStyle, GUILayout.Height(30))) { forcedImpostors.Remove(target.PlayerId); forcedPreGameRoles[target.PlayerId] = RoleTypes.Crewmate; }
                 if (GUILayout.Button("Engineer", btnStyle, GUILayout.Height(30))) { forcedImpostors.Remove(target.PlayerId); forcedPreGameRoles[target.PlayerId] = RoleTypes.Engineer; }
@@ -6822,74 +7568,128 @@ namespace ElysiumModMenu
             GUILayout.EndHorizontal();
         }
 
+        private void DrawMenuSectionHeader(string title)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(GUIContent.none, menuAccentBarStyle, GUILayout.Width(3), GUILayout.Height(16));
+            GUILayout.Space(8);
+            GUILayout.Label(title, menuSectionTitleStyle, GUILayout.Height(16));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(8);
+        }
+
         private void DrawMenuTab()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("MENU CUSTOMIZATION", headerStyle);
-            GUILayout.Space(5);
+            bool menuPrefsChanged = false;
+
+            // ----- APPEARANCE -----
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("MENU CUSTOMIZATION", "ОФОРМЛЕНИЕ МЕНЮ"));
 
             bool prevRgb = rgbMenuMode;
-            rgbMenuMode = DrawToggle(rgbMenuMode, "RGB Menu Mode");
+            rgbMenuMode = DrawToggle(rgbMenuMode, "RGB Menu Mode", 260);
             if (prevRgb && !rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]);
-
-            GUILayout.Space(5);
+            if (prevRgb != rgbMenuMode) menuPrefsChanged = true;
+            GUILayout.Label(L("Smoothly cycles the accent through the rainbow.", "Плавно переливает акцент по радуге."), menuDescStyle);
+            GUILayout.Space(8);
 
             bool prevWhiteTheme = whiteMenuTheme;
-            whiteMenuTheme = DrawToggle(whiteMenuTheme, "White Theme");
+            whiteMenuTheme = DrawToggle(whiteMenuTheme, "White Theme", 260);
             if (prevWhiteTheme != whiteMenuTheme)
             {
                 InitStyles();
                 UpdateAccentColor(currentAccentColor);
-                SaveConfig();
+                menuPrefsChanged = true;
             }
-
-            GUILayout.Space(5);
+            GUILayout.Label(L("Switches between the dark and light interface.", "Переключает тёмный и светлый интерфейс."), menuDescStyle);
+            GUILayout.Space(8);
 
             bool prevBg = enableBackground;
-            enableBackground = DrawToggle(enableBackground, "Enable Image Background");
+            enableBackground = DrawToggle(enableBackground, "Enable Image Background", 260);
             if (enableBackground && !prevBg) LoadBackgroundImage();
+            if (prevBg != enableBackground) menuPrefsChanged = true;
+            GUILayout.Label(L("Put 'MenuBG.png' or .jpg in BepInEx/config to add a background image.", "Положите 'MenuBG.png' или .jpg в BepInEx/config для фона."), menuDescStyle);
+            GUILayout.Space(8);
 
-            GUILayout.Space(5);
-            GUILayout.Label("<color=#777777>Put 'MenuBG.png' or .jpg in BepInEx/config to add a background image.</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 });
+            bool prevHardMenu = hardMenu;
+            hardMenu = DrawToggle(hardMenu, L("Solid Menu (block game clicks)", "Твердое меню (блок кликов по игре)"), 260);
+            if (prevHardMenu != hardMenu) menuPrefsChanged = true;
+            GUILayout.Label(L("When on, clicks over the menu stay in the menu so you can't misclick the game behind it.", "Когда включено, клики по меню остаются в меню — вы не промахнётесь по игре за ним."), menuDescStyle);
+            GUILayout.EndVertical();
 
-            GUILayout.Space(10);
+            // ----- ACCENT & PERFORMANCE -----
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("ACCENT & PERFORMANCE", "АКЦЕНТ И ПРОИЗВОДИТЕЛЬНОСТЬ"));
 
             GUILayout.BeginHorizontal();
-            GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold };
+            GUILayout.Label(L("FPS Limit", "Лимит FPS"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
+            int newFpsLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(fpsLimit, 60f, 240f, sliderStyle, sliderThumbStyle, GUILayout.Width(180)), 60, 240);
+            GUILayout.Space(10);
+            GUILayout.Label(fpsLimit.ToString(), menuBadgeStyle, GUILayout.Width(52), GUILayout.Height(22));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (newFpsLimit != fpsLimit)
+            {
+                fpsLimit = newFpsLimit;
+                ApplyFpsLimit();
+                menuPrefsChanged = true;
+            }
+
+            GUILayout.Space(12);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Accent Color", "Цвет акцента"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
+            Color prevGuiColor = GUI.color;
+            GUI.color = GetThemeAccentColor(rgbMenuMode ? currentAccentColor : menuColors[currentMenuColorIndex]);
+            GUILayout.Label(GUIContent.none, menuSwatchStyle, GUILayout.Width(22), GUILayout.Height(22));
+            GUI.color = prevGuiColor;
+            GUILayout.Space(8);
             GUI.enabled = !rgbMenuMode;
-            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); }
-            GUILayout.Label(menuColorNames[currentMenuColorIndex], middleColorStyle, GUILayout.Width(110), GUILayout.Height(25));
-            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); }
+            GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold };
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
+            GUILayout.Label(rgbMenuMode ? "RGB" : menuColorNames[currentMenuColorIndex], middleColorStyle, GUILayout.Width(120), GUILayout.Height(25));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
-            GUILayout.Space(10);
-
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("SPOOF MENU IDENTITY", headerStyle);
-            SpoofMenuEnabled = DrawToggle(SpoofMenuEnabled, "Enable Fake RPC");
-            GUILayout.Space(5);
+            // ----- SPOOF IDENTITY -----
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("SPOOF MENU IDENTITY", "ПОДМЕНА МЕНЮ"));
+            bool prevSpoofMenuEnabled = SpoofMenuEnabled;
+            SpoofMenuEnabled = DrawToggle(SpoofMenuEnabled, "Enable Fake RPC", 260);
+            if (prevSpoofMenuEnabled != SpoofMenuEnabled) menuPrefsChanged = true;
+            GUILayout.Label(L("Reports a fake mod menu name to other players.", "Показывает игрокам поддельное имя меню."), menuDescStyle);
+            GUILayout.Space(8);
             GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Fake Name", "Поддельное имя"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
+            GUI.enabled = SpoofMenuEnabled;
             GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) } };
-            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; }
-            GUILayout.Label($"{spoofMenuNames[selectedSpoofMenuIndex]}", middleLabelStyle, GUILayout.Width(110), GUILayout.Height(25));
-            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; }
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; menuPrefsChanged = true; }
+            GUILayout.Label(spoofMenuNames[selectedSpoofMenuIndex], middleLabelStyle, GUILayout.Width(150), GUILayout.Height(25));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; menuPrefsChanged = true; }
+            GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
-            GUILayout.Space(10);
-
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("NOTIFICATIONS & LOGGING", headerStyle);
-            GUILayout.Space(5);
-            EnableCustomNotifs = DrawToggle(EnableCustomNotifs, "Enable Custom UI Notifications", 250);
-            GUILayout.Space(5);
-            LogAllRPCs = DrawToggle(LogAllRPCs, "Sniff All RPCs (On-Screen)", 250);
+            // ----- NOTIFICATIONS & LOGGING -----
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("NOTIFICATIONS & LOGGING", "УВЕДОМЛЕНИЯ И ЛОГИ"));
+            bool prevCustomNotifs = EnableCustomNotifs;
+            EnableCustomNotifs = DrawToggle(EnableCustomNotifs, "Enable Custom UI Notifications", 280);
+            if (prevCustomNotifs != EnableCustomNotifs) menuPrefsChanged = true;
+            GUILayout.Space(6);
+            bool prevLogAllRpcs = LogAllRPCs;
+            LogAllRPCs = DrawToggle(LogAllRPCs, "Sniff All RPCs (On-Screen)", 280);
+            if (prevLogAllRpcs != LogAllRPCs) menuPrefsChanged = true;
             GUILayout.EndVertical();
+
+            if (menuPrefsChanged) SaveConfig();
         }
+
         private Vector2 outfitsScrollPos = Vector2.zero;
         public static bool AutoHostEnabled = false;
         public static bool AutoReturnLobbyAfterMatch = true;
@@ -6912,10 +7712,64 @@ namespace ElysiumModMenu
 
         private int currentAutoHostSubTab = 0;
         private string[] autoHostSubTabs = { "LOBBY CONTROLS", "ROLE MANAGER", "ANTI CHEAT", "AUTO HOST" };
+
+        private struct FavoriteOutfitSnapshot
+        {
+            public int ColorId;
+            public string HatId;
+            public string SkinId;
+            public string VisorId;
+            public string NamePlateId;
+            public string PetId;
+
+            public FavoriteOutfitSnapshot(int colorId, string hatId, string skinId, string visorId, string namePlateId, string petId)
+            {
+                ColorId = colorId;
+                HatId = hatId ?? string.Empty;
+                SkinId = skinId ?? string.Empty;
+                VisorId = visorId ?? string.Empty;
+                NamePlateId = namePlateId ?? string.Empty;
+                PetId = petId ?? string.Empty;
+            }
+        }
+
         private void DrawOutfitsTab()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("COPY SPECIFIC PLAYER", headerStyle);
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("FAVORITE OUTFITS", "ИЗБРАННЫЕ ОБРАЗЫ"));
+
+            PlayerControl selected = SelectedOutfitSourcePlayer();
+            for (int i = 0; i < FavoriteOutfitSlotCount; i++)
+            {
+                bool hasOutfit = TryDeserializeFavoriteOutfit(favoriteOutfitSlots[i], out FavoriteOutfitSnapshot outfit);
+                GUILayout.BeginVertical();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{L("Slot", "Слот")} {i + 1}", toggleLabelStyle, GUILayout.Width(52), GUILayout.Height(22));
+                GUILayout.Label(hasOutfit ? FavoriteOutfitSummary(outfit) : L("Empty", "Пусто"), new GUIStyle(GUI.skin.label) { fontSize = 11, clipping = TextClipping.Clip, alignment = TextAnchor.MiddleLeft }, GUILayout.ExpandWidth(true), GUILayout.Height(22));
+                GUI.enabled = hasOutfit;
+                if (GUILayout.Button(L("Apply", "Надеть"), btnStyle, GUILayout.Width(58), GUILayout.Height(22)))
+                    ApplyFavoriteOutfitSlot(i, outfit, hasOutfit);
+                GUI.enabled = true;
+                if (GUILayout.Button("X", btnStyle, GUILayout.Width(28), GUILayout.Height(22)))
+                    ClearFavoriteOutfitSlot(i);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(52);
+                if (GUILayout.Button(L("Save Mine", "Сохр. мой"), btnStyle, GUILayout.Width(100), GUILayout.Height(22)))
+                    SaveFavoriteOutfitSlot(i, PlayerControl.LocalPlayer);
+                if (GUILayout.Button(L("Save Selected", "Сохр. выбран"), btnStyle, GUILayout.Width(120), GUILayout.Height(22)))
+                    SaveFavoriteOutfitSlot(i, selected);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                GUILayout.EndVertical();
+                GUILayout.Space(4);
+            }
+
+            GUILayout.Space(12);
+            DrawMenuSectionHeader("COPY SPECIFIC PLAYER");
 
             outfitsScrollPos = GUILayout.BeginScrollView(outfitsScrollPos);
             if (lockedPlayersList.Count > 0)
@@ -6953,6 +7807,145 @@ namespace ElysiumModMenu
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
+        }
+
+        private static PlayerControl SelectedOutfitSourcePlayer()
+        {
+            try
+            {
+                if (lockedPlayersList != null)
+                {
+                    foreach (PlayerControl pc in lockedPlayersList)
+                    {
+                        if (pc != null && pc != PlayerControl.LocalPlayer && pc.Data != null && !pc.Data.Disconnected)
+                            return pc;
+                    }
+                }
+            }
+            catch { }
+
+            return PlayerControl.LocalPlayer;
+        }
+
+        private static int MaxOutfitColorId()
+        {
+            try { return Palette.PlayerColors != null ? Mathf.Max(0, Palette.PlayerColors.Length - 1) : 18; }
+            catch { return 18; }
+        }
+
+        private static bool TryCaptureFavoriteOutfit(PlayerControl source, out FavoriteOutfitSnapshot outfit)
+        {
+            outfit = default;
+            try
+            {
+                if (source == null || source.Data == null || source.Data.DefaultOutfit == null) return false;
+                var sourceOutfit = source.Data.DefaultOutfit;
+                outfit = new FavoriteOutfitSnapshot(
+                    Mathf.Clamp(sourceOutfit.ColorId, 0, MaxOutfitColorId()),
+                    sourceOutfit.HatId,
+                    sourceOutfit.SkinId,
+                    sourceOutfit.VisorId,
+                    sourceOutfit.NamePlateId,
+                    sourceOutfit.PetId);
+                return true;
+            }
+            catch { }
+
+            return false;
+        }
+
+        private static void ApplyFavoriteOutfit(PlayerControl target, FavoriteOutfitSnapshot outfit)
+        {
+            if (target == null) return;
+            target.RpcSetColor((byte)Mathf.Clamp(outfit.ColorId, 0, MaxOutfitColorId()));
+            target.RpcSetSkin(outfit.SkinId ?? string.Empty);
+            target.RpcSetHat(outfit.HatId ?? string.Empty);
+            target.RpcSetVisor(outfit.VisorId ?? string.Empty);
+            target.RpcSetNamePlate(outfit.NamePlateId ?? string.Empty);
+            target.RpcSetPet(outfit.PetId ?? string.Empty);
+        }
+
+        private static string SerializeFavoriteOutfit(FavoriteOutfitSnapshot outfit)
+        {
+            return string.Join("\t", new[]
+            {
+                Mathf.Clamp(outfit.ColorId, 0, MaxOutfitColorId()).ToString(),
+                CleanFavoriteOutfitPart(outfit.HatId),
+                CleanFavoriteOutfitPart(outfit.SkinId),
+                CleanFavoriteOutfitPart(outfit.VisorId),
+                CleanFavoriteOutfitPart(outfit.NamePlateId),
+                CleanFavoriteOutfitPart(outfit.PetId)
+            });
+        }
+
+        private static bool TryDeserializeFavoriteOutfit(string value, out FavoriteOutfitSnapshot outfit)
+        {
+            outfit = default;
+            if (string.IsNullOrWhiteSpace(value)) return false;
+
+            string[] parts = value.Split('\t');
+            if (parts.Length < 6 || !int.TryParse(parts[0], out int colorId)) return false;
+
+            outfit = new FavoriteOutfitSnapshot(Mathf.Clamp(colorId, 0, MaxOutfitColorId()), parts[1], parts[2], parts[3], parts[4], parts[5]);
+            return true;
+        }
+
+        private static string CleanFavoriteOutfitPart(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return string.Empty;
+            return value.Replace("\t", " ").Replace("\r", " ").Replace("\n", " ").Trim();
+        }
+
+        private static string FavoriteOutfitSummary(FavoriteOutfitSnapshot outfit)
+        {
+            string color = "Color " + outfit.ColorId;
+            try { color = Palette.GetColorName(outfit.ColorId); } catch { }
+            return $"{color} | {ShortOutfitId(outfit.HatId)}";
+        }
+
+        private static string ShortOutfitId(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "-";
+            string cleaned = value.Trim();
+            return cleaned.Length <= 10 ? cleaned : cleaned.Substring(0, 10);
+        }
+
+        private void SaveFavoriteOutfitSlot(int index, PlayerControl source)
+        {
+            if (index < 0 || index >= favoriteOutfitSlots.Length) return;
+            if (!TryCaptureFavoriteOutfit(source, out FavoriteOutfitSnapshot outfit))
+            {
+                ShowNotification($"<color=#FF4444>[OUTFIT]</color> {L("Player outfit is not ready.", "Образ игрока еще не готов.")}");
+                return;
+            }
+
+            favoriteOutfitSlots[index] = SerializeFavoriteOutfit(outfit);
+            SaveConfig();
+            ShowNotification($"<color=#00FFAA>[OUTFIT]</color> {L("Saved slot", "Сохранен слот")} {index + 1}");
+        }
+
+        private void ApplyFavoriteOutfitSlot(int index, FavoriteOutfitSnapshot outfit, bool hasOutfit)
+        {
+            if (!hasOutfit)
+            {
+                ShowNotification($"<color=#FFAA00>[OUTFIT]</color> {L("Slot is empty.", "Слот пуст.")}");
+                return;
+            }
+
+            try
+            {
+                ApplyFavoriteOutfit(PlayerControl.LocalPlayer, outfit);
+                ShowNotification($"<color=#00FFAA>[OUTFIT]</color> {L("Applied slot", "Надет слот")} {index + 1}");
+            }
+            catch { }
+        }
+
+        private void ClearFavoriteOutfitSlot(int index)
+        {
+            if (index < 0 || index >= favoriteOutfitSlots.Length) return;
+            favoriteOutfitSlots[index] = string.Empty;
+            SaveConfig();
+            ShowNotification($"<color=#AAAAAA>[OUTFIT]</color> {L("Cleared slot", "Очищен слот")} {index + 1}");
         }
         public static bool removePenalty = true;
         public static bool alwaysShowLobbyTimer = false;
@@ -7002,6 +7995,7 @@ namespace ElysiumModMenu
             UnlockCosmetics();
             LoadConfig();
             LoadBanList();
+            ClearSpamErrorLogOnStartup();
             StartBackgroundAnomalyLogMonitor();
 
 
@@ -7038,7 +8032,47 @@ namespace ElysiumModMenu
             SaveConfig();
         }
 
+        private static void ClearSpamErrorLogOnStartup()
+        {
+            try
+            {
+                watchedLogLineCounts.Clear();
+                logBurstWindowStartedAt = -1f;
+                logBurstCooldownUntil = 0f;
+                logBurstLineCount = 0;
+                anomalyLogWatchNotified = false;
+                logMonitorNextScanAt = 0f;
 
+                string root = string.IsNullOrWhiteSpace(Plugin.ElysiumFolder)
+                    ? System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "ElysiumModMenu")
+                    : Plugin.ElysiumFolder;
+
+                if (!System.IO.Directory.Exists(root)) return;
+
+                foreach (string file in System.IO.Directory.GetFiles(root, "SpamErrorLog*.txt", System.IO.SearchOption.AllDirectories))
+                {
+                    try { System.IO.File.Delete(file); }
+                    catch { }
+                }
+
+                System.Console.WriteLine("[ElysiumModMenu] Cleared previous SpamErrorLog files and reset log monitor state.");
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"[ElysiumModMenu] Failed to clear SpamErrorLog files: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        public static void SendAnomalyAlert(string title, string message, string dedupeKey = null, bool waitForCompletion = false, IEnumerable<string> attachmentPaths = null)
+        {
+            if (!enableAnomalyLogReports) return;
+            if (!DiscordStatusReporter.IsEnabled) return;
+            string webhookUrl = DiscordStatusReporter.ConfiguredWebhookUrl;
+            if (!DiscordStatusReporter.IsValidWebhookUrl(webhookUrl)) return;
+            int attachmentCount = attachmentPaths == null ? 0 : attachmentPaths.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().Count();
+            System.Console.WriteLine($"[ElysiumModMenu] Sending freeze/overload logs to configured webhook. Type={title}. Attachments={attachmentCount}.");
+            DiscordStatusReporter.SendDiagnosticAlert(webhookUrl, title, message, waitForCompletion, attachmentPaths);
+        }
 
         private static void StartBackgroundAnomalyLogMonitor()
         {
@@ -7168,6 +8202,7 @@ namespace ElysiumModMenu
                     logBurstCooldownUntil = now + (isStoredRpcBurst ? 5f : LogBurstAlertCooldownSeconds);
                     string reason = isStoredRpcBurst ? "stored rpc overload detected" : (isErrorBurst ? "error/red log detected" : "log spam detected");
                     string message = $"{BuildAnomalyReportDetails(allowUnityAccess)}\nnewLogLines={logBurstLineCount}\nerrorLines={errorLines}\nstoredMsgLines={storedMsgLines}\nwindowSeconds={LogBurstWindowSeconds}\nthreshold={LogBurstLineThreshold}\nreason={reason}, needs fix\nwatchedLogs={string.Join(", ", touchedLogs.Distinct().ToArray())}";
+                    SendAnomalyAlert(isErrorBurst ? "Abnormal error log" : "Abnormal log spam", message, "abnormal-log-spam", !allowUnityAccess, touchedLogFiles);
                     logBurstWindowStartedAt = -1f;
                     logBurstLineCount = 0;
                 }
@@ -7386,6 +8421,69 @@ namespace ElysiumModMenu
             return builder.ToString();
         }
 
+        private void TrySendDiscordLaunchStatusTick()
+        {
+            if (discordLaunchStatusSent || !DiscordStatusReporter.IsEnabled) return;
+            if (Time.unscaledTime < discordLaunchStatusNextTryAt) return;
+
+            string webhookUrl = DiscordStatusReporter.ConfiguredWebhookUrl.Trim();
+            if (!DiscordStatusReporter.IsValidWebhookUrl(webhookUrl))
+            {
+                discordLaunchStatusNextTryAt = Time.unscaledTime + 10f;
+                if (!discordInvalidWebhookNotified)
+                {
+                    discordInvalidWebhookNotified = true;
+                }
+                return;
+            }
+
+            if (PlayerControl.LocalPlayer == null || PlayerControl.LocalPlayer.Data == null)
+            {
+                discordLaunchStatusNextTryAt = Time.unscaledTime + 2f;
+                return;
+            }
+
+            string nickname = "Unknown";
+            string friendCode = "Hidden";
+            string puid = "Unknown";
+            string platform = "Unknown";
+            string roomCode = "No room";
+            int level = 0;
+
+            try
+            {
+                nickname = string.IsNullOrWhiteSpace(PlayerControl.LocalPlayer.Data.PlayerName)
+                    ? "Unknown"
+                    : PlayerControl.LocalPlayer.Data.PlayerName;
+                if (DiscordStatusReporter.IncludeLocalPuid)
+                    friendCode = GetDisplayedFriendCode(PlayerControl.LocalPlayer.Data, "Hidden");
+
+                uint rawLevel = PlayerControl.LocalPlayer.Data.PlayerLevel;
+                if (rawLevel != uint.MaxValue && rawLevel < 10000) level = (int)rawLevel + 1;
+            }
+            catch { }
+
+            try
+            {
+                ClientData client = AmongUsClient.Instance?.GetClientFromCharacter(PlayerControl.LocalPlayer);
+                if (client != null)
+                {
+                    puid = GetClientPuid(client);
+                    platform = GetPlatform(client);
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (AmongUsClient.Instance != null && AmongUsClient.Instance.GameId != 0)
+                    roomCode = AmongUsClient.Instance.GameId.ToString();
+            }
+            catch { }
+
+            DiscordStatusReporter.SendLaunchStatus(webhookUrl, nickname, friendCode, puid, platform, level, roomCode, DiscordStatusReporter.IncludeLocalPuid);
+            discordLaunchStatusSent = true;
+        }
 
         public static KeyCode bindMagnetCursor = KeyCode.F9;
         public static bool isWaitBindMagnetCursor = false;
@@ -7511,6 +8609,10 @@ namespace ElysiumModMenu
 
             ElysiumAutoHostService.Tick();
             ElysiumAutoLobbyReturn.UpdateLogic();
+            ApplyFpsLimit();
+            TryAutoGhostAfterStartTick();
+            TryAutoBanCustomPlatformsTick();
+            TrySendDiscordLaunchStatusTick();
             TryDetectLogBurstTick();
             if (votekickEveryone)
             {
@@ -7525,6 +8627,12 @@ namespace ElysiumModMenu
 
             if (wasShowMenu && !showMenu) SaveConfig();
             wasShowMenu = showMenu;
+
+            if (settingsDirty)
+            {
+                SaveConfig();
+                settingsDirty = false;
+            }
 
             if (PlayerControl.LocalPlayer != null)
             {
@@ -7954,7 +9062,7 @@ namespace ElysiumModMenu
                     else if (isEditingLevel && HandleClipboardShortcut(e, ref spoofLevelString)) { }
                     else if (isEditingFriendCode && HandleClipboardShortcut(e, ref spoofFriendCodeInput)) { }
                     else if (isEditingLocalFriendCode && HandleClipboardShortcut(e, ref localFriendCodeInput)) { }
-                    else if (isEditingGhostChatColor && HandleClipboardShortcut(e, ref ghostChatColorHex, 7)) { }
+                    else if (isEditingGhostChatColor && HandleClipboardShortcut(e, ref ghostChatColorHex, 7)) { ghostChatColorHex = FilterHexInput(ghostChatColorHex, 7); }
                     else if (e.keyCode == KeyCode.Backspace)
                     {
                         if (isEditingBan && banInput.Length > 0) { banInput = banInput.Substring(0, banInput.Length - 1); }
@@ -7972,7 +9080,7 @@ namespace ElysiumModMenu
                         if (isEditingLevel) { spoofLevelString += e.character; }
                         if (isEditingFriendCode) { spoofFriendCodeInput += e.character; }
                         if (isEditingLocalFriendCode) { localFriendCodeInput += e.character; }
-                        if (isEditingGhostChatColor && ghostChatColorHex.Length < 7) { ghostChatColorHex += e.character; }
+                        if (isEditingGhostChatColor) { ghostChatColorHex = FilterHexInput((ghostChatColorHex ?? "") + e.character, 7); }
                         e.Use();
                     }
                 }
@@ -8267,11 +9375,11 @@ namespace ElysiumModMenu
 
         private void DrawVotekickTab()
         {
-            GUILayout.BeginVertical(boxStyle);
+            GUILayout.BeginVertical(menuCardStyle);
             try
             {
                 GUIStyle voteInfoStyle = new GUIStyle(toggleLabelStyle) { richText = true, wordWrap = true };
-                GUILayout.Label("VOTEKICK MENU", headerStyle);
+                DrawMenuSectionHeader("VOTEKICK MENU");
                 GUILayout.Label("<color=#777777><b>Auto mode:</b> sends 3 votes to every valid player, leaves the room, and stays armed until you press it again.</color>", voteInfoStyle);
                 GUILayout.Space(5);
 
@@ -8292,7 +9400,7 @@ namespace ElysiumModMenu
             finally { GUILayout.EndVertical(); }
 
             GUILayout.Space(10);
-            GUILayout.Label("TARGET VOTE", headerStyle);
+            DrawMenuSectionHeader("TARGET VOTE");
 
             if (PlayerControl.AllPlayerControls != null)
             {
@@ -8385,11 +9493,9 @@ namespace ElysiumModMenu
             else if (tabToDraw == 3) DrawPlayersTab();
             else if (tabToDraw == 4) DrawSabotagesTab();
             else if (tabToDraw == 5) DrawHostOnlyTab();
-            else if (tabToDraw == 6) DrawOutfitsTab();
-            else if (tabToDraw == 7) DrawVotekickTab();
-            else if (tabToDraw == 8) DrawMenuTab();
-            else if (tabToDraw == 9) DrawMapsTab();
-            else if (tabToDraw == 10) DrawAnimationsTab();
+            else if (tabToDraw == 6) DrawVotekickTab();
+            else if (tabToDraw == 7) DrawMenuTab();
+            else if (tabToDraw == 8) DrawAnimationsTab();
 
             GUILayout.EndScrollView();
             GUILayout.EndArea();
@@ -8398,6 +9504,7 @@ namespace ElysiumModMenu
             GUI.DragWindow(new Rect(0, 0, 10000, 30));
         }
         public static int punishmentMode = 1;
+        public static bool settingsDirty = false;
         public static string[] punishmentNames = { "Null", "Warn", "Kick", "Ban" };
 
         public static bool blockSpoofRPC = true;
@@ -8406,6 +9513,7 @@ namespace ElysiumModMenu
         public static bool blockChatFloodRpc = true;
         public static bool blockMeetingFloodRpc = true;
         public static bool enablePasosLimit = true;
+        public static int rpcSpamLimit = 80;
         public static bool enableLocalPasosBan = true;
         public static bool enableHostPasosBan = true;
         public static bool autoBanBrokenFriendCode = false;
@@ -8470,6 +9578,8 @@ namespace ElysiumModMenu
                 if (isNewEntry)
                 {
                     sentMessages.Add(message);
+                    while (sentMessages.Count > ElysiumModMenuGUI.chatHistoryLimit)
+                        sentMessages.RemoveAt(0);
                 }
                 HistoryIndex = sentMessages.Count;
             }
@@ -8639,9 +9749,9 @@ namespace ElysiumModMenu
         public static bool isManualMapSpawn = false;
         private void DrawAnimationsTab()
         {
-            GUILayout.BeginVertical(boxStyle);
+            GUILayout.BeginVertical(menuCardStyle);
 
-            GUILayout.Label(L("LOOPED PLAYER ANIMATIONS", "ЗАЦИКЛЕННЫЕ АНИМАЦИИ ИГРОКА"), headerStyle);
+            DrawMenuSectionHeader(L("LOOPED PLAYER ANIMATIONS", "ЗАЦИКЛЕННЫЕ АНИМАЦИИ ИГРОКА"));
 
             string animInfo = L("<color=#777777>Animations are looped. They will run as long as the toggle is ON.</color>",
                                 "<color=#777777>Анимации зациклены. Будут работать, пока включен тумблер.</color>");
@@ -8881,97 +9991,107 @@ namespace ElysiumModMenu
 
         private void DrawLobbyControls()
         {
-            GUILayout.BeginVertical(boxStyle);
-            GUILayout.Label("LOBBY CONTROLS", headerStyle);
-
             GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical(GUILayout.Width(280));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(282));
+            DrawMenuSectionHeader("GAME RULES");
             neverEndGame = DrawToggle(neverEndGame, "Unlimited Game", 250);
             GUILayout.Space(5);
             noSettingLimit = DrawToggle(noSettingLimit, "No Setting Limit", 250);
             GUILayout.Space(5);
             noTaskMode = DrawToggle(noTaskMode, "No Task Mode", 250);
             GUILayout.Space(5);
+            allowDuplicateColors = DrawToggle(allowDuplicateColors, L("Allow Duplicate Colors", "Разрешить одинаковые цвета"), 250);
+            GUILayout.EndVertical();
+
+            GUILayout.Space(10);
+
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(282));
+            DrawMenuSectionHeader("CHAT MODERATION");
             enableColorCommand = DrawToggle(enableColorCommand, "Enable /c command (Public)", 250);
             GUILayout.Space(5);
             blockFortegreenChat = DrawToggle(blockFortegreenChat, "Block Fortegreen Chat", 250);
             GUILayout.Space(5);
             blockRainbowChat = DrawToggle(blockRainbowChat, "Block Rainbow Chat", 250);
             GUILayout.Space(5);
-
             autoChatEveryone = DrawToggle(autoChatEveryone, "Chat Everyone (Auto-Meeting)", 250);
             if (autoChatEveryone)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"Delay: {autoChatEveryoneDelay:0.0}s", toggleLabelStyle, GUILayout.Width(95));
-                autoChatEveryoneDelay = GUILayout.HorizontalSlider(autoChatEveryoneDelay, 0f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(240));
+                GUILayout.Label($"Delay: {autoChatEveryoneDelay:0.0}s", toggleLabelStyle, GUILayout.Width(78));
+                autoChatEveryoneDelay = GUILayout.HorizontalSlider(autoChatEveryoneDelay, 0f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(170));
                 GUILayout.EndHorizontal();
             }
-
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(15);
-            GUILayout.Label("HOST ACTIONS", headerStyle);
+            GUILayout.Space(10);
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.BeginVertical(GUILayout.Width(280));
-            if (GUILayout.Button("Insta Start", btnStyle, GUILayout.Height(25)))
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(282));
+            DrawMenuSectionHeader("LOBBY ACTIONS");
+            if (GUILayout.Button("Insta Start", btnStyle, GUILayout.Height(26)))
             { GameStartManager.Instance.startState = GameStartManager.StartingStates.Countdown; GameStartManager.Instance.countDownTimer = 0f; }
             GUILayout.Space(5);
-            if (GUILayout.Button("Close Meeting", btnStyle, GUILayout.Height(25))) MeetingHud.Instance.RpcClose();
+            if (GUILayout.Button("Close Meeting", btnStyle, GUILayout.Height(26))) MeetingHud.Instance.RpcClose();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Spawn Lobby", activeTabStyle, GUILayout.Height(25))) SpawnLobby();
+            if (GUILayout.Button("Spawn Lobby", activeTabStyle, GUILayout.Height(26))) SpawnLobby();
             GUILayout.Space(5);
-            if (GUILayout.Button("Despawn", btnStyle, GUILayout.Height(25))) DespawnLobby();
+            if (GUILayout.Button("Despawn", btnStyle, GUILayout.Height(26))) DespawnLobby();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Kill All", btnStyle, GUILayout.Height(25))) KillAll();
+            if (GUILayout.Button("Kill All", btnStyle, GUILayout.Height(26))) KillAll();
             GUILayout.Space(5);
-            if (GUILayout.Button("Kick All", btnStyle, GUILayout.Height(25))) KickAll();
+            if (GUILayout.Button("Kick All", btnStyle, GUILayout.Height(26))) KickAll();
             GUILayout.Space(5);
-            if (GUILayout.Button("Mass Morph", btnStyle, GUILayout.Height(25))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
+            if (GUILayout.Button("Mass Morph", btnStyle, GUILayout.Height(26))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical(GUILayout.Width(280));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(282));
+            DrawMenuSectionHeader("END GAME");
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Crewmate Win", btnStyle, GUILayout.Height(25))) SmartEndGame("CrewWin");
+            if (GUILayout.Button("Crewmate Win", btnStyle, GUILayout.Height(26))) SmartEndGame("CrewWin");
             GUILayout.Space(5);
-            if (GUILayout.Button("Impostor Win", btnStyle, GUILayout.Height(25))) SmartEndGame("ImpWin");
+            if (GUILayout.Button("Impostor Win", btnStyle, GUILayout.Height(26))) SmartEndGame("ImpWin");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Imp Disconnect", btnStyle, GUILayout.Height(25))) SmartEndGame("ImpDisconnect");
+            if (GUILayout.Button("Imp Disconnect", btnStyle, GUILayout.Height(26))) SmartEndGame("ImpDisconnect");
             GUILayout.Space(5);
-            if (GUILayout.Button("H&S Disconnect", activeTabStyle, GUILayout.Height(25))) SmartEndGame("HnsImpDisconnect");
+            if (GUILayout.Button("H&S Disconnect", activeTabStyle, GUILayout.Height(26))) SmartEndGame("HnsImpDisconnect");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
-            if (GUILayout.Button("Force End (Impostor Disconnect)", btnStyle, GUILayout.Height(25)) && GameManager.Instance != null && AmongUsClient.Instance.AmHost)
+            if (GUILayout.Button("Force End (Impostor Disconnect)", btnStyle, GUILayout.Height(26)) && GameManager.Instance != null && AmongUsClient.Instance.AmHost)
             { bool tempNeverEnd = neverEndGame; neverEndGame = false; GameManager.Instance.RpcEndGame((GameOverReason)4, false); neverEndGame = tempNeverEnd; }
             GUILayout.EndVertical();
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
         }
         public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName)
         {
             if (info == null) return originalName;
             string newName = originalName;
+            if (enableLocalNameSpoof &&
+                PlayerControl.LocalPlayer != null &&
+                info.PlayerId == PlayerControl.LocalPlayer.PlayerId &&
+                !string.IsNullOrWhiteSpace(customNameInput))
+            {
+                newName = BuildLocalNameRenderText(customNameInput);
+            }
+
             if (seeRoles && info.Role != null)
             {
                 string roleName = info.Role.Role.ToString();
@@ -9100,7 +10220,7 @@ namespace ElysiumModMenu
 
                     if (ElysiumModMenuGUI.showWatermark)
                     {
-                        string shimmerTitle = ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu v1.2.7");
+                        string shimmerTitle = ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu v1.3.4");
                         finalString = $"{shimmerTitle} • " + finalString;
                     }
 
