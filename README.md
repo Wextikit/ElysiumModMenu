@@ -15,7 +15,7 @@ The menu includes account/local spoof options, ESP tools, anti-cheat protection,
 
 **Current version:** `v1.3.5`
 
-♡ Download: [ElysiumModMenu.dll](#)
+♡ Download: [https://github.com/meowchelo/ElysiumModMenu/releases/tag/v1.3.5](#)
 
 ---
 
