@@ -1,12 +1,11 @@
 # ✦ ElysiumModMenu — Among Us
 
-♡ **ElysiumModMenu** is a BepInEx IL2CPP mod menu for **Among Us**, designed as an all-in-one menu for private lobbies, testing, host-side controls, visual tools, chat improvements, cosmetics, and lobby management.
-
-The menu includes account/local spoof options, ESP tools, anti-cheat protection, chat utilities, sabotage and door controls, outfit presets, host tools, keybinds, customization options, and multilingual UI support.
+♡ **ElysiumModMenu** is a BepInEx IL2CPP mod menu for **Among Us**.
+It combines private lobby tools, visual options, chat improvements, cosmetics, host controls, and menu customization in one place.
 
 > ⚠️ **Warning**
-> ElysiumModMenu includes powerful host-side and network-related features.
-> Use it only in private lobbies, testing environments, or with friends who agreed to play with mods.
+> This menu includes powerful host-side and network-related features.
+> Use it only in private lobbies, test rooms, or with friends who agreed to play with mods.
 > Do not use it to ruin public games, crash lobbies, harass players, or abuse random users.
 
 ---
@@ -21,7 +20,7 @@ The menu includes account/local spoof options, ESP tools, anti-cheat protection,
 
 ## ✦ Main Menu Sections
 
-The menu is organized into multiple tabs for quick access:
+The menu is organized into clean tabs for quick access:
 
 * `GENERAL`
 * `SELF`
@@ -32,49 +31,27 @@ The menu is organized into multiple tabs for quick access:
 * `OUTFITS`
 * `VOTEKICK`
 * `MENU`
-* `MAPS`
-* `ANIMATIONS`
-* `INFORMATION`
 * `KEYBINDS`
-* `WELCOME`
-* `CREDITS`
 
 ---
 
 ## ♡ General
 
-The **General** section contains useful global features and quality-of-life options.
-
-Main features:
+The **General** section contains global features and quality-of-life options.
 
 * FPS limiter with configurable cap
 * Unlock cosmetics
-* More lobby info in the public game list
-* Auto Ghost After Start
-* Allow duplicate player colors
-* Menu watermark toggle
-* RGB menu color mode
-* Custom menu colors
-* Multi-language menu support
-* Basic spell check
-* Anomaly log reports for diagnostic and anti-cheat fixes
+* More lobby info in the game list
 
 ---
 
 ## ✦ Self / Account
 
-The **Self** section focuses on local player options, profile display, spoofing, and client-side changes.
-
-Main features:
+The **Self** section focuses on local player options and profile changes.
 
 * Level spoof
-* Platform spoof with selectable platform
-* Local name spoof
-* Local fake Friend Code
-* Network Friend Code spoof
-* Guest name unlock
-* Cosmetic unlocks
-* Client-side visual name effects
+* Platform spoof
+* Local name and Friend Code spoof
 
 Name effect examples:
 
@@ -90,39 +67,19 @@ shimmer:Elysium
 
 The **Visuals** section adds extra information and visibility options during gameplay.
 
-Main features:
-
-* See ghosts
-* See player roles
+* See ghosts and player roles
 * Show player info above nameplates
-* Show Host, level, platform, and Friend Code
-* Hide Friend Code display if needed
-* Friend ESP ignore list
-* Reveal roles during meetings
-* Reveal votes
-* See players inside vents
-* Full Bright
-* Tracers
-* Free camera with WASD movement and scroll zoom
-* Always show chat
-* Read ghost chat
-
-The `spf` marker near a platform means that platform spoofing is active on that player.
+* Free camera with zoom
 
 ---
 
 ## ♡ Players
 
-The **Players** section is used for player-related actions and quick player management.
-
-Main features:
+The **Players** section is used for player-related actions and quick management.
 
 * Select players from the lobby or match
 * View player information
-* Apply actions to selected players
-* Save selected player outfit
-* Use selected player data with other menu tools
-* Manage player-related ESP visibility
+* Use selected player data with menu tools
 
 ---
 
@@ -130,24 +87,9 @@ Main features:
 
 The menu includes protection tools for hosts and private lobbies.
 
-Main features:
-
-* RPC protection with configurable rate limit
-* Block spoof RPC
-* Block sabotage abuse
-* Block meeting abuse
-* Block game RPC in lobby
-* Block chat flood
-* Block meeting flood
-* RPC sniffer with known mod menu IDs
-* Anti vote-kick
-* Auto-kick Fortegreen and bugged color players
-* Auto-ban platform spoofers as host
-* Broken Friend Code detector
-* Pet Spam Shield
-* Local persistent ban list
-* Bot ban list with persistent storage
-* Friend ESP ignore list
+* RPC protection and rate limit
+* Block chat, meeting, and sabotage abuse
+* Local ban lists and bot protection
 
 Config files:
 
@@ -162,23 +104,11 @@ ElysiumFriendEspIgnore.txt
 
 ## 𖤐 Chat
 
-The **Chat** section improves the in-game chat and adds more flexible input options.
+The **Chat** section improves the in-game chat experience.
 
-Main features:
-
-* Extended chat length
-* Fast chat
-* Links, email, and symbol support
-* Chat history with Up / Down arrows
-* Clipboard support
-* Local chat log
-* Whisper / private messages
-* `/color` command
-* Dark chat theme
-* Custom ghost chat color
-* Basic spell check
-* Host filters for rainbow names and Fortegreen abuse
-* Allow duplicate player colors
+* Extended and fast chat
+* Chat history and clipboard support
+* Dark chat theme and custom ghost chat color
 
 Chat log file:
 
@@ -192,40 +122,19 @@ ChatLog.txt
 
 The **Outfits** section lets you save and restore cosmetic loadouts.
 
-Main features:
-
 * Favorite Outfits system
 * 4 outfit slots
-* Save your current outfit
-* Save the selected player's outfit
-* Restore saved outfit slots with one click
-* Full cosmetic loadout support
+* Save your outfit or selected player outfit
 
 ---
 
 ## ✦ Host / Lobby Tools
 
-The **Host Only** section contains tools designed for hosts and private lobby control.
+The **Host Only** section contains tools for private lobby control.
 
-Main features:
-
-* Auto Host
-* Auto return after matches
-* Fast start
-* Wait for loaded players
-* Force start
-* Pre-game role manager
-* Force impostors
-* Force roles
-* Kick all
-* Report / eject / revive
-* Morph / mass morph
-* Spawn / despawn in lobby
-* Insta start
-* Smart end game
-* No task mode
-* No setting limits
-* Auto Ghost After Start
+* Auto Host and fast start
+* Role manager and force roles
+* Smart end game and lobby automation
 
 > ⚠️ Host tools should only be used in private lobbies with consent from other players.
 
@@ -235,50 +144,31 @@ Main features:
 
 The **Sabotage** section provides quick sabotage and door controls.
 
-Main features:
-
-* Trigger Reactor
-* Trigger O2
-* Trigger Comms
-* Trigger Lights
-* Trigger all sabotages
-* Fix all sabotages
-* Close all doors
-* Open all doors
-* Lock doors by room
-* Unlock doors by room
+* Trigger or fix sabotages
+* Close or open all doors
+* Lock or unlock doors by room
 
 ---
 
 ## ♡ VoteKick
 
-The **VoteKick** section includes tools related to vote-kick behavior and lobby protection.
-
-Main features:
+The **VoteKick** section includes tools related to vote-kick behavior.
 
 * Anti vote-kick
 * Disable vote kicks as host
-* Protection against abusive vote-kick behavior
-* Host-side control for private lobbies
+* Protection against vote-kick abuse
 
 ---
 
 ## ✦ Menu Customization
 
-The **Menu** section contains customization and interface options.
-
-Main features:
+The **Menu** section contains interface and style options.
 
 * RGB menu color mode
-* Custom menu color selection
 * Menu watermark toggle
 * Custom menu background
-* Dark chat theme toggle
-* Custom keybinds
-* Multi-language interface
-* Menu language auto-detection
 
-Supported menu languages include:
+Supported menu languages:
 
 ```text
 English, Русский, Deutsch, Français, Español, Italiano, Português,
@@ -296,7 +186,7 @@ Default toggle key:
 Insert
 ```
 
-You can rebind the menu key inside the menu under the **Keybinds** section.
+You can rebind the menu key inside the **Keybinds** section.
 
 ---
 
