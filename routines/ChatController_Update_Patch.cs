@@ -38,3 +38,30 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+
+[HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
+public static class ChatController_Update_Patch
+{
+    public static void Postfix(ChatController __instance)
+    {
+        try
+        {
+            if (!ElysiumModMenuGUI.enableChatDarkMode) return;
+
+            if (__instance.freeChatField != null && __instance.freeChatField.background != null)
+            {
+                __instance.freeChatField.background.color = new Color32(40, 40, 40, byte.MaxValue);
+                if (__instance.freeChatField.textArea != null && __instance.freeChatField.textArea.outputText != null)
+                    __instance.freeChatField.textArea.outputText.color = Color.white;
+            }
+            if (__instance.quickChatField != null && __instance.quickChatField.background != null)
+            {
+                __instance.quickChatField.background.color = new Color32(40, 40, 40, byte.MaxValue);
+                if (__instance.quickChatField.text != null)
+                    __instance.quickChatField.text.color = Color.white;
+            }
+        }
+        catch { }
+    }
+}

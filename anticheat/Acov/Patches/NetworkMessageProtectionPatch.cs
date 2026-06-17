@@ -38,3 +38,32 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+[HarmonyPatch(typeof(InnerNetClient), "HandleMessage")]
+internal static class NetworkMessageProtectionPatch
+{
+	public static bool Prefix(InnerNetClient __instance, MessageReader reader, SendOption sendOption)
+	{
+		if (!ElysiumModMenu.ElysiumModMenuGUI.oldAntiCheatVersion) return true;
+		using (Acov.AcovProfiler.Sample("Net.CheckMessage"))
+			return NetworkProtectionGuard.CheckMessage(__instance, reader, sendOption);
+	}
+}
+}

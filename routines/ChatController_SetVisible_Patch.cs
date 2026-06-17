@@ -38,3 +38,12 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(ChatController), nameof(ChatController.SetVisible))]
+public static class ChatController_SetVisible_Patch
+{
+    public static void Prefix(ref bool visible)
+    {
+        if (ElysiumModMenuGUI.alwaysChat) visible = true;
+    }
+}

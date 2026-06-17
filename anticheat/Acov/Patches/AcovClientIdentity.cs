@@ -38,3 +38,36 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+internal struct AcovClientIdentity
+{
+	internal int ClientId;
+	internal string PlayerName;
+	internal string FriendCode;
+	internal string ProductUserId;
+	internal AcovClientIdentity(int clientId, string playerName, string friendCode, string productUserId)
+	{
+		ClientId = clientId;
+		PlayerName = playerName;
+		FriendCode = friendCode;
+		ProductUserId = productUserId;
+	}
+}
+}

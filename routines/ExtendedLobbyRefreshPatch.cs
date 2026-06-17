@@ -38,3 +38,12 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.RefreshList))]
+public static class ExtendedLobbyRefreshPatch
+{
+    public static void Postfix()
+    {
+        try { if (ElysiumModMenuGUI.extendedLobby && ExtendedLobbyListPatch.scroller != null) ExtendedLobbyListPatch.scroller.ScrollRelative(new Vector2(0f, -100f)); } catch { }
+    }
+}

@@ -38,3 +38,26 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+[HarmonyPatch(typeof(MeetingHud), "PopulateResults")]
+public static class RevealVotesCleanupPatch
+{
+    public static void Prefix(MeetingHud __instance)
+    {
+        if (!ElysiumModMenuGUI.RevealVotesEnabled) return;
+        try
+        {
+            foreach (var item in __instance.playerStates)
+            {
+                if (item == null) continue;
+                var component = item.transform.GetComponent<VoteSpreader>();
+                if (component != null && component.Votes.Count != 0)
+                {
+                    foreach (var sprite in component.Votes) Object.DestroyImmediate(sprite.gameObject);
+                    component.Votes.Clear();
+                }
+            }
+            RevealVotesPatch._votedPlayers.Clear();
+        }
+        catch { }
+    }
+}

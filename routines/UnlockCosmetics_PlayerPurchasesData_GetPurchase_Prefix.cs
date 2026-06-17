@@ -38,3 +38,14 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(PlayerPurchasesData), nameof(PlayerPurchasesData.GetPurchase))]
+public static class UnlockCosmetics_PlayerPurchasesData_GetPurchase_Prefix
+{
+    public static bool Prefix(ref bool __result)
+    {
+        if (!ElysiumModMenuGUI.unlockCosmetics) return true;
+        __result = true;
+        return false;
+    }
+}

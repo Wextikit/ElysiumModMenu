@@ -38,3 +38,31 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+internal static class KnownModRpcCatalog
+{
+	internal static bool TryFind(byte rpcByte, out int ruleIndex, out KnownModRpcRule rule)
+	{
+		ruleIndex = -1;
+		rule = default(KnownModRpcRule);
+		return false;
+	}
+}
+}

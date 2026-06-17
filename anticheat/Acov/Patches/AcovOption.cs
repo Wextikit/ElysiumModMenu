@@ -38,3 +38,28 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+internal sealed class AcovOption<T>
+{
+	private readonly Func<T> getter;
+	internal AcovOption(Func<T> getter) { this.getter = getter; }
+	internal T Value { get { return getter(); } }
+}
+}

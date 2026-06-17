@@ -38,3 +38,14 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(FindAGameManager), nameof(FindAGameManager.HandleList))]
+public static class MoreLobbyInfo_FindAGameManager_HandleList_Postfix
+{
+    public static void Postfix(HttpMatchmakerManager.FindGamesListFilteredResponse response, FindAGameManager __instance)
+    {
+        if (!ElysiumModMenuGUI.moreLobbyInfo) return;
+
+        __instance.TotalText.text = response.Metadata.AllGamesCount.ToString();
+    }
+}

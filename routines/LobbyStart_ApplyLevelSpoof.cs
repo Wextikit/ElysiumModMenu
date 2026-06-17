@@ -38,3 +38,14 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+[HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
+public static class LobbyStart_ApplyLevelSpoof
+{
+    public static void Postfix()
+    {
+        if (ElysiumModMenuGUI.enableLevelSpoof && !ElysiumModMenuGUI.isEditingLevel && uint.TryParse(ElysiumModMenuGUI.spoofLevelString, out uint parsedLvl))
+        {
+            ElysiumModMenuGUI.ApplyLevelSpoofValue(parsedLvl);
+        }
+    }
+}

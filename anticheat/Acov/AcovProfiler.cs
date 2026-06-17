@@ -38,3 +38,11 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+namespace Acov
+{
+	internal static class AcovProfiler
+	{
+		internal static System.IDisposable Sample(string label) { return null; }
+	}
+}

@@ -38,3 +38,21 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace ElysiumModMenu
+{
+    public partial class ElysiumModMenuGUI : MonoBehaviour
+    {
+
+public static string[] spoofMenuNames = { "ElysiumModMenu", "HostGuard/TOH", "Polar", "BanMod", "Better Among Us", "Sicko Menu", "GNC", "KillNetwork (V1)", "KillNetwork (V2)", "KNM" };
+
+public static byte[] spoofMenuRPCs = { 89, 176, 204, 212, 151, 164, 154, 85, 150, 162 };
+
+public static float rpcSpoofDelay = 4f;
+
+public static readonly string[] menuLanguageNames = { "Auto", "English", "Русский", "Deutsch", "Français", "Español", "Italiano", "Português", "Polski", "Nederlands", "Türkçe", "Čeština", "Română", "Magyar", "Svenska", "Dansk", "Suomi", "Norsk", "Українська", "Ελληνικά", "中文", "日本語", "한국어" };
+
+public static readonly string[] menuLanguageCodes = { "auto", "en", "ru", "de", "fr", "es", "it", "pt", "pl", "nl", "tr", "cs", "ro", "hu", "sv", "da", "fi", "no", "uk", "el", "zh", "ja", "ko" };
+
+public static int currentMenuLanguageIndex = 0;
+}
+}

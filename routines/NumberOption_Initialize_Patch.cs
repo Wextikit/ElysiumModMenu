@@ -38,3 +38,20 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(NumberOption), nameof(NumberOption.Initialize))]
+public static class NumberOption_Initialize_Patch
+{
+    public static void Postfix(NumberOption __instance)
+    {
+        try
+        {
+            if (!ElysiumModMenuGUI.noSettingLimit) return;
+            if (GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek &&
+                (__instance.Title == StringNames.GameNumImpostors || __instance.Title == StringNames.GamePlayerSpeed))
+                return;
+            __instance.ValidRange = new FloatRange(-999f, 999f);
+        }
+        catch { }
+    }
+}

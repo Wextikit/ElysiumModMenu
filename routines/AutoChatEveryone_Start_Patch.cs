@@ -38,3 +38,17 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+[HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.Start))]
+public static class AutoChatEveryone_Start_Patch
+{
+    public static void Postfix()
+    {
+        ElysiumModMenuGUI.InitializeKillCooldownOnRoundStart();
+
+        if (ElysiumModMenuGUI.autoChatEveryone && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        {
+            ElysiumModMenuGUI.pendingAutoMeeting = true;
+            ElysiumModMenuGUI.autoMeetingTimer = 0f;
+        }
+    }
+}

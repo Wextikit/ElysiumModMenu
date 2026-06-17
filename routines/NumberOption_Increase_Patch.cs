@@ -38,3 +38,24 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(NumberOption), nameof(NumberOption.Increase))]
+public static class NumberOption_Increase_Patch
+{
+    public static bool Prefix(NumberOption __instance)
+    {
+        try
+        {
+            if (!ElysiumModMenuGUI.noSettingLimit) return true;
+            if (GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek &&
+                (__instance.Title == StringNames.GameNumImpostors || __instance.Title == StringNames.GamePlayerSpeed))
+                return true;
+            __instance.Value += __instance.Increment;
+            __instance.UpdateValue();
+            __instance.OnValueChanged.Invoke(__instance);
+            __instance.AdjustButtonsActiveState();
+            return false;
+        }
+        catch { return true; }
+    }
+}

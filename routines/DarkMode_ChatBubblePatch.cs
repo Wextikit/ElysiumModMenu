@@ -38,3 +38,25 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(ChatBubble), nameof(ChatBubble.SetText))]
+public static class DarkMode_ChatBubblePatch
+{
+    public static void Postfix(ChatBubble __instance)
+    {
+        try
+        {
+            if (!ElysiumModMenuGUI.enableChatDarkMode) return;
+
+            Transform bg = __instance.transform.Find("Background");
+            if (bg != null)
+            {
+                var sr = bg.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.color = new Color32(35, 35, 35, 255);
+            }
+            if (__instance.TextArea != null)
+                __instance.TextArea.color = Color.white;
+        }
+        catch { }
+    }
+}

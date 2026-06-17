@@ -38,3 +38,31 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+internal static class AcovPlayerLoadStates
+{
+	internal static AcovPlayerLoadInfo Evaluate(ClientData client)
+	{
+		AcovPlayerLoadInfo info = default(AcovPlayerLoadInfo);
+		try { info.Connected = client != null; info.Ready = client != null && client.Character != null; } catch { }
+		return info;
+	}
+}
+}

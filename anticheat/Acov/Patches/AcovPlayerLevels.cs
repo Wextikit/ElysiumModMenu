@@ -38,3 +38,39 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+namespace Acov.Patches
+{
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using BepInEx.Configuration;
+using HarmonyLib;
+using Hazel;
+using InnerNet;
+using UnityEngine;
+
+
+internal static class AcovPlayerLevels
+{
+	private static readonly Dictionary<int, uint> byClient = new Dictionary<int, uint>();
+	internal static void Remember(PlayerControl player, uint level)
+	{
+		try { if (player != null) byClient[player.OwnerId] = level; } catch { }
+	}
+	internal static bool TryGetDisplayLevel(int clientId, out uint level)
+	{
+		return byClient.TryGetValue(clientId, out level);
+	}
+	internal static bool TryGetDisplayLevel(PlayerControl player, out uint level)
+	{
+		level = 0u;
+		try { return player != null && byClient.TryGetValue(player.OwnerId, out level); } catch { return false; }
+	}
+}
+}

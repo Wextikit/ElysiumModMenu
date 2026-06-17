@@ -38,3 +38,18 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+
+[HarmonyPatch(typeof(IGameOptionsExtensions), nameof(IGameOptionsExtensions.GetAdjustedNumImpostors))]
+public static class IGameOptionsExtensions_GetAdjustedNumImpostors_Patch
+{
+    public static bool Prefix(IGameOptions __instance, ref int __result)
+    {
+        try
+        {
+            if (!ElysiumModMenuGUI.noSettingLimit) return true;
+            __result = GameOptionsManager.Instance.CurrentGameOptions.NumImpostors;
+            return false;
+        }
+        catch { return true; }
+    }
+}

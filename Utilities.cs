@@ -38,3 +38,16 @@ using Color = UnityEngine.Color;
 using Object = UnityEngine.Object;
 using Vector3 = UnityEngine.Vector3;
 
+public static class Extra
+{
+    public static ModPlayer Mod(this PlayerControl pc)
+	{
+		return pc.gameObject.EnsureComponent<ModPlayer>();
+	}
+
+	public static T EnsureComponent<T>(this GameObject obj) where T : Component
+	{
+		return obj.GetComponent<T>() ?? obj.AddComponent<T>();
+	}
+
+}
