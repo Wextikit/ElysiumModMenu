@@ -58,6 +58,7 @@ namespace ElysiumModMenu
         public static ConfigEntry<bool> ShowWatermarkConfig;
         public static ConfigEntry<int> MenuColorIndexConfig;
         public static ConfigEntry<bool> RgbMenuModeConfig;
+        public static ConfigEntry<bool> RgbMenuTextConfig;
         public static ConfigEntry<bool> UnlockCosmeticsConfig;
         public static ConfigEntry<bool> MoreLobbyInfoConfig;
         public static ConfigEntry<bool> EnableChatDarkModeConfig;
@@ -113,6 +114,7 @@ namespace ElysiumModMenu
             ShowWatermarkConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "ShowWatermark", true, "");
             MenuColorIndexConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "MenuColorIndex", 10, "");
             RgbMenuModeConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "RgbMenuMode", false, "");
+            RgbMenuTextConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "RgbMenuText", false, "When true, RGB Menu Mode also recolors menu text.");
             UnlockCosmeticsConfig = MenuConfig.Bind("ElysiumModMenu.General", "UnlockCosmetics", true, "");
             MoreLobbyInfoConfig = MenuConfig.Bind("ElysiumModMenu.Visuals", "MoreLobbyInfo", true, "");
             EnableChatDarkModeConfig = MenuConfig.Bind("ElysiumModMenu.Chat", "EnableChatDarkMode", true, "Turns the custom dark chat input and bubble colors on/off.");
@@ -439,6 +441,8 @@ namespace ElysiumModMenu
 
         public static Color currentAccentColor = new Color(1f, 0.549f, 0f, 1f);
         public static bool rgbMenuMode = false;
+        public static bool rgbMenuText = false;
+        private static ElysiumModMenuGUI activeGui;
         private float rgbMenuHue = 0f;
         public static bool enableBackground = false;
         public static bool hardMenu = false;
@@ -860,7 +864,7 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Select Map:", "Выбор карты:"), GUILayout.Width(100));
             selectedMapSpawnIdx = (int)GUILayout.HorizontalSlider((int)selectedMapSpawnIdx, 0, mapSpawnNames.Length - 1, sliderStyle, sliderThumbStyle, GUILayout.Width(200));
-            GUILayout.Label($"<color=#{ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor))}>{mapSpawnNames[(int)selectedMapSpawnIdx]}</color>", new GUIStyle(GUI.skin.label) { richText = true });
+            GUILayout.Label($"<color=#{GetMenuAccentHex()}>{mapSpawnNames[(int)selectedMapSpawnIdx]}</color>", new GUIStyle(GUI.skin.label) { richText = true });
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
@@ -913,7 +917,7 @@ namespace ElysiumModMenu
             GUILayout.Label(L("CHAT SETTINGS & LOGS", "НАСТРОЙКИ ЧАТА И ЛОГИ"), headerStyle);
             GUILayout.Space(10);
 
-            string hexColor = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+            string hexColor = GetMenuAccentHex();
 
             GUILayout.BeginHorizontal();
 
@@ -1436,7 +1440,7 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Mode:", "Режим:"), toggleLabelStyle, GUILayout.Width(60));
 
-            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) } };
+            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() } };
 
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(25), GUILayout.Height(25)))
             {
@@ -5369,6 +5373,8 @@ namespace ElysiumModMenu
                 Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
                 Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
                 Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
+                Plugin.RgbMenuTextConfig.Value = rgbMenuText;
+                SaveBool("M_RgbMenuText", rgbMenuText);
                 if (menuToggleKey == KeyCode.None) menuToggleKey = KeyCode.Insert;
                 Plugin.MenuKeybind.Value = menuToggleKey;
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
@@ -5529,7 +5535,7 @@ namespace ElysiumModMenu
 
             GUILayout.Space(15);
 
-            string hexColor = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+            string hexColor = GetMenuAccentHex();
             GUIStyle sliderLabelStyle = new GUIStyle(toggleLabelStyle) { richText = true };
 
             GUILayout.BeginHorizontal();
@@ -5577,6 +5583,7 @@ namespace ElysiumModMenu
                 rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
                 currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
                 rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
+                rgbMenuText = LoadBool("M_RgbMenuText", Plugin.RgbMenuTextConfig.Value);
                 whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
                 currentMenuLanguageIndex = Mathf.Clamp(LoadInt("M_MenuLanguageIndex", currentMenuLanguageIndex), 0, menuLanguageNames.Length - 1);
                 fpsLimit = Mathf.Clamp(LoadInt("M_FpsLimit", fpsLimit), 60, 240);
@@ -5861,10 +5868,47 @@ namespace ElysiumModMenu
             return mapped;
         }
 
+        public static Color GetMenuAccentColor(bool allowRgbText = true)
+        {
+            return allowRgbText && RgbMenuTextActive()
+                ? GetThemeAccentColor(currentAccentColor)
+                : GetThemeAccentColor(GetStableMenuAccentSource());
+        }
+
+        public static string GetMenuAccentHex(bool allowRgbText = true)
+        {
+            return ColorUtility.ToHtmlStringRGB(GetMenuAccentColor(allowRgbText));
+        }
+
+        public static Color GetMenuControlAccentColor()
+        {
+            return rgbMenuMode
+                ? GetThemeAccentColor(currentAccentColor)
+                : GetThemeAccentColor(GetStableMenuAccentSource());
+        }
+
+        private static bool RgbMenuTextActive()
+        {
+            return rgbMenuMode && rgbMenuText;
+        }
+
+        private static Color GetStableMenuAccentSource()
+        {
+            try
+            {
+                if (activeGui != null && activeGui.menuColors != null && activeGui.menuColors.Length > 0)
+                    return activeGui.menuColors[Mathf.Clamp(activeGui.currentMenuColorIndex, 0, activeGui.menuColors.Length - 1)];
+            }
+            catch { }
+
+            return currentAccentColor;
+        }
+
         private void UpdateAccentColor(Color color)
         {
             currentAccentColor = color;
             Color effectiveColor = GetThemeAccentColor(color);
+            Color controlColor = rgbMenuMode ? effectiveColor : GetMenuAccentColor(false);
             if (texAccent != null)
             {
                 int size = texAccent.width;
@@ -5879,7 +5923,7 @@ namespace ElysiumModMenu
                         float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
                         float dist = Mathf.Sqrt(dx * dx + dy * dy);
                         float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = effectiveColor; c.a = alpha;
+                        Color c = controlColor; c.a = alpha;
                         pix[y * size + x] = c;
                     }
                 }
@@ -5899,7 +5943,7 @@ namespace ElysiumModMenu
                         float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
                         float dist = Mathf.Sqrt(dx * dx + dy * dy);
                         float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = effectiveColor; c.a = alpha;
+                        Color c = controlColor; c.a = alpha;
                         pix[y * size + x] = c;
                     }
                 }
@@ -5919,28 +5963,30 @@ namespace ElysiumModMenu
                         float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
                         float dist = Mathf.Sqrt(dx * dx + dy * dy);
                         float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = effectiveColor; c.a = alpha;
+                        Color c = controlColor; c.a = alpha;
                         pix[y * size + x] = c;
                     }
                 }
                 texScrollThumb.SetPixels(pix); texScrollThumb.Apply();
             }
-            if (texToggleOn != null) UpdateSwitchTex(texToggleOn, true, effectiveColor);
-            if (windowStyle != null) windowStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : color;
-            if (headerStyle != null) headerStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
-            if (menuSectionTitleStyle != null) menuSectionTitleStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
-            if (menuBadgeStyle != null) menuBadgeStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
+            if (texToggleOn != null) UpdateSwitchTex(texToggleOn, true, controlColor);
+            bool rgbText = RgbMenuTextActive();
+            Color menuHeadingText = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : GetMenuAccentColor(false));
+            if (windowStyle != null) windowStyle.normal.textColor = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : GetMenuAccentColor(false));
+            if (headerStyle != null) headerStyle.normal.textColor = menuHeadingText;
+            if (menuSectionTitleStyle != null) menuSectionTitleStyle.normal.textColor = menuHeadingText;
+            if (menuBadgeStyle != null) menuBadgeStyle.normal.textColor = menuHeadingText;
             if (activeSidebarBtnStyle != null) { activeSidebarBtnStyle.normal.textColor = effectiveColor; activeSidebarBtnStyle.hover.textColor = effectiveColor; }
             if (activeTabStyle != null) activeTabStyle.normal.background = texAccent;
             if (activeSubTabStyle != null) activeSubTabStyle.normal.background = texAccent;
             if (btnStyle != null) btnStyle.active.background = texAccent;
-            if (inputBlockStyle != null) inputBlockStyle.normal.textColor = whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color;
+            if (inputBlockStyle != null) inputBlockStyle.normal.textColor = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : GetMenuAccentColor(false));
         }
 
         private void InitStyles()
         {
             bool isLightTheme = whiteMenuTheme;
-            Color accent = GetThemeAccentColor(currentAccentColor);
+            Color accent = GetMenuControlAccentColor();
             Color darkBg = isLightTheme ? new Color(0.97f, 0.97f, 0.97f, 0.78f) : new Color(0.12f, 0.12f, 0.12f, 0.90f);
             Color sidebarBg = new Color(0.0f, 0.0f, 0.0f, 0.0f);
             Color boxBg = new Color(0f, 0f, 0f, 0f);
@@ -5949,7 +5995,7 @@ namespace ElysiumModMenu
             Color textMain = isLightTheme ? new Color(0.18f, 0.18f, 0.18f, 1f) : new Color(0.78f, 0.78f, 0.78f, 1f);
             Color textMuted = isLightTheme ? new Color(0.33f, 0.33f, 0.33f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);
             Color textHover = isLightTheme ? new Color(0.06f, 0.06f, 0.06f, 1f) : Color.white;
-            Color headerText = isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : accent;
+            Color headerText = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : GetMenuAccentColor(false));
             Color inputBgCol = isLightTheme ? new Color(1f, 1f, 1f, 0.86f) : new Color(0.08f, 0.08f, 0.08f, 0.85f);
 
             texWindowBg = MakeRoundedTex(64, darkBg, 12f);
@@ -6012,7 +6058,7 @@ namespace ElysiumModMenu
 
             windowStyle = new GUIStyle();
             windowStyle.normal.background = texWindowBg;
-            windowStyle.normal.textColor = accent;
+            windowStyle.normal.textColor = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : GetMenuAccentColor(false));
             windowStyle.fontStyle = FontStyle.Bold;
             windowStyle.fontSize = 14;
             windowStyle.padding = CreateRectOffset(0, 0, 0, 0);
@@ -6052,7 +6098,7 @@ namespace ElysiumModMenu
             inputBlockStyle.normal.background = texInputBg;
             inputBlockStyle.hover.background = texInputBg;
             inputBlockStyle.active.background = texAccent;
-            inputBlockStyle.normal.textColor = isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : accent;
+            inputBlockStyle.normal.textColor = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : GetMenuAccentColor(false));
             inputBlockStyle.alignment = TextAnchor.MiddleCenter;
             inputBlockStyle.fontStyle = FontStyle.Bold;
 
@@ -6242,7 +6288,7 @@ namespace ElysiumModMenu
             if (GUILayout.Button(label, btnStyle, GUILayout.Height(25), GUILayout.Width(width))) clicked = true;
             string bindTxt = bindingAction == bindKey ? "Press Key..." : (keyBinds.ContainsKey(bindKey) ? $"[{keyBinds[bindKey]}]" : "[Bind Key]");
             GUIStyle bindStyle = new GUIStyle(btnStyle) { fontSize = 10, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } };
-            if (bindingAction == bindKey) bindStyle.normal.textColor = GetThemeAccentColor(currentAccentColor);
+            if (bindingAction == bindKey) bindStyle.normal.textColor = GetMenuAccentColor();
             if (GUILayout.Button(bindTxt, bindStyle, GUILayout.Height(15), GUILayout.Width(width))) bindingAction = bindKey;
             GUILayout.EndVertical();
             return clicked;
@@ -6399,7 +6445,7 @@ namespace ElysiumModMenu
         private bool DrawColoredActionButton(string text, Color color, float width, float height = 24f)
         {
             GUIStyle style = new GUIStyle(btnStyle);
-            Color themedColor = whiteMenuTheme ? GetThemeAccentColor(color) : color;
+            Color themedColor = RgbMenuTextActive() ? GetMenuAccentColor() : (whiteMenuTheme ? GetThemeAccentColor(color) : color);
             Color hoverColor = whiteMenuTheme
                 ? Color.Lerp(themedColor, Color.black, 0.18f)
                 : Color.Lerp(themedColor, Color.white, 0.22f);
@@ -6482,7 +6528,7 @@ namespace ElysiumModMenu
                 if (currentMenuLanguageIndex < 0) currentMenuLanguageIndex = menuLanguageNames.Length - 1;
                 SaveConfig();
             }
-            GUIStyle languageValueStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold, clipping = TextClipping.Overflow, wordWrap = false };
+            GUIStyle languageValueStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetMenuAccentColor() }, fontStyle = FontStyle.Bold, clipping = TextClipping.Overflow, wordWrap = false };
             string languageValue = menuLanguageNames[Mathf.Clamp(currentMenuLanguageIndex, 0, menuLanguageNames.Length - 1)];
             float languageValueWidth = Mathf.Max(132f, Mathf.Ceil(languageValueStyle.CalcSize(new GUIContent(languageValue)).x) + 24f);
             GUILayout.Label(languageValue, languageValueStyle, GUILayout.Width(languageValueWidth), GUILayout.Height(24));
@@ -6496,7 +6542,7 @@ namespace ElysiumModMenu
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
 
-            string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+            string accentHex = GetMenuAccentHex();
             string githubHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(26, 188, 156, 255)) : new Color32(26, 188, 156, 255));
             string goldHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(255, 187, 54, 255)) : new Color32(255, 187, 54, 255));
             string leadHex = ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(255, 92, 122, 255)) : new Color32(255, 92, 122, 255));
@@ -6719,7 +6765,7 @@ namespace ElysiumModMenu
             GUIStyle roleMidStyle = new GUIStyle(btnStyle)
             {
                 fontStyle = FontStyle.Bold,
-                normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) },
+                normal = { background = null, textColor = GetMenuAccentColor() },
                 alignment = TextAnchor.MiddleCenter
             };
 
@@ -7536,7 +7582,7 @@ namespace ElysiumModMenu
         {
             GUILayout.BeginVertical();
             GUIStyle greenHeader = new GUIStyle(headerStyle);
-            greenHeader.normal.textColor = GetThemeAccentColor(currentAccentColor);
+            greenHeader.normal.textColor = GetMenuAccentColor();
             GUILayout.Label("ACCOUNT SPOOFER", greenHeader);
 
             GUILayout.Space(4);
@@ -7666,7 +7712,7 @@ namespace ElysiumModMenu
                 SaveConfig();
             }
             GUILayout.Space(2);
-            string hexColor = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+            string hexColor = GetMenuAccentHex();
             GUILayout.Label($"Platform: <color=#{hexColor}>{platformNames[currentPlatformIndex]}</color>", new GUIStyle(toggleLabelStyle) { fontSize = 12, richText = true }, GUILayout.Height(23));
             int newPlatIdx = (int)GUILayout.HorizontalSlider(currentPlatformIndex, 0, platformNames.Length - 1, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
             if (newPlatIdx != currentPlatformIndex)
@@ -7867,7 +7913,7 @@ namespace ElysiumModMenu
                 DrawMenuSectionHeader("TARGET ROLE CONTROL");
 
                 GUILayout.BeginHorizontal();
-                GUIStyle roleMidStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, alignment = TextAnchor.MiddleCenter };
+                GUIStyle roleMidStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() }, alignment = TextAnchor.MiddleCenter };
                 if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
                 {
                     targetRoleAssignIdx--;
@@ -7940,7 +7986,7 @@ namespace ElysiumModMenu
                 GUIStyle morphLabelStyle = new GUIStyle(btnStyle);
                 morphLabelStyle.normal.background = null;
                 morphLabelStyle.hover.background = null;
-                morphLabelStyle.normal.textColor = GetThemeAccentColor(currentAccentColor);
+                morphLabelStyle.normal.textColor = GetMenuAccentColor();
                 morphLabelStyle.fontStyle = FontStyle.Bold;
                 morphLabelStyle.alignment = TextAnchor.MiddleCenter;
 
@@ -8535,7 +8581,7 @@ namespace ElysiumModMenu
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("Roles", headerStyle);
             GUILayout.BeginHorizontal();
-            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) } };
+            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() } };
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(25), GUILayout.Height(22))) { fakeRoleIdx--; if (fakeRoleIdx < 0) fakeRoleIdx = forceRoleOptions.Length - 1; }
             GUILayout.Label(forceRoleOptions[fakeRoleIdx].ToString(), middleLabelStyle, GUILayout.Width(100), GUILayout.Height(22));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(25), GUILayout.Height(22))) { fakeRoleIdx++; if (fakeRoleIdx >= forceRoleOptions.Length) fakeRoleIdx = 0; }
@@ -8974,7 +9020,7 @@ namespace ElysiumModMenu
             GUIStyle allRoleMidStyle = new GUIStyle(btnStyle)
             {
                 fontStyle = FontStyle.Bold,
-                normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) },
+                normal = { background = null, textColor = GetMenuAccentColor() },
                 alignment = TextAnchor.MiddleCenter
             };
 
@@ -9107,6 +9153,17 @@ namespace ElysiumModMenu
             GUILayout.Label(L("Smoothly cycles the accent through the rainbow.", "Плавно переливает акцент по радуге."), menuDescStyle);
             GUILayout.Space(8);
 
+            bool prevRgbText = rgbMenuText;
+            rgbMenuText = DrawToggle(rgbMenuText, "RGB Text", 260);
+            if (prevRgbText != rgbMenuText)
+            {
+                InitStyles();
+                UpdateAccentColor(currentAccentColor);
+                menuPrefsChanged = true;
+            }
+            GUILayout.Label("When off, RGB Menu Mode does not recolor menu text.", menuDescStyle);
+            GUILayout.Space(8);
+
             bool prevWhiteTheme = whiteMenuTheme;
             whiteMenuTheme = DrawToggle(whiteMenuTheme, "White Theme", 260);
             if (prevWhiteTheme != whiteMenuTheme)
@@ -9154,12 +9211,12 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Accent Color", "Цвет акцента"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
             Color prevGuiColor = GUI.color;
-            GUI.color = GetThemeAccentColor(rgbMenuMode ? currentAccentColor : menuColors[currentMenuColorIndex]);
+            GUI.color = GetMenuControlAccentColor();
             GUILayout.Label(GUIContent.none, menuSwatchStyle, GUILayout.Width(22), GUILayout.Height(22));
             GUI.color = prevGuiColor;
             GUILayout.Space(8);
             GUI.enabled = !rgbMenuMode;
-            GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) }, fontStyle = FontStyle.Bold };
+            GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetMenuControlAccentColor() }, fontStyle = FontStyle.Bold };
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
             GUILayout.Label(rgbMenuMode ? "RGB" : menuColorNames[currentMenuColorIndex], middleColorStyle, GUILayout.Width(120), GUILayout.Height(25));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
@@ -9179,7 +9236,7 @@ namespace ElysiumModMenu
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Fake Name", "Поддельное имя"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
             GUI.enabled = SpoofMenuEnabled;
-            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetThemeAccentColor(currentAccentColor) } };
+            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() } };
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; menuPrefsChanged = true; }
             GUILayout.Label(spoofMenuNames[selectedSpoofMenuIndex], middleLabelStyle, GUILayout.Width(150), GUILayout.Height(25));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; menuPrefsChanged = true; }
@@ -9504,6 +9561,7 @@ namespace ElysiumModMenu
         }
         public void Start()
         {
+            activeGui = this;
             if (enableBackground) LoadBackgroundImage();
             UnlockCosmetics();
             LoadConfig();
@@ -10698,7 +10756,7 @@ namespace ElysiumModMenu
                     GUI.Box(new Rect(xPos, yPos, notificationBoxSize.x, notificationBoxSize.y), "", windowStyle);
 
                     GUI.color = new Color(1f, 1f, 1f, currentAlpha > 0.5f ? 1f : currentAlpha * 2f);
-                    string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+                    string accentHex = GetMenuAccentHex();
 
                     GUI.Label(new Rect(xPos + 10f, yPos + 5f, notificationBoxSize.x - 20f, 20f), $"<b><color=#{accentHex}>{notif.title}</color></b>");
 
@@ -11582,7 +11640,7 @@ namespace ElysiumModMenu
             }
             if (showPlayerInfo)
             {
-                string accentHex = ColorUtility.ToHtmlStringRGB(GetThemeAccentColor(currentAccentColor));
+                string accentHex = GetMenuAccentHex();
                 string espLine = BuildESPInfoLine(info);
                 if (!string.IsNullOrWhiteSpace(espLine))
                     newName = $"<size=80%><color=#{accentHex}>{espLine}</color></size>\n{newName}";
