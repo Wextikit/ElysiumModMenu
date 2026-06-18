@@ -184,33 +184,4 @@ public static class ChatController_AddChat_Patch
             return true;
         }
     }
-
-
-
-    public static void Postfix(GameStartManager __instance)
-    {
-        if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.LocalPlayer == null) return;
-        if (ElysiumModMenuGUI.customStartTimer > 0f) return;
-
-        if (ElysiumModMenuGUI.fakeStartCounterTroll)
-        {
-            try
-            {
-                sbyte[] arr = { -123, -100, -69, -42, 0, 42, 69, 100, 123 };
-                sbyte b = arr[UnityEngine.Random.Range(0, arr.Length)];
-                PlayerControl.LocalPlayer.RpcSetStartCounter((int)b);
-                __instance.SetStartCounter(b);
-            }
-            catch { }
-        }
-        else if (ElysiumModMenuGUI.fakeStartCounterCustom && int.TryParse(ElysiumModMenuGUI.fakeStartInput, out int custom))
-        {
-            try
-            {
-                PlayerControl.LocalPlayer.RpcSetStartCounter(custom);
-                __instance.SetStartCounter((sbyte)Mathf.Clamp(custom, -128, 127));
-            }
-            catch { }
-        }
-    }
 }

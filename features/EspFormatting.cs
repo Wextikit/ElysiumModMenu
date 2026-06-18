@@ -621,23 +621,6 @@ public static void InitializeKillCooldownOnRoundStart()
             }
         }
 
-[HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Update))]
-        public static class GameStartManager_Update_Patch
-        {
-            public static void Postfix(GameStartManager __instance)
-            {
-                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.LocalPlayer == null) return;
-                if (ElysiumModMenuGUI.fakeStartCounterTroll)
-                {
-                    try { sbyte[] arr = { -123, -111, -100, -69, -67, -52, -42, 0, 42, 52, 67, 69, 100, 111, 123 }; sbyte b = arr[UnityEngine.Random.Range(0, arr.Length)]; PlayerControl.LocalPlayer.RpcSetStartCounter(b); __instance.SetStartCounter(b); } catch { }
-                }
-                else if (ElysiumModMenuGUI.fakeStartCounterCustom && int.TryParse(ElysiumModMenuGUI.fakeStartInput, out int custom))
-                {
-                    try { PlayerControl.LocalPlayer.RpcSetStartCounter(custom); __instance.SetStartCounter((sbyte)Mathf.Clamp(custom, -128, 127)); } catch { }
-                }
-            }
-        }
-
 [HarmonyPatch(typeof(GameManager), nameof(GameManager.RpcEndGame))]
         public static class InfiniteGamePatch { public static bool Prefix() { try { if (ElysiumModMenuGUI.neverEndGame && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost) return false; } catch { } return true; } }
 

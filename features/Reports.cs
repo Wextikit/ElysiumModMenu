@@ -81,7 +81,6 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
         {
             activeGui = this;
             if (enableBackground) LoadBackgroundImage();
-            UnlockCosmetics();
             LoadConfig();
             LoadBanList();
             LoadBotBanList();

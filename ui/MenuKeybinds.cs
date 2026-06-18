@@ -598,6 +598,8 @@ public static bool FlippedSkeld
         {
             public static bool Prefix(ChatController __instance)
             {
+                if (HushWhisper.TryHandle(__instance)) return false;
+
                 if (!ElysiumModMenuGUI.allowLinksAndSymbols) return true;
 
                 string text = __instance.freeChatField.Text;

@@ -53,7 +53,7 @@ private void LoadConfig()
                 spoofFriendCodeInput = Plugin.SpoofFriendCodeConfig.Value;
                 enablePlatformSpoof = Plugin.EnablePlatformSpoof.Value;
                 autoBanBrokenFriendCode = Plugin.AutoBanBrokenFriendCodeConfig.Value;
-                currentPlatformIndex = Plugin.PlatformIndex.Value;
+                currentPlatformIndex = Mathf.Clamp(Plugin.PlatformIndex.Value, 0, platformValues.Length - 1);
                 showWatermark = Plugin.ShowWatermarkConfig.Value;
                 unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
                 moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;

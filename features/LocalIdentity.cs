@@ -403,20 +403,6 @@ private void SpawnLobby()
             catch { }
         }
 
-public static void UnlockCosmetics()
-        {
-            if (HatManager.Instance == null) return;
-            try
-            {
-                foreach (var h in HatManager.Instance.allHats) h.Free = true;
-                foreach (var s in HatManager.Instance.allSkins) s.Free = true;
-                foreach (var v in HatManager.Instance.allVisors) v.Free = true;
-                foreach (var p in HatManager.Instance.allPets) p.Free = true;
-                foreach (var n in HatManager.Instance.allNamePlates) n.Free = true;
-            }
-            catch { }
-        }
-
 public static void ChangeNameGlobalHost(PlayerControl target, string newName)
         {
             if (target == null) return;

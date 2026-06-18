@@ -508,6 +508,12 @@ public class ModPlayer : MonoBehaviour
             {
                 if (enableMalformedPacketGuard == false) return true;
 
+                if (reader == null)
+                {
+                    Crash("Empty network packet");
+                    return false;
+                }
+
                 switch (reader.Tag)
                 {
                     case 1:
@@ -649,6 +655,17 @@ public class ModPlayer : MonoBehaviour
                 }
                 return false;
             }
+
+            // Catch malformed-reader failures at the packet boundary. Patching Hazel's
+            // packed integer methods directly recurses on Epic's IL2CPP wrappers.
+            public static Exception Finalizer(Exception __exception)
+            {
+                if (__exception == null || !enableMalformedPacketGuard)
+                    return __exception;
+
+                Crash("Malformed network packet (" + __exception.GetType().Name + ")");
+                return null;
+            }
         }
 
 [HarmonyPatch(typeof(InnerNetClient), "HandleGameData")]
@@ -674,6 +691,10 @@ public class ModPlayer : MonoBehaviour
                         __instance.StartCoroutine(BepInEx.Unity.IL2CPP.Utils.Collections.CollectionExtensions.WrapToIl2Cpp(Handle(__instance, reader, msgNum, TargetClientId, sendOption, num)));
                     }
                 }
+                catch (Exception error)
+                {
+                    HandleMessage.Crash("Malformed GameData frame (" + error.GetType().Name + ")");
+                }
                 finally
                 {
                     parentReader.Recycle();
@@ -689,16 +710,23 @@ public class ModPlayer : MonoBehaviour
                 {
                     case GameDataTypes.SceneChangeFlag:
                         {
-                            int num3 = reader.ReadPackedInt32();
-                            ClientData clientData2 = __instance.FindClientById(num3);
-                            string text = reader.ReadString();
-                            if (clientData2 != null && !string.IsNullOrWhiteSpace(text))
+                            try
                             {
-                                MonoBehaviourExtensions.StartCoroutine(__instance, AmongUsClientUtils.CoOnPlayerChangedScene(__instance, clientData2, text));
-                                Debug.Log($"SceneChangeFlag for {num3} to {text}");
-                                break;
+                                int num3 = reader.ReadPackedInt32();
+                                ClientData clientData2 = __instance.FindClientById(num3);
+                                string text = reader.ReadString();
+                                if (clientData2 != null && !string.IsNullOrWhiteSpace(text))
+                                {
+                                    MonoBehaviourExtensions.StartCoroutine(__instance, AmongUsClientUtils.CoOnPlayerChangedScene(__instance, clientData2, text));
+                                    Debug.Log($"SceneChangeFlag for {num3} to {text}");
+                                    break;
+                                }
+                                Debug.Log($"(SceneChangeFlag) Couldn't find client {num3} to change scene to {text}");
                             }
-                            Debug.Log($"(SceneChangeFlag) Couldn't find client {num3} to change scene to {text}");
+                            catch (Exception error)
+                            {
+                                HandleMessage.Crash("Malformed scene packet (" + error.GetType().Name + ")");
+                            }
                             reader.Recycle();
                             break;
                         }

@@ -44,8 +44,12 @@ public static class UnlockCosmetics_PlayerPurchasesData_GetPurchase_Prefix
 {
     public static bool Prefix(ref bool __result)
     {
-        if (!ElysiumModMenuGUI.unlockCosmetics) return true;
-        __result = true;
-        return false;
+        if (ElysiumModMenuGUI.unlockCosmetics)
+        {
+            __result = true;
+            return false;
+        }
+
+        return true;
     }
 }

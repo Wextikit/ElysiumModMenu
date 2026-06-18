@@ -251,9 +251,6 @@ namespace ElysiumModMenu
             }
         }
 
-[HarmonyPatch(typeof(PlatformSpecificData), nameof(PlatformSpecificData.Serialize))]
-        public static class PlatformSpooferPatch { public static void Prefix(PlatformSpecificData __instance) { try { if (ElysiumModMenuGUI.enablePlatformSpoof && __instance != null) __instance.Platform = ElysiumModMenuGUI.platformValues[ElysiumModMenuGUI.currentPlatformIndex]; } catch { } } }
-
 [HarmonyPatch(typeof(FullAccount), nameof(FullAccount.CanSetCustomName))]
         public static class FullAccount_CanSetCustomName_Patch { public static void Prefix(ref bool canSetName) { try { if (ElysiumModMenuGUI.unlockFeatures) canSetName = true; } catch { } } }
 

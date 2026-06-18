@@ -651,61 +651,6 @@ public static bool banQuickChatEmptySpammer = true;
 
 public static bool enableUnownedSpawnGuard = true;
 
-static class HazelThings
-        {
-            static bool isShouldProtect => PlayerControl.LocalPlayer && AmongUsClient.Instance.NetworkMode != NetworkModes.FreePlay;
-
-            static bool isCooling;
-            static void GetHazelError(string errorType)
-            {
-                if (!isCooling)
-                {
-                    isCooling = true;
-                    DestroyableSingleton<HudManager>.Instance.Notifier.AddDisconnectMessage($"Got Hazel error - <color=#ffff00>{errorType}</color>");
-                    if (banMalformedPacketSender)
-                        {
-                            KeyValuePair<int, float> keyValuePair = HandleMessage.LastJoin.OrderBy((KeyValuePair<int, float> pair) => pair.Value).FirstOrDefault();
-		                    AmongUsClient.Instance.KickPlayer(keyValuePair.Key, ban: true);
-                        }
-                    new LateTask(delegate
-                    {
-                        isCooling = false;
-                    }, 10f);
-                }
-            }
-            [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadPackedUInt32))]
-            class SafePackedUInt32
-            {
-                static bool Prefix(MessageReader __instance, ref uint __result)
-                {
-                    if (__instance.Length <= __instance.Position && enableMalformedPacketGuard && isShouldProtect)
-                    {
-                        __result = 0;
-                        GetHazelError("ReadPackedUInt32");
-                        return false;
-                    }
-
-                    return true;
-                }
-            }
-
-            [HarmonyPatch(typeof(MessageReader), nameof(MessageReader.ReadPackedInt32))]
-            class SafePackedInt32
-            {
-                static bool Prefix(MessageReader __instance, ref int __result)
-                {
-                    if (__instance.Length <= __instance.Position && enableMalformedPacketGuard && isShouldProtect)
-                    {
-                        __result = 0;
-                        GetHazelError("ReadPackedInt32");
-                        return false;
-                    }
-
-                    return true;
-                }
-            }
-        }
-
 internal class LateTask
         {
             public string name;

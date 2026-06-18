@@ -40,7 +40,7 @@ using Vector3 = UnityEngine.Vector3;
 
 namespace ElysiumModMenu
 {
-    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.3.6")]
+    [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", "1.3.7")]
     public class Plugin : BasePlugin
     {
         public static ModPlayer modClass;
@@ -57,6 +57,7 @@ namespace ElysiumModMenu
         public static ConfigEntry<bool> EnablePlatformSpoof;
         public static ConfigEntry<bool> AutoBanBrokenFriendCodeConfig;
         public static ConfigEntry<int> PlatformIndex;
+        private static ConfigEntry<bool> StorePlatformMigrated;
         public static ConfigEntry<bool> ShowWatermarkConfig;
         public static ConfigEntry<int> MenuColorIndexConfig;
         public static ConfigEntry<bool> RgbMenuModeConfig;
@@ -114,7 +115,14 @@ namespace ElysiumModMenu
             SpoofFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "FriendCode", "crewmate01", "");
             EnablePlatformSpoof = MenuConfig.Bind("ElysiumModMenu.Spoofing", "EnablePlatformSpoof", true, "");
             AutoBanBrokenFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Anticheat", "AutoBanBrokenFriendCode", false, "");
-            PlatformIndex = MenuConfig.Bind("ElysiumModMenu.Spoofing", "PlatformIndex", 1, "");
+            int nativePlatformIndex = DetectNativePlatformIndex();
+            PlatformIndex = MenuConfig.Bind("ElysiumModMenu.Spoofing", "PlatformIndex", nativePlatformIndex, "");
+            StorePlatformMigrated = MenuConfig.Bind("ElysiumModMenu.Compatibility", "StorePlatformMigrated", false, "Internal one-time Epic/Steam platform migration flag.");
+            if (!StorePlatformMigrated.Value)
+            {
+                PlatformIndex.Value = nativePlatformIndex;
+                StorePlatformMigrated.Value = true;
+            }
             ShowWatermarkConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "ShowWatermark", true, "");
             MenuColorIndexConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "MenuColorIndex", 10, "");
             RgbMenuModeConfig = MenuConfig.Bind("ElysiumModMenu.GUI", "RgbMenuMode", false, "");
@@ -140,6 +148,24 @@ namespace ElysiumModMenu
 
             var harmony = new Harmony("com.elysiummodmenu.harmony");
             harmony.PatchAll();
+        }
+
+        private static int DetectNativePlatformIndex()
+        {
+            try
+            {
+                string gameRoot = System.IO.Directory.GetCurrentDirectory();
+                bool epicInstall = System.IO.Directory.Exists(System.IO.Path.Combine(gameRoot, ".egstore"));
+                bool epicLaunch = Environment.GetCommandLineArgs().Any(argument =>
+                    argument.IndexOf("epic", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    argument.StartsWith("-AUTH_", StringComparison.OrdinalIgnoreCase));
+
+                return epicInstall || epicLaunch ? 0 : 1;
+            }
+            catch
+            {
+                return 1;
+            }
         }
 
         private static void RemoveLegacyPlaintextWebhookConfig(string configPath)
