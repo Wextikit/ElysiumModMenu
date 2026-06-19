@@ -26,7 +26,15 @@ player information, lobby automation, chat tools, and local appearance options.
 - Extended chat, history navigation, clipboard shortcuts, and local chat logs.
 - Configurable network protection and moderation notifications.
 - Persistent local moderation list.
-
+> [!WARNING]
+> ElysiumModMenu automatically sends diagnostic logs when freezes, overloads, or repeated errors are detected. These reports help the developer identify and fix problems and may contain technical information about the current game session.
+>
+> Log reporting can be disabled at any time in `Among Us/ElysiumModMenu/ElysiumModMenu.cfg`:
+>
+> ```ini
+> [ElysiumModMenu.Diagnostics]
+> EnableAnomalyLogReports = false
+> ```
 ## Features
 
 ### Lobby management
