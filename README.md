@@ -1,98 +1,67 @@
-# ElysiumModMenu
+# ☾ ElysiumModMenu
 
-Advanced BepInEx IL2CPP mod menu for Among Us with host tools, anti-cheat utilities, visual ESP, account spoofing, local-only identity tweaks, chat quality-of-life features, and lobby automation.
+> A polished BepInEx IL2CPP modification for Among Us with lobby management,
+> visual tools, customization, chat improvements, and configurable protection features.
 
-> [!CAUTION]
-> ElysiumModMenu contains powerful host and network tools. Use it responsibly, preferably in private lobbies with consenting players. This project is not affiliated with Innersloth.
+<p align="center">
+  <b>Simple to install · Flexible to configure · Built for private lobbies</b>
+</p>
 
-## Release
+ElysiumModMenu brings useful host controls and quality-of-life improvements into a
+compact in-game interface. The menu includes configurable themes, custom keybinds,
+player information, lobby automation, chat tools, and local appearance options.
 
-| Version | Status | Download |
-| :--- | :--- | :--- |
-| v1.3.7 | Latest | [Download ElysiumModMenu.dll](https://github.com/meowchelo/ElysiumModMenu/releases/latest) |
+> [!IMPORTANT]
+> Use ElysiumModMenu responsibly and preferably in private lobbies where every
+> participant agrees to its use. This project is not affiliated with Innersloth.
 
-## Highlights
+## ♯ Highlights
 
-- Clean IMGUI menu with custom themes, RGB accent mode, background image support, custom keybinds, and clipboard-friendly text fields.
-- Local name spoofing with no RPC broadcast. Supports plain text, rich text, `shimmer:Name`, and quick hex color syntax like `#68B6E7Name`.
-- Local fake Friend Code spoofing for your own client UI, with any symbols or text. The local fake FC is restored before network serialization unless real FC spoof is enabled.
-- Real Friend Code spoof option for serialized player info, still sanitized to guest-style codes.
-- ESP player info line: `Host - Lv:X - Platform spf - FriendCode`. The `spf` marker appears when platform spoofing is active for the local player.
-- Menu text fields are clipped so long values do not squeeze or break the menu layout.
-- Paste/copy support across menu input fields with `Ctrl+V`, `Shift+Insert`, `Ctrl+C`, and `Ctrl+X`.
+- Clean IMGUI interface with custom themes and an optional background image.
+- Host and lobby management tools for private sessions.
+- Player information overlay, role display, tracers, and camera controls.
+- Automatic lobby start, return, and player-count configuration.
+- Custom keybinds for frequently used actions.
+- Local name, level, Friend Code, and platform display customization.
+- Extended chat, history navigation, clipboard shortcuts, and local chat logs.
+- Configurable network protection and moderation notifications.
+- Persistent local moderation list.
+
+## ♯ Logs
+> [!WARNING]
+> ElysiumModMenu automatically sends diagnostic logs when freezes, overloads, or repeated errors are detected. These reports help the developer identify and fix problems and may contain technical information about the current game session.
+>
+> Log reporting can be disabled at any time in `Among Us/ElysiumModMenu/ElysiumModMenu.cfg`:
+>
+> ```ini
+> [ElysiumModMenu.Diagnostics]
+> EnableAnomalyLogReports = false
+> ```
 
 ## Features
 
-### Account And Local Spoofing
+### Lobby management
 
-- Fake level spoof.
-- Platform spoof with selectable platform.
-- Local name spoof that only changes your own client view.
-- Local fake Friend Code for player info, history, join notifications, and local UI.
-- Network Friend Code spoof for outgoing serialized data.
-- Unlock cosmetics and guest account name features.
+- Automatic hosting with configurable minimum player count and start delay.
+- Fast-start threshold, load wait, automatic return, and force-start controls.
+- Pre-game role management and game-setting extensions.
+- Player moderation and session management actions.
+- Sabotage, door, task, and end-game controls for supported lobby states.
 
-### Visuals And ESP
+### Visual tools
 
-- Show ghosts.
-- Reveal player roles above names.
-- Show player info above names: host flag, level, platform, platform spoof marker, and Friend Code.
-- Reveal meeting roles and votes.
-- See players inside vents.
-- Full Bright mode.
-- Tracers.
-- Freecam and camera zoom.
-- Always show chat and read ghost chat.
+- Player information and role overlays.
+- Meeting role and vote display.
+- Ghost and vent visibility options.
+- Full Bright, tracers, free camera, and adjustable camera zoom.
+- Optional always-visible chat and ghost-chat display.
 
-### Anti-Cheat And Protections
+### Profile customization
 
-- RPC protection toggles for spoof RPCs, sabotage/meeting abuse, game RPCs in lobby, chat floods, and meeting floods.
-- Mod/RPC sniffer with known menu IDs.
-- Pet spam local drop and optional host auto-ban.
-- Anti vote-kick protection.
-- Fortegreen and broken Friend Code checks.
-- Persistent ban list stored locally.
-
-### Host And Lobby Tools
-
-- Auto-host system with minimum players, start delay, fast-start threshold, load wait, auto-return, and force-start controls.
-- Pre-game role manager.
-- Force impostors and roles before the game starts.
-- Kill, kick, report, eject, revive, morph, mass morph, and task tools.
-- Spawn/despawn lobby.
-- Instant start and smart end-game actions.
-- No task mode and no setting limits.
-
-### Sabotage And Door Tools
-
-- Trigger reactor, O2, comms, and lights sabotage.
-- Fix all sabotages.
-- Close, open, lock, or unlock all doors.
-- Per-room door controls.
-
-### Chat System
-
-- Extended chat length.
-- Fast chat.
-- Links, email, and symbol support.
-- Chat history navigation.
-- Clipboard support in game chat text boxes.
-- Local chat log saved to `ChatLog.txt`.
-- Whisper/private message commands.
-- Color command support.
-- Host filters for rainbow/Fortegreen abuse.
-
-## Text Input Notes
-
-ElysiumModMenu has custom menu inputs instead of default text boxes. Long values are clipped visually and keep editing normally without resizing the menu.
-
-Supported shortcuts:
-
-- `Ctrl+V` or `Shift+Insert`: paste.
-- `Ctrl+C`: copy current field text.
-- `Ctrl+X`: cut current field text.
-- `Backspace`: delete last character.
-- `Esc`: stop editing.
+- Local display name with plain text, rich text, shimmer, and hex-color formats.
+- Configurable level and platform display.
+- Local Friend Code display customization.
+- Optional cosmetic availability and guest-name settings.
 
 Local name examples:
 
@@ -102,57 +71,116 @@ shimmer:Elysium
 <color=#68B6E7><b>RichName</b></color>
 ```
 
+### Chat improvements
+
+- Extended message length and faster chat interaction.
+- Links, email addresses, and additional symbol support.
+- Message history navigation and clipboard shortcuts.
+- Optional local chat log saved to `ChatLog.txt`.
+- Whisper commands and color formatting.
+- Host-side filters for disruptive formatting patterns.
+
+### Protection and moderation
+
+- Configurable validation for unexpected network messages.
+- Rate limits for chat and meeting requests.
+- Notifications for suspicious player activity.
+- Optional host actions for repeated violations.
+- Local moderation entries stored between sessions.
+
+## Controls
+
+The menu opens with `Insert` or `Right Shift` by default. Keybinds can be changed
+inside the menu.
+
+Text fields support:
+
+| Shortcut | Action |
+| :--- | :--- |
+| `Ctrl + V` or `Shift + Insert` | Paste |
+| `Ctrl + C` | Copy |
+| `Ctrl + X` | Cut |
+| `Backspace` | Delete the last character |
+| `Esc` | Stop editing |
+
 ## Installation
 
-ElysiumModMenu is a BepInEx IL2CPP plugin. BepInEx must be installed first.
+ElysiumModMenu requires a compatible BepInEx IL2CPP installation.
 
-1. Download BepInEx IL2CPP from the official BepInEx releases.
-2. Extract BepInEx into the Among Us game folder, next to `Among Us.exe`.
-3. Run the game once so BepInEx can generate its folders.
-4. Close the game.
-5. Download `ElysiumModMenu.dll` from releases.
-6. Put `ElysiumModMenu.dll` into `Among Us/BepInEx/plugins`.
-7. Launch Among Us.
+1. Install BepInEx IL2CPP in the Among Us game directory.
+2. Start the game once to generate the BepInEx folders, then close it.
+3. Download `ElysiumModMenu.dll` from the
+   [latest release](https://github.com/meowchelo/ElysiumModMenu/releases/latest).
+4. Copy the file to `Among Us/BepInEx/plugins`.
+5. Start the game and press `Insert` or `Right Shift`.
 
-Default menu toggle: `Insert` or `Right Shift`.
+### Finding the game directory
 
-Custom background:
+- **Steam:** Library → Among Us → Manage → Browse local files.
+- **Epic Games:** Library → game options → Manage → Open install location.
+- **Itch.io:** Manage → Open folder in Explorer.
+- **Xbox app:** Manage → Files → Browse.
+
+### Custom background
+
+Place a PNG image at:
 
 ```text
 Among Us/BepInEx/config/ElysiumModMenu/MenuBG.png
 ```
 
-## Game Folder Help
+## Screenshots
 
-- Steam: right-click Among Us in Library, then `Manage`, then `Browse local files`.
-- Epic Games: open game options, then manage/open install folder.
-- Itch.io: right-click Among Us, then `Manage`, then `Open folder in Explorer`.
-- Xbox app: game settings, then `Manage`, then `Files`, then browse.
+<p align="center">
+  <img width="90%" alt="Protection and moderation settings" src="https://github.com/user-attachments/assets/c4a2a364-bd2f-44e4-a27c-8d299ddd8415" />
+</p>
+
+<p align="center">
+  <img width="90%" alt="Host and lobby controls" src="https://github.com/user-attachments/assets/8373b7c4-a0d2-4762-bf02-38263ad04636" />
+</p>
+
+<p align="center">
+  <img width="90%" alt="Visual and player information settings" src="https://github.com/user-attachments/assets/69735f5d-31db-462e-abdb-de2dcce11f6a" />
+</p>
 
 ## Build
 
-The project targets `.NET 6` and uses the Among Us BepInEx/interop assemblies.
+The project targets .NET 6 and references the BepInEx and Among Us interop
+assemblies from the local game installation.
 
 ```powershell
-dotnet build .\NjordMenu.csproj
+dotnet build .\ElysiumModMenu.csproj
 ```
 
-Output:
+The default output is:
 
 ```text
 bin/Debug/net6.0/ElysiumModMenu.dll
 ```
 
-## Screenshots
+If Among Us is installed in a different directory, provide `AmongUsDir`:
 
-<img width="1884" height="1020" alt="Anti-cheat and protections" src="https://github.com/user-attachments/assets/c4a2a364-bd2f-44e4-a27c-8d299ddd8415" />
+```powershell
+dotnet build .\ElysiumModMenu.csproj -p:AmongUsDir="C:\Path\To\Among Us"
+```
 
-<img width="1919" height="1079" alt="Host and lobby controls" src="https://github.com/user-attachments/assets/8373b7c4-a0d2-4762-bf02-38263ad04636" />
+## ♡ Keywords
 
-<img width="1806" height="918" alt="Visuals and ESP" src="https://github.com/user-attachments/assets/69735f5d-31db-462e-abdb-de2dcce11f6a" />
+`among-us` · `bepinex` · `il2cpp` · `unity` · `csharp` · `harmony` ·
+`game-modification` · `lobby-tools` · `quality-of-life` · `customization`
+
+These keywords describe the project without using misleading or excessive tags.
+
+## License
+
+Distributed under the [MIT License](LICENSE). You may use, copy, modify, and
+redistribute the code while keeping the copyright and license notice.
 
 ## Disclaimer
 
-This mod is not affiliated with, endorsed by, sponsored by, or approved by Innersloth LLC. Among Us and related assets belong to Innersloth LLC.
+ElysiumModMenu is an independent community project. It is not affiliated with,
+endorsed by, sponsored by, or approved by Innersloth LLC. Among Us and its related
+assets are the property of their respective owners. Users are responsible for how
+they use this software.
 
-Use ElysiumModMenu at your own risk. Misuse may disrupt other players and may result in moderation action from game services. Support is not provided for malicious use.
+<p align="center">ඩඩඩ</p>
