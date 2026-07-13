@@ -1,52 +1,52 @@
-
 <div align="center">
 
-# Elysium Mod Menu (emm) - Among us
+# Elysium Mod Menu
 
-**A sleek, client-side mod menu for Among Us.**
-
-Dark IMGUI overlay · QoL & host tools · visuals & ESP · access guard · a full built-in music player
+**A configurable BepInEx IL2CPP menu for Among Us**
 
 <br>
 
-<p>
-  <img src="https://img.shields.io/badge/Among%20Us-555555?style=for-the-badge" alt="Among Us">
-  <img src="https://img.shields.io/badge/IL2CPP-111111?style=for-the-badge" alt="IL2CPP">
-  <img src="https://img.shields.io/badge/.NET-6.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 6.0">
-</p>
-
-<p>
-  <a href="https://github.com/Wextikit/ElysiumCore/releases/latest">
-    <img src="https://img.shields.io/github/v/release/Wextikit/ElysiumCore?style=for-the-badge&label=Version&color=8A2BE2" alt="Version">
-  </a>
-  <a href="https://github.com/Wextikit/ElysiumCore/stargazers">
-    <img src="https://img.shields.io/github/stars/Wextikit/ElysiumCore?style=for-the-badge&label=Stars&color=ffdd00" alt="Stars">
-  </a>
-</p>
-
-<br>
-
-<a href="https://github.com/Wextikit/ElysiumCore/releases/latest">
+<a href="https://github.com/Wextikit/ElysiumModMenu/releases/latest">
   <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download">
 </a>
 <a href="docs/CHANGELOG.md">
   <img src="https://img.shields.io/badge/Changelog-View-0969da?style=for-the-badge" alt="Changelog">
 </a>
-<a href="https://github.com/Wextikit/ElysiumCore/issues">
+<a href="https://github.com/Wextikit/ElysiumModMenu/issues">
   <img src="https://img.shields.io/badge/Report-Issue-da3633?style=for-the-badge&logo=github&logoColor=white" alt="Report an issue">
 </a>
 
 <br>
 <br>
 
-<a href="https://discord.gg/C3X8pwAuU5">
-  <img src="https://img.shields.io/badge/Discord-ElysiumCore-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord">
+<a href="https://discord.gg/CdrpKJzFp">
+  <img src="https://img.shields.io/badge/Discord-ElysiumModMenu-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord">
 </a>
 
 </div>
 
 > [!CAUTION]
-> This menu includes host, network, spoofing, and moderation tools. Use it only in private or consenting lobbies. Misuse can disrupt games and may result in account or server moderation. Elysium Core is not affiliated with Innersloth.
+> This menu includes host, network, spoofing, and moderation tools. Use it only in private or consenting lobbies. Misuse can disrupt games and may result in account or server moderation. Elysium Mod Menu is not affiliated with Innersloth.
+
+## Features
+
+| Area                | Included tools                                                                                                                                                                     |
+| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Visuals & ESP**   | Roles, player information, ghosts, vents, protection effects, filtered tracers, Full Bright, freecam, camera zoom, meeting roles, revealed votes, and Phantom visibility           |
+| **Host & Lobby**    | Auto Host, role manager, lobby controls, task settings, player actions, smart start/end controls, persistent bans, forced impostors, No Task Mode, and unrestricted settings       |
+| **Anti-Cheat**      | RPC and flood protections, mod detection, bot checks, malformed identity checks, configurable auto-kicks/bans, pet-spam protection, vote-kick protection, and custom platform bans |
+| **Account & Local** | Level, platform, name, and Friend Code spoofing; cosmetics and Cosmicube controls; saved outfits, local Friend Code display, guest-name support, and disconnect-penalty removal    |
+| **Chat & QoL**      | Extended chat, history, clipboard support, whispers, filters, notifications, keybinds, custom themes, fast chat, color commands, and local chat logging                            |
+| **Maps & Sabotage** | Sabotage controls, repairs, vent tools, global doors, per-room door controls, Mushroom Mixup, unfixable lights, and instant repair of all systems                                  |
+
+> [!NOTE]
+> Host-only actions require you to be the current lobby host. Local visual and identity options generally affect only your own client unless their description explicitly mentions RPC or network synchronization.
+
+## Installation and usage
+
+> [!WARNING]
+> Before installing Elysium Mod Menu, make sure you understand the disclaimer and use the menu only in private, testing, or consenting lobbies.
+
 ###  1. Install BepInEx IL2CPP
  
  ♯ Elysium Mod Menu is a **BepInEx IL2CPP** mod.
@@ -99,7 +99,7 @@ The first launch may take longer than usual and a console window may appear. Thi
 
 ### 3. Install Elysium Mod Menu
 
-Download `ElysiumModMenu.dll` from the [latest Elysium release](https://github.com/meowchelo/ElysiumModMenu/releases/latest).
+Download `ElysiumModMenu.dll` from the [latest Elysium release](https://github.com/Wextikit/ElysiumModMenu/releases/latest).
 
 Place the file here:
 
@@ -124,7 +124,7 @@ To update the menu:
 
 1. ♯ Close Among Us.
 
-2. ♯ Download the new `ElysiumModMenu.dll` from the [latest release](https://github.com/meowchelo/ElysiumModMenu/releases/latest).
+2. ♯ Download the new `ElysiumModMenu.dll` from the [latest release](https://github.com/Wextikit/ElysiumModMenu/releases/latest).
 
 3. ♯ Replace the old file in:
 
@@ -148,8 +148,28 @@ To update the menu:
 | iOS                         | Not supported                                         |
 | Switch / Xbox / PlayStation | Not supported                                         |
 
-The Platform Spoof option can display Epic, Steam, Mac, Microsoft, Itch, iOS, Android, Switch, Xbox, PlayStation, or Starlight to other clients. These are spoofing targets, not platforms on which the mod itself can run.
+The Platform Spoof option can display supported platform labels to other clients. These are spoofing targets, not platforms on which the mod itself can run.
 
+## ♯ Diagnostic logs
+
+> [!WARNING]
+> Diagnostic reporting is enabled by default. When the game detects a freeze, error burst, or log overload, the configured build may send a diagnostic summary and attach affected Unity/BepInEx log files to the maintainer's configured endpoint.
+
+### Enable or disable diagnostic reporting
+
+Open:
+
+```
+Among Us/ElysiumModMenu/ElysiumModMenu.cfg
+```
+
+Under `[ElysiumModMenu.Diagnostics]`, set:
+
+```
+EnableAnomalyLogReports = false
+```
+
+Use `true` to enable automatic anomaly reports. Restart the game after changing the file.
 
 ### Enable detailed local logs
 
@@ -165,8 +185,8 @@ Among Us/BepInEx/LogOutput.log
 
 ##  ♡ Community and support
 
-* Join the [ElysiumModMenu Discord](https://discord.gg/DpeWsCqZ) for announcements, help, previews, and community discussion.
-* Use [GitHub Issues](https://github.com/meowchelo/ElysiumModMenu/issues) for reproducible bugs and feature requests.
+* Join the [ElysiumModMenu Discord](https://discord.gg/CdrpKJzFp) for announcements, help, previews, and community discussion.
+* Use [GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) for reproducible bugs and feature requests.
 * When reporting a problem, include the menu version, game platform, what happened, reproduction steps, and the relevant log excerpt.
 * Remove room codes, Friend Codes, PUIDs, chat messages, and personal paths before posting logs publicly.
 
