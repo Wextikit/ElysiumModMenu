@@ -49,6 +49,8 @@ public void OnGUI()
             Event e = Event.current;
 
             HandleMessage.HandleTimer();
+            if (!stylesInited || windowStyle == null || safeLineStyle == null || sliderStyle == null || sliderThumbStyle == null || knobStyle == null)
+                InitStyles();
 
             bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun;
             bool isCustomSpoofRpcEditing = customSpoofRpcInputFocused && selectedSpoofMenuIndex == spoofMenuNames.Length - 1;
@@ -381,7 +383,7 @@ public void OnGUI()
                     GUI.color = whiteMenuTheme
                         ? new Color(1f, 1f, 1f, currentAlpha)
                         : new Color(0.12f, 0.12f, 0.12f, currentAlpha);
-                    GUI.Box(new Rect(xPos, yPos, notificationBoxSize.x, notificationBoxSize.y), "", windowStyle);
+                    GUI.Box(new Rect(xPos, yPos, notificationBoxSize.x, notificationBoxSize.y), "", windowStyle ?? GUI.skin.box);
 
                     GUI.color = new Color(1f, 1f, 1f, currentAlpha > 0.5f ? 1f : currentAlpha * 2f);
                     string notificationTextHex = whiteMenuTheme ? "202020" : GetMenuAccentHex(false);
@@ -395,7 +397,7 @@ public void OnGUI()
                     float progress = 1f - (notif.lifetime / notif.ttl);
                     Color progressColor = GetMenuAccentColor(false);
                     GUI.color = new Color(progressColor.r, progressColor.g, progressColor.b, currentAlpha);
-                    GUI.Box(new Rect(xPos + 8f, yPos + notificationBoxSize.y - 6f, (notificationBoxSize.x - 16f) * progress, 2f), "", safeLineStyle);
+                    GUI.Box(new Rect(xPos + 8f, yPos + notificationBoxSize.y - 6f, (notificationBoxSize.x - 16f) * progress, 2f), "", safeLineStyle ?? GUI.skin.box);
                     GUI.color = Color.white;
                 }
             }

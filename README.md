@@ -150,39 +150,6 @@ To update the menu:
 
 The Platform Spoof option can display supported platform labels to other clients. These are spoofing targets, not platforms on which the mod itself can run.
 
-## ♯ Diagnostic logs
-
-> [!WARNING]
-> Diagnostic reporting is enabled by default. When the game detects a freeze, error burst, or log overload, the configured build may send a diagnostic summary and attach affected Unity/BepInEx log files to the maintainer's configured endpoint.
-
-### Enable or disable diagnostic reporting
-
-Open:
-
-```
-Among Us/ElysiumModMenu/ElysiumModMenu.cfg
-```
-
-Under `[ElysiumModMenu.Diagnostics]`, set:
-
-```
-EnableAnomalyLogReports = false
-```
-
-Use `true` to enable automatic anomaly reports. Restart the game after changing the file.
-
-### Enable detailed local logs
-
-Open **Menu → Notifications & Logging** and enable **Detailed Unity/RPC Logs**.
-
-This restores verbose RPC, Message, Info, and Debug output. Disable it during normal play for better performance; warnings and errors remain available.
-
-The main local BepInEx log is usually stored at:
-
-```
-Among Us/BepInEx/LogOutput.log
-```
-
 ##  ♡ Community and support
 
 * Join the [ElysiumModMenu Discord](https://discord.gg/CdrpKJzFp) for announcements, help, previews, and community discussion.
@@ -259,7 +226,7 @@ These options are located in the **Menu** tab. Unlock behavior is client-side, m
 
 </details>
 
-## Disclaimer ❕❕❕
+## Disclaimer 
 
 > [!IMPORTANT]
 > Elysium Mod Menu is an independent, unofficial modification. It is not affiliated with, endorsed by, sponsored by, or approved by Innersloth LLC. Among Us, its name, trademarks, and game assets belong to their respective owners.
@@ -271,3 +238,11 @@ You are solely responsible for installing and using the mod, complying with appl
 The maintainers are not responsible for bans, restrictions, corrupted files, lost progress, game instability, third-party modifications, misuse, or damage arising from use of this software.
 
 Support is not provided for harassment, disruption, moderation evasion, unauthorized access, or other malicious activity.
+
+
+## ✨ Inspiration
+
+- [SickoMenu](https://github.com/g0aty/SickoMenu) by [g0aty](https://github.com/g0aty)
+- [MalumMenu](https://github.com/scp222thj/MalumMenu) by [scp222thj](https://github.com/scp222thj)
+- [AmongUsMenu](https://github.com/BitCrackers/AmongUsMenu) by [BitCrackers](https://github.com/BitCrackers)
+- [EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles) by [Gurge44](https://github.com/Gurge44)
