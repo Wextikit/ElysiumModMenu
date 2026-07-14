@@ -99,7 +99,7 @@ private void DrawPlayersTab()
             GUILayout.EndVertical();
 
             GUILayout.Space(playerActionGapMain); GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(playerActionPanelWidth), GUILayout.ExpandHeight(true));
-            playerActionScrollPos = GUILayout.BeginScrollView(playerActionScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none, GUILayout.Width(playerActionPanelWidth - 8f));
+            playerActionScrollPos = GUILayout.BeginScrollView(playerActionScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.Width(playerActionPanelWidth - 8f));
 
             PlayerControl target = null;
             try { target = lockedPlayersList.FirstOrDefault(p => p != null && p.PlayerId == selectedAntiCheatPlayerId); }

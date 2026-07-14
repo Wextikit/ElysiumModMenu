@@ -529,22 +529,27 @@ private static string GetSafeColorName(int colorId)
 
 private void DrawLobbyControls()
         {
-            float outerContentWidth = GetMenuWorkWidth(220f, 760f);
+            // Keep room for the menu's inner margins and the scroll-view gutter.
+            float outerContentWidth = Mathf.Floor(Mathf.Max(220f, GetMenuWorkWidth(220f, 760f) - 44f));
+            float columnGap = 10f;
+            const float hostActionButtonHeight = 24f;
+            const float hostActionGap = 4f;
+            const float topTileHeight = 220f;
+            const float bottomTileHeight = 220f;
+            const float lobbyActionsWidthOffset = 20f;
+            float lobbyColumnWidth = Mathf.Floor(Mathf.Max(190f, (outerContentWidth - columnGap) / 2f));
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
                 ? menuCardStyle.padding.left + menuCardStyle.padding.right
                 : 28f;
-            float columnGap = 10f;
-            float lobbyColumnWidth = Mathf.Floor(Mathf.Max(190f, (outerContentWidth - columnGap - (cardPaddingWidth * 2f)) / 2f));
+            float cardInnerWidth = Mathf.Max(120f, lobbyColumnWidth - cardPaddingWidth);
+            float twoButtonWidth = Mathf.Max(52f, (cardInnerWidth - hostActionGap) / 2f);
+            float threeButtonWidth = Mathf.Max(40f, (cardInnerWidth - (hostActionGap * 2f)) / 3f);
             int lobbyControlWidth = Mathf.RoundToInt(Mathf.Max(150f, lobbyColumnWidth - 32f));
-            const float hostActionButtonHeight = 24f;
-            const float hostActionGap = 4f;
-            const float leftTileHeight = 202f;
-            const float rightTileHeight = 94f;
+
+            GUILayout.BeginVertical(GUILayout.Width(outerContentWidth));
 
             GUILayout.BeginHorizontal(GUILayout.Width(outerContentWidth));
-
-            GUILayout.BeginVertical(GUILayout.Width(lobbyColumnWidth));
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(leftTileHeight));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth + lobbyActionsWidthOffset), GUILayout.Height(topTileHeight));
             DrawMenuSectionHeader(L("GAME RULES", "ПРАВИЛА ИГРЫ"));
             GUILayout.FlexibleSpace();
             neverEndGame = DrawToggle(neverEndGame, L("Unlimited Game", "Бесконечная игра"), lobbyControlWidth);
@@ -587,53 +592,9 @@ private void DrawLobbyControls()
 
             GUILayout.Space(10);
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(leftTileHeight));
-            DrawMenuSectionHeader(L("LOBBY ACTIONS", "ДЕЙСТВИЯ ЛОББИ"));
-            GUILayout.FlexibleSpace();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("Spawn Lobby", "Создать лобби"), activeTabStyle, GUILayout.Height(hostActionButtonHeight))) SpawnLobby();
-            GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("Despawn", "Удалить"), btnStyle, GUILayout.Height(hostActionButtonHeight))) DespawnLobby();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(hostActionGap);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Flood Task All", btnStyle, GUILayout.Height(hostActionButtonHeight))) FloodAllPlayersWithTasks();
-            GUILayout.Space(hostActionGap);
-            if (GUILayout.Button("Delete Task All", btnStyle, GUILayout.Height(hostActionButtonHeight))) DeleteAllPlayerTasks();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(hostActionGap);
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("Kill All", "Убить всех"), btnStyle, GUILayout.Height(hostActionButtonHeight))) KillAll();
-            GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("Kick All", "Кикнуть всех"), btnStyle, GUILayout.Height(hostActionButtonHeight))) KickAll();
-            GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("Mass Morph", "Масс-морф"), btnStyle, GUILayout.Height(hostActionButtonHeight))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
-            GUILayout.EndHorizontal();
-            GUILayout.Space(hostActionGap);
-
-            selectedLobbyVentIdx = Mathf.Clamp(selectedLobbyVentIdx, 0, Mathf.Max(0, GetVentCount() - 1));
-            GUILayout.BeginHorizontal();
-            float ventLabelW = Mathf.Min(135f, Mathf.Max(82f, lobbyColumnWidth * 0.34f));
-            GUILayout.Label($"Vent: {GetVentLabel(selectedLobbyVentIdx)}", new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip }, GUILayout.Width(ventLabelW), GUILayout.Height(hostActionButtonHeight));
-            if (GetVentCount() > 1)
-                selectedLobbyVentIdx = Mathf.RoundToInt(GUILayout.HorizontalSlider(selectedLobbyVentIdx, 0, GetVentCount() - 1, sliderStyle, sliderThumbStyle, GUILayout.Width(Mathf.Max(50f, lobbyColumnWidth - ventLabelW - 128f))));
-            else
-                GUILayout.Space(Mathf.Max(50f, lobbyColumnWidth - ventLabelW - 128f));
-            GUILayout.Space(hostActionGap);
-            if (GUILayout.Button("Vent TP All", btnStyle, GUILayout.Width(102f), GUILayout.Height(hostActionButtonHeight))) TeleportAllPlayersToVent(selectedLobbyVentIdx);
-            GUILayout.EndHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.EndVertical();
-            GUILayout.EndVertical();
-
-            GUILayout.Space(10);
-
-            GUILayout.BeginVertical(GUILayout.Width(lobbyColumnWidth));
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(rightTileHeight));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(topTileHeight));
             DrawMenuSectionHeader(L("CHAT MODERATION", "МОДЕРАЦИЯ ЧАТА"));
-            GUILayout.FlexibleSpace();
+            GUILayout.Space(4f);
             enableColorCommand = DrawToggle(enableColorCommand, L("Enable /c command (Public)", "Разрешить команду /c"), lobbyControlWidth);
             GUILayout.Space(5);
             blockFortegreenChat = DrawToggle(blockFortegreenChat, L("Block Fortegreen Chat", "Блокировать чат Fortegreen"), lobbyControlWidth);
@@ -650,39 +611,85 @@ private void DrawLobbyControls()
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
 
-            GUILayout.Space(6);
+            GUILayout.Space(10);
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(rightTileHeight));
+            GUILayout.BeginHorizontal(GUILayout.Width(outerContentWidth));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(bottomTileHeight));
+            DrawMenuSectionHeader(L("LOBBY ACTIONS", "ДЕЙСТВИЯ ЛОББИ"));
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("Spawn Lobby", "Создать лобби"), activeTabStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) SpawnLobby();
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button(L("Despawn", "Удалить"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) DespawnLobby();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(hostActionGap);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Flood Task All", btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) FloodAllPlayersWithTasks();
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button("Delete Task All", btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) DeleteAllPlayerTasks();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(hostActionGap);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("Kill All", "Убить всех"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KillAll();
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button(L("Kick All", "Кикнуть всех"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KickAll();
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button(L("Mass Morph", "Масс-морф"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
+            GUILayout.EndHorizontal();
+            GUILayout.Space(hostActionGap);
+
+            selectedLobbyVentIdx = Mathf.Clamp(selectedLobbyVentIdx, 0, Mathf.Max(0, GetVentCount() - 1));
+            GUILayout.BeginHorizontal();
+            float ventButtonWidth = Mathf.Min(102f, Mathf.Max(60f, cardInnerWidth * 0.3f));
+            float ventLabelW = Mathf.Min(135f, Mathf.Max(70f, cardInnerWidth * 0.34f));
+            GUILayout.Label($"Vent: {GetVentLabel(selectedLobbyVentIdx)}", new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip }, GUILayout.Width(ventLabelW), GUILayout.Height(hostActionButtonHeight));
+            float ventSliderWidth = Mathf.Max(20f, cardInnerWidth - ventLabelW - ventButtonWidth - hostActionGap);
+            if (GetVentCount() > 1)
+                selectedLobbyVentIdx = Mathf.RoundToInt(GUILayout.HorizontalSlider(selectedLobbyVentIdx, 0, GetVentCount() - 1, sliderStyle, sliderThumbStyle, GUILayout.Width(ventSliderWidth)));
+            else
+                GUILayout.Space(ventSliderWidth);
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button("Vent TP All", btnStyle, GUILayout.Width(ventButtonWidth), GUILayout.Height(hostActionButtonHeight))) TeleportAllPlayersToVent(selectedLobbyVentIdx);
+            GUILayout.EndHorizontal();
+            GUILayout.FlexibleSpace();
+            GUILayout.EndVertical();
+
+            GUILayout.Space(10);
+
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(lobbyColumnWidth), GUILayout.Height(bottomTileHeight));
             DrawMenuSectionHeader(L("END GAME", "КОНЕЦ ИГРЫ"));
-            disableEndGameSafeMode = DrawToggle(disableEndGameSafeMode, L("Disable Safe End", "Отключить safe end"), Mathf.RoundToInt(lobbyColumnWidth - 12f));
+            disableEndGameSafeMode = DrawToggle(disableEndGameSafeMode, L("Disable Safe End", "Отключить safe end"), Mathf.RoundToInt(cardInnerWidth));
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("Crewmate Win", "Победа экипажа"), btnStyle, GUILayout.Height(hostActionButtonHeight))) SmartEndGame("CrewWin");
+            if (GUILayout.Button(L("Crewmate Win", "Победа экипажа"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) SmartEndGame("CrewWin");
             GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("Impostor Win", "Победа предателей"), btnStyle, GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ImpWin");
+            if (GUILayout.Button(L("Impostor Win", "Победа предателей"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ImpWin");
             GUILayout.EndHorizontal();
             GUILayout.Space(hostActionGap);
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("Imp Disconnect", "Дисконнект предателя"), btnStyle, GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ImpDisconnect");
+            if (GUILayout.Button(L("Imp Disconnect", "Дисконнект предателя"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ImpDisconnect");
             GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("H&S Disconnect", "H&S дисконнект"), activeTabStyle, GUILayout.Height(hostActionButtonHeight))) SmartEndGame("HnsImpDisconnect");
+            if (GUILayout.Button(L("H&S Disconnect", "H&S дисконнект"), activeTabStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) SmartEndGame("HnsImpDisconnect");
             GUILayout.EndHorizontal();
             GUILayout.Space(hostActionGap);
 
-            if (GUILayout.Button(L("Force End", "Завершить"), btnStyle, GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ForceEnd");
+            if (GUILayout.Button(L("Force End", "Завершить"), btnStyle, GUILayout.Width(cardInnerWidth), GUILayout.Height(hostActionButtonHeight))) SmartEndGame("ForceEnd");
             GUILayout.Space(hostActionGap);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("Insta Start", "Мгновенный старт"), btnStyle, GUILayout.Height(hostActionButtonHeight))) TryInstaStartAfterEveryoneLoaded(true);
+            if (GUILayout.Button(L("Insta Start", "Мгновенный старт"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight))) TryInstaStartAfterEveryoneLoaded(true);
             GUILayout.Space(hostActionGap);
-            if (GUILayout.Button(L("Close Meeting", "Закрыть собрание"), btnStyle, GUILayout.Height(hostActionButtonHeight)) && MeetingHud.Instance != null) MeetingHud.Instance.RpcClose();
+            if (GUILayout.Button(L("Close Meeting", "Закрыть собрание"), btnStyle, GUILayout.Width(twoButtonWidth), GUILayout.Height(hostActionButtonHeight)) && MeetingHud.Instance != null) MeetingHud.Instance.RpcClose();
             GUILayout.EndHorizontal();
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
 
-            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
 private static void FloodAllPlayersWithTasks()

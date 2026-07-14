@@ -47,6 +47,7 @@ public void Update()
         {
             if (isPanicked) return;
 
+            HandleMenuScaleInput();
             TickNotificationQueue();
             TickFakeStartCounter();
             TickAutoTwoImpostors();

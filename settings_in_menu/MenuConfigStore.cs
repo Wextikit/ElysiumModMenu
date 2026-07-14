@@ -209,6 +209,7 @@ private void LoadConfig()
                 hostAutoKillTarget = LoadBool("M_HostAutoKillTarget", hostAutoKillTarget);
                 hostAutoKillTargetId = (byte)Mathf.Clamp(LoadInt("M_HostAutoKillTargetId", hostAutoKillTargetId), 0, 255);
                 bugRoomAutoAngel = LoadBool("M_BugRoomAutoAngel", bugRoomAutoAngel);
+                bugRoomAutoAngelIntervalSeconds = Mathf.Clamp(LoadFloat("M_BugRoomAutoAngelIntervalSeconds", bugRoomAutoAngelIntervalSeconds), 0.001f, 0.50f);
                 bugRoomAutoKillShield = LoadBool("M_BugRoomAutoKillShield", bugRoomAutoKillShield);
                 bugRoomTimedAutoRun = LoadBool("M_BugRoomTimedAutoRun", bugRoomTimedAutoRun);
                 if (PlayerPrefs.HasKey("M_BugRoomTimedAutoRunMinutes"))
@@ -280,6 +281,8 @@ private void LoadConfig()
                     LoadFloat("M_MenuWindowY", windowRect.y),
                     Mathf.Clamp(LoadFloat("M_MenuWindowW", windowRect.width), 640f, 1400f),
                     Mathf.Clamp(LoadFloat("M_MenuWindowH", windowRect.height), 420f, 900f));
+                menuScale = Mathf.Clamp(LoadFloat("M_MenuScale", menuScale), 0.65f, 1.75f);
+                enableMenuScaleInput = LoadBool("M_EnableMenuScaleInput", enableMenuScaleInput);
                 currentTab = Mathf.Clamp(LoadInt("M_CurrentTab", currentTab), 0, tabNames.Length - 1);
                 targetTabIndex = Mathf.Clamp(LoadInt("M_TargetTab", currentTab), 0, tabNames.Length - 1);
                 currentGeneralSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralSubTab", currentGeneralSubTab), 0, generalSubTabs.Length - 1);

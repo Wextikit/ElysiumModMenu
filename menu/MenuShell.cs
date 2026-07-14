@@ -48,6 +48,8 @@ public void OnGUI()
 
             Event e = Event.current;
 
+            ConsumeMenuScaleScrollEvent(e);
+
             HandleMessage.HandleTimer();
             if (!stylesInited || windowStyle == null || safeLineStyle == null || sliderStyle == null || sliderThumbStyle == null || knobStyle == null)
                 InitStyles();
@@ -403,6 +405,46 @@ public void OnGUI()
             }
         }
 
+private void HandleMenuScaleInput()
+        {
+            // Read the raw input in Update so GUILayout scroll views cannot consume it first.
+            if (!showMenu || !enableMenuScaleInput || !IsMenuScaleModifierHeld())
+                return;
+
+            float scrollDelta = Input.mouseScrollDelta.y;
+            if (Mathf.Approximately(scrollDelta, 0f))
+                return;
+
+            Vector3 mousePosition = Input.mousePosition;
+            Vector2 guiMousePosition = new Vector2(mousePosition.x, Screen.height - mousePosition.y);
+            if (!GetScaledMenuRect().Contains(guiMousePosition))
+                return;
+
+            menuScale = Mathf.Clamp(menuScale * Mathf.Pow(1.025f, scrollDelta), 0.65f, 1.75f);
+            SaveConfig();
+        }
+
+private static void ConsumeMenuScaleScrollEvent(Event e)
+        {
+            if (!showMenu || !enableMenuScaleInput || e == null || e.type != EventType.ScrollWheel ||
+                !IsMenuScaleModifierHeld() || !GetScaledMenuRect().Contains(e.mousePosition))
+                return;
+
+            // Prevent GUILayout.BeginScrollView from also moving the active tab.
+            e.Use();
+        }
+
+private static bool IsMenuScaleModifierHeld()
+        {
+            return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+        }
+
+private static Rect GetScaledMenuRect()
+        {
+            Vector2 size = windowRect.size * menuScale;
+            return new Rect(windowRect.center - size * 0.5f, size);
+        }
+
 private void DrawMenuWindowIfVisible()
         {
             if (!showMenu) return;
@@ -414,6 +456,7 @@ private void DrawMenuWindowIfVisible()
             FontStyle oldButtonFont = GUI.skin.button.fontStyle;
             FontStyle oldToggleFont = GUI.skin.toggle.fontStyle;
             Color oldContentColor = GUI.contentColor;
+            Matrix4x4 oldGuiMatrix = GUI.matrix;
 
             try
             {
@@ -426,6 +469,9 @@ private void DrawMenuWindowIfVisible()
                 if (RgbMenuTextActive())
                     GUI.contentColor = GetMenuAccentColor();
 
+                Vector2 menuCenter = windowRect.center;
+                GUI.matrix = Matrix4x4.TRS(menuCenter, Quaternion.identity, new Vector3(menuScale, menuScale, 1f)) *
+                             Matrix4x4.TRS(-menuCenter, Quaternion.identity, Vector3.one) * oldGuiMatrix;
                 windowRect = GUI.Window(0, windowRect, (Action<int>)DrawElysiumModMenu, "", windowStyle);
             }
             finally
@@ -436,6 +482,7 @@ private void DrawMenuWindowIfVisible()
                 GUI.skin.toggle.fontStyle = oldToggleFont;
                 GUI.contentColor = oldContentColor;
                 GUI.color = Color.white;
+                GUI.matrix = oldGuiMatrix;
             }
 
             ClampMenuWindowToScreen();
@@ -585,7 +632,9 @@ private static float GetMenuWorkWidth(float min = 120f, float max = 620f)
             GUI.color = new Color(1f, 1f, 1f, tabTransitionProgress);
 
             GUILayout.BeginArea(new Rect(bodyX, bodyY, bodyW, bodyH));
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            Vector2 requestedScrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            if (!enableMenuScaleInput || !IsMenuScaleModifierHeld())
+                scrollPosition = requestedScrollPosition;
 
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();

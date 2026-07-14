@@ -527,6 +527,8 @@ private static byte hostAutoKillTargetId = byte.MaxValue;
 
 public static bool bugRoomAutoAngel = false;
 
+public static float bugRoomAutoAngelIntervalSeconds = 0.15f;
+
 public static bool bugRoomAutoKillShield = false;
 
 public static bool noKillCooldownHostOnly = false;
@@ -560,6 +562,10 @@ public static Color hostChatColorValue = new Color32(0, 128, 128, 255);
 public static bool showMenu = false;
 
 public static Rect windowRect = new Rect(100, 100, 750, 480);
+
+public static float menuScale = 1f;
+
+public static bool enableMenuScaleInput = true;
 
 public static bool freecam = false;
 
