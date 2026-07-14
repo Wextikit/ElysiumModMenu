@@ -226,7 +226,7 @@ These options are located in the **Menu** tab. Unlock behavior is client-side, m
 
 </details>
 
-## Disclaimer 
+## Disclaimer 🥶
 
 > [!IMPORTANT]
 > Elysium Mod Menu is an independent, unofficial modification. It is not affiliated with, endorsed by, sponsored by, or approved by Innersloth LLC. Among Us, its name, trademarks, and game assets belong to their respective owners.
