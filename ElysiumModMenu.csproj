@@ -387,6 +387,16 @@
 		</Reference>
 	</ItemGroup>
 	<ItemGroup>
+		<Compile Remove="AcidMenu_decompiled\**\*.cs" />
+		<Compile Remove="Area51files_decompiled\**\*.cs" />
+		<Compile Remove="AstroMenu_decompiled\**\*.cs" />
+		<Compile Remove="HydraRemakePRIVATE_decompiled\**\*.cs" />
+		<Compile Remove="KillNetwork_no_check_decompiled\**\*.cs" />
+		<Compile Remove="NME_decompiled\**\*.cs" />
+		<Compile Remove="Oxford_decompiled\**\*.cs" />
+		<Compile Remove="TuffMenu_REAL_decompiled\**\*.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<None Update="resources\discord_rpc_elysium.jpg" CopyToOutputDirectory="PreserveNewest" />
 		<EmbeddedResource Include="resources\discord_rpc_elysium.jpg" LogicalName="ElysiumModMenu.discord_rpc_elysium.jpg" />
 		<EmbeddedResource Include="resources\radar_skeld.png" LogicalName="ElysiumModMenu.radar_skeld.png" />

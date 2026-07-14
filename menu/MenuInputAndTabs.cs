@@ -447,7 +447,13 @@ private Vector2 playersHistoryScroll = Vector2.zero;
 
 private int currentPlayersSubTab = 0;
 
-private string[] playersSubTabs = { "ACTIONS", "HISTORY" };
+private string[] playersSubTabs = { "ACTIONS", "PLAYER HISTORY", "CLONES" };
+
+private Vector2 playersClonesScroll = Vector2.zero;
+
+private int cloneFormationIdx = 0;
+
+private int cloneFormationCount = 8;
 
 private int currentRoleBuffSubTab = 0;
 

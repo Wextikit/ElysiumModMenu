@@ -121,7 +121,7 @@ private void DrawChatSettingsContent()
             GUILayout.Space(2);
             enableFastChat = DrawToggle(enableFastChat, L("Fast Chat (3.1 to 2.1", "Быстрый чат (c 3.1 до 2.1)"), 280);
             GUILayout.Space(2);
-            allowLinksAndSymbols = DrawToggle(allowLinksAndSymbols, L("Bypass URL Block", "Обход блока URL"), 280);
+            allowLinksAndSymbols = DrawToggle(allowLinksAndSymbols, L("Unlock Extra Characters", "Экстра символы"), 280);
             GUILayout.Space(2);
             enableSpellCheck = DrawToggle(enableSpellCheck, L("Spell Check (Basic)", "Проверка орфографии (Базовая)"), 280);
             GUILayout.EndVertical();

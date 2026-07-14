@@ -56,6 +56,11 @@ private void DrawPlayersTab()
                 DrawPlayersHistoryTab();
                 return;
             }
+            if (currentPlayersSubTab == 2)
+            {
+                DrawPlayersClonesTab();
+                return;
+            }
 
             float playersTabWidth = GetMenuWorkWidth(220f, 760f);
             bool stackPlayers = playersTabWidth < 430f;

@@ -290,7 +290,7 @@ private void DrawChatSettingsCompact(float columnWidth)
 
             DrawChatBlock("FILTER", () =>
             {
-                allowLinksAndSymbols = DrawCompactToggle(allowLinksAndSymbols, "Bypass URL Block", toggleWidth);
+                allowLinksAndSymbols = DrawCompactToggle(allowLinksAndSymbols, "Extra Symbols", toggleWidth);
                 GUILayout.Space(1);
                 enableSpellCheck = DrawCompactToggle(enableSpellCheck, "Spell Check", toggleWidth);
                 GUILayout.Space(1);

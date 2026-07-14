@@ -50,6 +50,7 @@ public void Update()
             TickNotificationQueue();
             TickFakeStartCounter();
             TickAutoTwoImpostors();
+            NetworkedClones.Tick(showMenu);
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
