@@ -100,6 +100,12 @@ private void DrawMenuTab()
             GUILayout.Label("Switches menu text between bold and normal. Default: bold.", menuDescStyle);
             GUILayout.Space(8);
 
+            bool prevMenuScaleInput = enableMenuScaleInput;
+            enableMenuScaleInput = DrawToggle(enableMenuScaleInput, L("Enable Ctrl + Wheel Scale", "Масштабирование Ctrl + колёсиком"), 260);
+            if (prevMenuScaleInput != enableMenuScaleInput) menuPrefsChanged = true;
+            GUILayout.Label(L("Hold Ctrl and scroll anywhere over the menu to change its size, including scrollable settings. Turning this off keeps the current size.", "Зажмите Ctrl и крутите колёсико в любом месте меню, включая прокручиваемые настройки, чтобы изменить размер. Выключение сохраняет текущий размер."), menuDescStyle);
+            GUILayout.Space(8);
+
             bool prevWhiteTheme = whiteMenuTheme;
             whiteMenuTheme = DrawToggle(whiteMenuTheme, "White Theme", 260);
             if (prevWhiteTheme != whiteMenuTheme)
@@ -519,6 +525,7 @@ private void ResetSlidersToDefault()
             hostAutoKillTarget = false;
             hostAutoKillTargetId = byte.MaxValue;
             bugRoomAutoAngel = false;
+            bugRoomAutoAngelIntervalSeconds = 0.15f;
             bugRoomAutoKillShield = false;
             killWhileVanishedHostOnly = false;
             disableEndGameSafeMode = false;

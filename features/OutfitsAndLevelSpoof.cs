@@ -68,6 +68,37 @@ private void DrawOutfitsTab()
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("FAVORITE OUTFITS", "ИЗБРАННЫЕ ОБРАЗЫ"));
 
+            GUILayout.BeginHorizontal(boxStyle, GUILayout.Height(46));
+            try
+            {
+                GUILayout.BeginVertical(GUILayout.Width(92), GUILayout.Height(40));
+                GUILayout.Space(2);
+                GUILayout.BeginHorizontal();
+                DrawOutfitShopChip(new Color(0.85f, 0.08f, 0.08f, 1f));
+                DrawOutfitShopChip(new Color(1f, 0.55f, 0.06f, 1f));
+                DrawOutfitShopChip(new Color(1f, 0.95f, 0.18f, 1f));
+                DrawOutfitShopChip(new Color(0.11f, 0.78f, 0.22f, 1f));
+                GUILayout.EndHorizontal();
+                GUILayout.Space(4);
+                GUILayout.BeginHorizontal();
+                DrawOutfitShopChip(new Color(0.14f, 0.38f, 1f, 1f));
+                DrawOutfitShopChip(new Color(0.53f, 0.23f, 0.9f, 1f));
+                DrawOutfitShopChip(new Color(0.93f, 0.28f, 0.75f, 1f));
+                DrawOutfitShopChip(new Color(0.15f, 0.92f, 0.84f, 1f));
+                GUILayout.EndHorizontal();
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical();
+                GUILayout.Label(L("Outfit shop", "Магазин вещей"), new GUIStyle(toggleLabelStyle) { fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft }, GUILayout.Height(18));
+                GUILayout.Label(L("Open the vanilla clothes panel from the lobby.", "Открыть ванильную плитку вещей из лобби."), menuDescStyle, GUILayout.Height(18));
+                GUILayout.EndVertical();
+
+                if (GUILayout.Button(L("OPEN", "ОТКРЫТЬ"), btnStyle, GUILayout.Width(88), GUILayout.Height(34)))
+                    OpenOutfitShopTile();
+            }
+            finally { GUILayout.EndHorizontal(); }
+            GUILayout.Space(8);
+
             PlayerControl selected = SelectedOutfitSourcePlayer();
             for (int i = 0; i < FavoriteOutfitSlotCount; i++)
             {
@@ -182,6 +213,368 @@ private void DrawOutfitsTab()
             GUILayout.Label(L("Free colors right now: ", "Свободных цветов сейчас: ") + freeCount, menuDescStyle);
 
             GUILayout.EndVertical();
+        }
+
+private void DrawOutfitShopChip(Color col)
+        {
+            Color prev = GUI.color;
+            GUI.color = col;
+            GUILayout.Box(GUIContent.none, menuSwatchSquareStyle, GUILayout.Width(18), GUILayout.Height(18));
+            GUI.color = prev;
+        }
+
+private static GameObject tmpOutfitShopObj;
+
+private static bool forceOutfitShopUse;
+
+private static float forceOutfitShopUseUntil;
+
+private static void OpenOutfitShopTile()
+        {
+            try
+            {
+                if (TryUseTmpWardrobe())
+                {
+                    showMenu = false;
+                    return;
+                }
+
+                if (TryClickWardrobeButton())
+                {
+                    showMenu = false;
+                    return;
+                }
+
+                PlayerCustomizationMenu menu = PlayerCustomizationMenu.Instance;
+                if (menu == null)
+                {
+                    GameStartManager gsm = null;
+                    try
+                    {
+                        if (DestroyableSingleton<GameStartManager>.InstanceExists)
+                            gsm = DestroyableSingleton<GameStartManager>.Instance;
+                    }
+                    catch { }
+
+                    if (gsm == null)
+                        gsm = UnityEngine.Object.FindObjectOfType<GameStartManager>();
+
+                    GameObject obj = gsm != null ? gsm.PlayerOptionsMenu : null;
+                    if (obj != null)
+                    {
+                        menu = obj.GetComponent<PlayerCustomizationMenu>();
+                        if (menu == null) menu = obj.GetComponentInChildren<PlayerCustomizationMenu>(true);
+                    }
+                }
+
+                if (menu == null)
+                {
+                    ShowNotification("<color=#FFAA00>[OUTFIT]</color> Магазин вещей доступен только в лобби.");
+                    return;
+                }
+
+                menu.Open();
+                showMenu = false;
+            }
+            catch
+            {
+                ShowNotification("<color=#FF4444>[OUTFIT]</color> Не смог открыть магазин вещей.");
+            }
+        }
+
+private static bool TryUseTmpWardrobe()
+        {
+            CleanupTmpWardrobe();
+
+            PlayerControl local = PlayerControl.LocalPlayer;
+            if (local == null) return false;
+
+            GameObject src = FindWardrobeObj();
+            if (src == null) return false;
+
+            if (TryUseWardrobeObj(src)) return true;
+
+            try
+            {
+                GameObject obj = UnityEngine.Object.Instantiate(src);
+                tmpOutfitShopObj = obj;
+                obj.name = "ElysiumTmpWardrobe";
+                obj.transform.position = local.transform.position + new Vector3(0f, -0.35f, 0f);
+                obj.SetActive(true);
+
+                foreach (Renderer r in obj.GetComponentsInChildren<Renderer>(true))
+                    if (r != null) r.enabled = false;
+
+                foreach (AudioSource a in obj.GetComponentsInChildren<AudioSource>(true))
+                    if (a != null) a.enabled = false;
+
+                Console con = obj.GetComponent<Console>();
+                if (con == null) con = obj.GetComponentInChildren<Console>(true);
+                if (con != null) return TryUseWardrobeObj(obj);
+
+                SystemConsole sys = obj.GetComponent<SystemConsole>();
+                if (sys == null) sys = obj.GetComponentInChildren<SystemConsole>(true);
+                if (sys != null) return TryUseWardrobeObj(obj);
+            }
+            catch { }
+
+            CleanupTmpWardrobe();
+            return false;
+        }
+
+private static bool TryUseWardrobeObj(GameObject obj)
+        {
+            if (obj == null) return false;
+
+            Console con = obj.GetComponent<Console>();
+            if (con == null) con = obj.GetComponentInChildren<Console>(true);
+            if (con != null)
+            {
+                float oldDist = 0f;
+                try { oldDist = con.usableDistance; con.usableDistance = 999f; } catch { }
+                BeginForceOutfitShopUse();
+                TryClickUseButton(con.Cast<IUsable>());
+                try { con.Use(); } catch { }
+                try { con.usableDistance = oldDist; } catch { }
+                return true;
+            }
+
+            SystemConsole sys = obj.GetComponent<SystemConsole>();
+            if (sys == null) sys = obj.GetComponentInChildren<SystemConsole>(true);
+            if (sys != null)
+            {
+                float oldDist = 0f;
+                try { oldDist = sys.usableDistance; sys.usableDistance = 999f; } catch { }
+                BeginForceOutfitShopUse();
+                TryClickUseButton(sys.Cast<IUsable>());
+                try { sys.Use(); } catch { }
+                try { sys.usableDistance = oldDist; } catch { }
+                return true;
+            }
+
+            return false;
+        }
+
+private static void BeginForceOutfitShopUse()
+        {
+            forceOutfitShopUse = true;
+            forceOutfitShopUseUntil = Time.realtimeSinceStartup + 0.8f;
+        }
+
+private static bool IsForceOutfitShopUse()
+        {
+            if (!forceOutfitShopUse) return false;
+            if (Time.realtimeSinceStartup <= forceOutfitShopUseUntil) return true;
+            forceOutfitShopUse = false;
+            return false;
+        }
+
+private static void TryClickUseButton(IUsable usable)
+        {
+            try
+            {
+                if (usable == null || HudManager.Instance == null || HudManager.Instance.UseButton == null)
+                    return;
+
+                HudManager.Instance.UseButton.SetTarget(usable);
+                HudManager.Instance.UseButton.Refresh();
+                HudManager.Instance.UseButton.DoClick();
+            }
+            catch { }
+        }
+
+private static GameObject FindWardrobeObj()
+        {
+            GameObject found = null;
+
+            try
+            {
+                Console[] cons = UnityEngine.Object.FindObjectsOfType<Console>(true);
+                foreach (Console con in cons)
+                {
+                    if (con == null) continue;
+                    if (!IsWardrobeConsole(con)) continue;
+                    if (con.gameObject.activeInHierarchy) return con.gameObject;
+                    if (found == null) found = con.gameObject;
+                }
+            }
+            catch { }
+
+            try
+            {
+                SystemConsole[] cons = UnityEngine.Object.FindObjectsOfType<SystemConsole>(true);
+                foreach (SystemConsole con in cons)
+                {
+                    if (con == null) continue;
+                    if (!IsWardrobeConsole(con)) continue;
+                    if (con.gameObject.activeInHierarchy) return con.gameObject;
+                    if (found == null) found = con.gameObject;
+                }
+            }
+            catch { }
+
+            return found;
+        }
+
+private static bool IsWardrobeConsole(Console con)
+        {
+            try
+            {
+                if (con.UseIcon == ImageNames.WardrobeButton)
+                    return true;
+            }
+            catch { }
+
+            return IsWardrobeName(con != null ? con.name : "");
+        }
+
+private static bool IsWardrobeConsole(SystemConsole con)
+        {
+            try
+            {
+                if (con.UseIcon == ImageNames.WardrobeButton)
+                    return true;
+            }
+            catch { }
+
+            return IsWardrobeName(con != null ? con.name : "");
+        }
+
+private static bool IsWardrobeName(string value)
+        {
+            string txt = CleanOutfitUiText(value);
+            return txt.Contains("wardrobe") || txt.Contains("playeroptions") || txt.Contains("customization");
+        }
+
+private static bool IsWardrobeObj(object obj)
+        {
+            try
+            {
+                if (obj is Console con) return IsWardrobeConsole(con);
+                if (obj is SystemConsole sys) return IsWardrobeConsole(sys);
+            }
+            catch { }
+
+            return false;
+        }
+
+private static void CleanupTmpWardrobe()
+        {
+            try
+            {
+                if (tmpOutfitShopObj != null)
+                    UnityEngine.Object.Destroy(tmpOutfitShopObj);
+            }
+            catch { }
+
+            tmpOutfitShopObj = null;
+        }
+
+private static bool TryClickWardrobeButton()
+        {
+            try
+            {
+                PassiveButton[] buttons = UnityEngine.Object.FindObjectsOfType<PassiveButton>(true);
+                foreach (PassiveButton btn in buttons)
+                {
+                    if (btn == null || btn.OnClick == null) continue;
+                    if (!btn.gameObject.activeInHierarchy || !btn.isActiveAndEnabled) continue;
+                    if (!IsWardrobeButton(btn.name, btn.GetComponentsInChildren<TMP_Text>(true))) continue;
+
+                    try { btn.OnClick.Invoke(); } catch { }
+                    try { btn.ReceiveClickDown(); btn.ReceiveClickUp(); } catch { }
+                    return true;
+                }
+            }
+            catch { }
+
+            try
+            {
+                Button[] buttons = UnityEngine.Object.FindObjectsOfType<Button>(true);
+                foreach (Button btn in buttons)
+                {
+                    if (btn == null || btn.onClick == null) continue;
+                    if (!btn.gameObject.activeInHierarchy || !btn.isActiveAndEnabled || !btn.interactable) continue;
+                    if (!IsWardrobeButton(btn.name, btn.GetComponentsInChildren<TMP_Text>(true))) continue;
+
+                    btn.onClick.Invoke();
+                    return true;
+                }
+            }
+            catch { }
+
+            return false;
+        }
+
+private static bool IsWardrobeButton(string objName, Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<TMP_Text> texts)
+        {
+            string txt = CleanOutfitUiText(objName);
+            if (texts != null)
+            {
+                foreach (TMP_Text t in texts)
+                {
+                    if (t == null) continue;
+                    txt += " " + CleanOutfitUiText(t.text);
+                }
+            }
+
+            if (txt.Contains("chat") || txt.Contains("setting") || txt.Contains("room") || txt.Contains("phone"))
+                return false;
+
+            return txt.Contains("wardrobe") ||
+                   txt.Contains("customize") ||
+                   txt.Contains("customisation") ||
+                   txt.Contains("customization") ||
+                   txt.Contains("playeroptions") ||
+                   txt.Contains("player options");
+        }
+
+private static string CleanOutfitUiText(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            return Regex.Replace(value, "<.*?>", "").Replace("\r", " ").Replace("\n", " ").Trim().ToLowerInvariant();
+        }
+
+[HarmonyPatch(typeof(PlayerCustomizationMenu), nameof(PlayerCustomizationMenu.Close))]
+        public static class PlayerCustomizationMenu_Close_TmpWardrobe
+        {
+            public static void Postfix()
+            {
+                CleanupTmpWardrobe();
+            }
+        }
+
+[HarmonyPatch(typeof(PlayerCustomizationMenu), "OnDestroy")]
+        public static class PlayerCustomizationMenu_OnDestroy_TmpWardrobe
+        {
+            public static void Postfix()
+            {
+                CleanupTmpWardrobe();
+            }
+        }
+
+[HarmonyPatch]
+        public static class OutfitShop_ConsoleCanUse_Patch
+        {
+            public static IEnumerable<MethodBase> TargetMethods()
+            {
+                MethodInfo con = AccessTools.Method(typeof(Console), nameof(Console.CanUse), new[] { typeof(NetworkedPlayerInfo), typeof(bool).MakeByRefType(), typeof(bool).MakeByRefType() });
+                if (con != null) yield return con;
+
+                MethodInfo sys = AccessTools.Method(typeof(SystemConsole), nameof(SystemConsole.CanUse), new[] { typeof(NetworkedPlayerInfo), typeof(bool).MakeByRefType(), typeof(bool).MakeByRefType() });
+                if (sys != null) yield return sys;
+            }
+
+            public static void Postfix(object __instance, NetworkedPlayerInfo pc, ref bool canUse, ref bool couldUse, ref float __result)
+            {
+                if (!IsForceOutfitShopUse()) return;
+                if (pc == null || pc.Object != PlayerControl.LocalPlayer) return;
+                if (!IsWardrobeObj(__instance)) return;
+
+                canUse = true;
+                couldUse = true;
+                __result = 0f;
+            }
         }
 
 private static PlayerControl SelectedOutfitSourcePlayer()

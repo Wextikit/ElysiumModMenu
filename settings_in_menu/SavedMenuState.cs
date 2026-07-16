@@ -703,6 +703,8 @@ private void SaveConfig()
                 PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
                 PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
                 PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
+                PlayerPrefs.SetFloat("M_MenuScale", menuScale);
+                SaveBool("M_EnableMenuScaleInput", enableMenuScaleInput);
                 PlayerPrefs.SetInt("M_CurrentTab", currentTab);
                 PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
                 PlayerPrefs.SetInt("M_CurrentGeneralSubTab", currentGeneralSubTab);
@@ -827,6 +829,7 @@ private void SaveConfig()
                 SaveBool("M_HostAutoKillTarget", hostAutoKillTarget);
                 PlayerPrefs.SetInt("M_HostAutoKillTargetId", hostAutoKillTargetId);
                 SaveBool("M_BugRoomAutoAngel", bugRoomAutoAngel);
+                PlayerPrefs.SetFloat("M_BugRoomAutoAngelIntervalSeconds", Mathf.Clamp(bugRoomAutoAngelIntervalSeconds, 0.001f, 0.50f));
                 SaveBool("M_BugRoomAutoKillShield", bugRoomAutoKillShield);
                 SaveBool("M_BugRoomTimedAutoRun", bugRoomTimedAutoRun);
                 PlayerPrefs.SetInt("M_BugRoomTimedAutoRunMinutes", Mathf.Clamp(bugRoomTimedAutoRunMinutes, 1, 60));
@@ -967,7 +970,8 @@ private void DrawBugRoomTab()
             GUILayout.Space(5);
             DrawBugRoomKillTargetPicker();
             GUILayout.Space(8);
-            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, "Auto Angel 0.10", 280);
+            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, $"Auto Angel {bugRoomAutoAngelIntervalSeconds:0.000}", 280);
+            DrawBugRoomAngelInterval();
             GUILayout.Space(5);
             bugRoomAutoKillShield = DrawToggle(bugRoomAutoKillShield, "Auto Kill Angel Shield 0.13", 280);
 
@@ -998,6 +1002,18 @@ private void DrawBugRoomTab()
             GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{code}</color> | suffix: <color=#{GetMenuAccentHex()}>{suffix}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 });
 
             GUILayout.EndVertical();
+        }
+
+private void DrawBugRoomAngelInterval()
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(430), GUILayout.Height(22));
+            GUILayout.Label($"Angel Delay: <color=#{GetMenuAccentHex()}>{bugRoomAutoAngelIntervalSeconds:0.000}s</color>", new GUIStyle(toggleLabelStyle) { richText = true, fontSize = 11 }, GUILayout.Width(155), GUILayout.Height(22));
+
+            float old = bugRoomAutoAngelIntervalSeconds;
+            float val = GUILayout.HorizontalSlider(bugRoomAutoAngelIntervalSeconds, 0.001f, 0.50f, sliderStyle, sliderThumbStyle, GUILayout.Width(250));
+            bugRoomAutoAngelIntervalSeconds = Mathf.Clamp(Mathf.Round(val * 1000f) / 1000f, 0.001f, 0.50f);
+            if (Mathf.Abs(old - bugRoomAutoAngelIntervalSeconds) > 0.0001f) settingsDirty = true;
+            GUILayout.EndHorizontal();
         }
 
 private void DrawBugRoomTimedAutoRun()
@@ -1089,23 +1105,5 @@ private void DrawBugRoomKillTargetPicker()
             GUILayout.EndHorizontal();
         }
 
-private static List<PlayerControl> GetBugRoomKillTargets()
-        {
-            List<PlayerControl> plrs = new List<PlayerControl>();
-            try
-            {
-                if (PlayerControl.AllPlayerControls == null) return plrs;
-                PlayerControl local = PlayerControl.LocalPlayer;
-                foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc == null || pc == local || pc.Data == null) continue;
-                    if (pc.Data.Disconnected || pc.PlayerId >= 100) continue;
-                    plrs.Add(pc);
-                }
-                plrs.Sort((a, b) => a.PlayerId.CompareTo(b.PlayerId));
-            }
-            catch { }
-            return plrs;
-        }
 }
 }

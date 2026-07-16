@@ -236,13 +236,19 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             texToggleOn.hideFlags = HideFlags.HideAndDontSave;
             UpdateSwitchTex(texToggleOff, false, Color.white);
             UpdateSwitchTex(texToggleOn, true, accent);
-            texTrackOff = new Texture2D(30, 16, TextureFormat.RGBA32, false);
+            texTrackOff = new Texture2D(120, 64, TextureFormat.RGBA32, false);
             texTrackOff.hideFlags = HideFlags.HideAndDontSave;
-            texTrackOn = new Texture2D(30, 16, TextureFormat.RGBA32, false);
+            texTrackOff.filterMode = FilterMode.Bilinear;
+            texTrackOff.wrapMode = TextureWrapMode.Clamp;
+            texTrackOn = new Texture2D(120, 64, TextureFormat.RGBA32, false);
             texTrackOn.hideFlags = HideFlags.HideAndDontSave;
+            texTrackOn.filterMode = FilterMode.Bilinear;
+            texTrackOn.wrapMode = TextureWrapMode.Clamp;
             UpdateTrackTex(texTrackOff, false, Color.white);
             UpdateTrackTex(texTrackOn, true, accent);
-            texKnobWhite = MakeRoundedTex(16, Color.white, 8f);
+            texKnobWhite = MakeRoundedTex(64, Color.white, 32f);
+            texKnobWhite.filterMode = FilterMode.Bilinear;
+            texKnobWhite.wrapMode = TextureWrapMode.Clamp;
 
             safeLineStyle = new GUIStyle();
             safeLineStyle.normal.background = MakeRoundedTex(2, isLightTheme ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.white, 0f);
@@ -328,8 +334,12 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             toggleOnStyle.normal.background = texToggleOn;
             trackOffStyle = new GUIStyle();
             trackOffStyle.normal.background = texTrackOff;
+            trackOffStyle.hover.background = texTrackOff;
+            trackOffStyle.active.background = texTrackOff;
             trackOnStyle = new GUIStyle();
             trackOnStyle.normal.background = texTrackOn;
+            trackOnStyle.hover.background = texTrackOn;
+            trackOnStyle.active.background = texTrackOn;
             knobStyle = new GUIStyle();
             knobStyle.normal.background = texKnobWhite;
 

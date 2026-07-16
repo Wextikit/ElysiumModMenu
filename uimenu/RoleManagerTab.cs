@@ -129,7 +129,7 @@ private void DrawPlayersRoles()
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(150), GUILayout.Height(315));
-            preRolesListScrollPos = GUILayout.BeginScrollView(preRolesListScrollPos, GUILayout.ExpandHeight(true));
+            preRolesListScrollPos = GUILayout.BeginScrollView(preRolesListScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.ExpandHeight(true));
             foreach (var pc in lockedPlayersList)
             {
                 if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
@@ -147,7 +147,7 @@ private void DrawPlayersRoles()
 
             GUILayout.Space(8);
             GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandWidth(true), GUILayout.Height(315));
-            preRolesActionScrollPos = GUILayout.BeginScrollView(preRolesActionScrollPos, GUILayout.ExpandHeight(true));
+            preRolesActionScrollPos = GUILayout.BeginScrollView(preRolesActionScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.ExpandHeight(true));
             PlayerControl target = !string.IsNullOrEmpty(selectedPreRoleFc)
                 ? lockedPlayersList.FirstOrDefault(p => GetRoleForceKey(p) == selectedPreRoleFc)
                 : lockedPlayersList.FirstOrDefault(p => p.PlayerId == selectedPreRoleId);
