@@ -160,7 +160,8 @@ public static class RPCSniffer_RawGameDataPatch
                     string rpcLabel = ResolveRpcLabel(callId);
                     string line = $"Raw RPC recv: {rpcLabel} ({callId}), netId={netId}, object={objectLabel}, localClient={__instance.ClientId}, gameId={__instance.GameId}";
                     try { Plugin.Instance?.Log?.LogInfo((object)line); } catch { }
-                    ElysiumModMenuGUI.ShowNotification($"<color=#00FFFF>[RAW RPC]</color> {objectLabel}: <b>{rpcLabel}</b> <color=#FFFF00>({callId})</color>");
+                    if (!IsPlayerRpcTarget(__instance, netId))
+                        ElysiumModMenuGUI.ShowNotification($"<color=#00FFFF>[RAW RPC]</color> {objectLabel}: <b>{rpcLabel}</b> <color=#FFFF00>({callId})</color>");
                 }
                 finally
                 {
@@ -177,6 +178,18 @@ public static class RPCSniffer_RawGameDataPatch
             copy?.Recycle();
             try { parentReader.Position = originalPosition; } catch { }
         }
+    }
+
+    private static bool IsPlayerRpcTarget(InnerNetClient client, uint netId)
+    {
+        try
+        {
+            if (client?.allObjects == null || !client.allObjects.AllObjectsFast.TryGetValue(netId, out InnerNetObject obj) || obj == null)
+                return false;
+
+            return obj.TryCast<PlayerControl>() != null;
+        }
+        catch { return false; }
     }
 
     private static string ResolveRpcObjectLabel(InnerNetClient client, uint netId)
