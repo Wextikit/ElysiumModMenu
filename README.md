@@ -2,88 +2,116 @@
 
 # Elysium Mod Menu
 
-**A configurable BepInEx IL2CPP menu for Among Us**
+**Dark IMGUI overlay for Among Us with local QoL, visual, host, lobby and moderation tools.**
 
-<br>
+<p>
+  <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
+  <img src="https://img.shields.io/badge/Runtime-IL2CPP-111827?style=flat-square" alt="IL2CPP">
+  <img src="https://img.shields.io/badge/Loader-BepInEx-374151?style=flat-square" alt="BepInEx">
+  <img src="https://img.shields.io/badge/Language-C%23-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
+  <img src="https://img.shields.io/badge/Version-1.4.4-a855f7?style=flat-square" alt="Version 1.4.4">
+  <img src="https://img.shields.io/github/downloads/Wextikit/ElysiumModMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
+</p>
 
-<a href="https://github.com/Wextikit/ElysiumModMenu/releases/latest">
-  <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download">
-</a>
-<a href="docs/CHANGELOG.md">
-  <img src="https://img.shields.io/badge/Changelog-View-0969da?style=for-the-badge" alt="Changelog">
-</a>
-<a href="https://github.com/Wextikit/ElysiumModMenu/issues">
-  <img src="https://img.shields.io/badge/Report-Issue-da3633?style=for-the-badge&logo=github&logoColor=white" alt="Report an issue">
-</a>
-
-<br>
-<br>
-
-<a href="https://discord.gg/CdrpKJzFp">
-  <img src="https://img.shields.io/badge/Discord-ElysiumModMenu-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord">
-</a>
+<p>
+  <a href="https://github.com/Wextikit/ElysiumModMenu/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download latest release">
+  </a>
+  <a href="docs/CHANGELOG.md">
+    <img src="https://img.shields.io/badge/Changelog-View-0969da?style=for-the-badge" alt="View changelog">
+  </a>
+  <a href="https://github.com/Wextikit/ElysiumModMenu/issues">
+    <img src="https://img.shields.io/badge/Report-Issue-da3633?style=for-the-badge&logo=github&logoColor=white" alt="Report an issue">
+  </a>
+</p>
 
 </div>
 
 > [!CAUTION]
-> This menu includes host, network, spoofing, and moderation tools. Use it only in private or consenting lobbies. Misuse can disrupt games and may result in account or server moderation. Elysium Mod Menu is not affiliated with Innersloth.
+> Elysium Mod Menu includes host, network, spoofing and moderation tools. Use them only in private, testing or consenting lobbies. Misuse can disrupt games and may result in account or server moderation. The project is not affiliated with Innersloth.
 
-## Features
+## About the menu
 
-| Area                | Included tools                                                                                                                                                                     |
-| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Visuals & ESP**   | Roles, player information, ghosts, vents, protection effects, filtered tracers, Full Bright, freecam, camera zoom, meeting roles, revealed votes, and Phantom visibility           |
-| **Host & Lobby**    | Auto Host, role manager, lobby controls, task settings, player actions, smart start/end controls, persistent bans, forced impostors, No Task Mode, and unrestricted settings       |
-| **Anti-Cheat**      | RPC and flood protections, mod detection, bot checks, malformed identity checks, configurable auto-kicks/bans, pet-spam protection, vote-kick protection, and custom platform bans |
-| **Account & Local** | Level, platform, name, and Friend Code spoofing; cosmetics and Cosmicube controls; saved outfits, local Friend Code display, guest-name support, and disconnect-penalty removal    |
-| **Chat & QoL**      | Extended chat, history, clipboard support, whispers, filters, notifications, keybinds, custom themes, fast chat, color commands, and local chat logging                            |
-| **Maps & Sabotage** | Sabotage controls, repairs, vent tools, global doors, per-room door controls, Mushroom Mixup, unfixable lights, and instant repair of all systems                                  |
+Elysium Mod Menu is a configurable BepInEx IL2CPP plugin for Among Us. It adds an in-game IMGUI menu without replacing the original game UI. The menu combines local visual options, player information, outfit controls, host-only lobby administration, anti-cheat checks, chat tools and configurable keybinds.
 
-> [!NOTE]
-> Host-only actions require you to be the current lobby host. Local visual and identity options generally affect only your own client unless their description explicitly mentions RPC or network synchronization.
+The project separates local and network behavior:
 
-## Installation and usage
+| Action type | Who is affected |
+| :---------- | :-------------- |
+| **Local visual** | Only your client sees the result. Examples include ESP, Full Bright, freecam and camera zoom. |
+| **Local profile** | Changes your local saved data or menu configuration. Examples include menu profiles, saved outfits and selected UI settings. |
+| **RPC action** | The local player sends a normal game RPC, so players in the current room can see the result. |
+| **Host-only** | Requires you to be the current host and can affect selected players or the entire lobby. |
+
+Availability depends on the current game state. Some actions only make sense in a lobby, during a match, while a meeting is open or when the local player is alive.
+
+## Main features
+
+| Area | Included tools |
+| :--- | :------------- |
+| **Visuals & ESP** | Player roles and information, ghosts, vents, protection effects, filtered tracers, ESP boxes, Full Bright, freecam, camera zoom, meeting roles, revealed votes and Phantom visibility. |
+| **Self & movement** | Walk-speed controls, no-clip, cursor teleport, player following, local identity options, level spoofing and animation controls. |
+| **Outfits** | Four persistent favorite slots, copying an outfit from another player, Random Outfit from the full cosmetic catalog, profile saving and free-color tools. |
+| **Host & lobby** | Auto Host, role manager, lobby controls, task settings, smart start/end actions, forced impostors, No Task Mode and unrestricted game settings. |
+| **Anti-Cheat** | RPC validation, flood protections, malformed identity checks, bot detection, configurable kick/ban actions, vote-kick protection and custom platform bans. |
+| **Players** | Select and inspect players, view player history, copy identifiers, teleport, morph, kill, revive, kick, ban and report. |
+| **Chat & QoL** | Extended and fast chat, history, clipboard tools, whispers, filters, notifications, custom colors, keybinds and local chat logging. |
+| **Maps & sabotage** | Sabotage controls, instant repairs, vent tools, global doors, per-room door controls, Mushroom Mixup and unfixable lights. |
+| **Customization** | Menu themes, background image, RGB accents, watermark settings, notification styles, FPS limit and configurable menu scale. |
+
+### Random Outfit
+
+The `Outfits` page contains a one-click Random Outfit card:
+
+- selects a random color from `Palette.PlayerColors`;
+- selects a hat, skin, visor and pet from the complete loaded `HatManager` catalog;
+- keeps the current nameplate;
+- applies the result to the local player with the existing cosmetic RPC methods;
+- with `Save to profile` enabled, writes the selected IDs to the Among Us player profile;
+- with profile saving disabled, restores the saved profile when the next lobby starts.
+
+The random color is not filtered by room occupancy. A host or server can reject or react to an already occupied color.
+
+## Menu guide
+
+| Tab | Purpose |
+| :-- | :------ |
+| **General** | Project information, language, saved menu profiles and configurable keybinds. |
+| **Self** | Movement, identity and level spoofing, local abilities, outfits and personal gameplay options. |
+| **Visuals** | ESP, roles, ghosts, protection effects, visibility filters, tracers, lighting and camera tools. |
+| **Players** | Player selection, history, identifiers and local, RPC or host actions for a selected player. |
+| **Sabotages** | Trigger or repair systems, control vents and operate doors globally or by room. |
+| **Host Only** | Lobby controls, role management, Anti-Cheat, Auto Host, maps, task rules, starts and end-game actions. |
+| **Votekick** | Vote-kick information, automatic rounds and related protection options. |
+| **Menu** | Themes, background, performance, privacy, cosmetic unlocks, notifications, logging and reset options. |
+| **Animations** | Supported task, scanner, camera, shield and other local animation effects. |
+
+## Installation
 
 > [!WARNING]
-> Before installing Elysium Mod Menu, make sure you understand the disclaimer and use the menu only in private, testing, or consenting lobbies.
+> Close Among Us before changing BepInEx or plugin files.
 
-###  1. Install BepInEx IL2CPP
- 
- ♯ Elysium Mod Menu is a **BepInEx IL2CPP** mod.
-Among Us is a Unity IL2CPP game, so the normal Mono version of BepInEx will not work.
+### 1. Install BepInEx IL2CPP
 
- ♯ Download BepInEx IL2CPP from one of these sources:
+Elysium Mod Menu requires the IL2CPP build of BepInEx. The normal Mono build will not load this plugin.
 
-* [BepInEx releases](https://github.com/BepInEx/BepInEx/releases)
-* [BepInEx bleeding-edge builds](https://builds.bepinex.dev/projects/bepinex_be)
+- [BepInEx releases](https://github.com/BepInEx/BepInEx/releases)
+- [BepInEx bleeding-edge builds](https://builds.bepinex.dev/projects/bepinex_be)
 
- ♯ Choose the archive that matches your Among Us build:
+Choose the archive matching the architecture of your Among Us executable. If Task Manager marks `Among Us.exe` as a 32-bit process, use x86; otherwise use x64.
 
-| Game version source     | Recommended BepInEx architecture |
-| :---------------------- | :------------------------------- |
-| Steam                   | x86                              |
-| Itch.io                 | x86                              |
-| Epic Games              | x64                              |
-| Microsoft Store         | x64                              |
-| Xbox App / PC Game Pass | x64                              |
+### 2. Extract BepInEx into the game directory
 
-If you are not sure which architecture your game uses, open Among Us, then open **Task Manager**.
-If the process is shown as `Among Us.exe (32-bit)`, use **x86**. Otherwise, use **x64**.
+Open the directory containing:
 
-### 2. Place BepInEx into the Among Us folder
-
-ඩ Open your Among Us installation folder. It should contain files like:
-
-```
+```text
 Among Us.exe
 GameAssembly.dll
 ```
 
-♯ Extract the BepInEx archive directly into this folder.
+Extract BepInEx directly into this directory. The resulting structure should be similar to:
 
-♯ After extracting, your Among Us folder should look similar to this:
-
-```
+```text
 Among Us/
 ├─ Among Us.exe
 ├─ GameAssembly.dll
@@ -92,77 +120,36 @@ Among Us/
 └─ BepInEx/
 ```
 
-If you do not see `winhttp.dll`, `dotnet`, and `BepInEx` next to `Among Us.exe`, the archive was probably extracted into an extra folder. Open that folder and move its contents directly into the Among Us directory.
-
-Launch Among Us once after installing BepInEx.
-The first launch may take longer than usual and a console window may appear. This is normal. Once the game reaches the main menu, close it.
+Launch Among Us once after installing BepInEx. The first launch can take longer while BepInEx creates its folders and configuration files. Close the game after reaching the main menu.
 
 ### 3. Install Elysium Mod Menu
 
-Download `ElysiumModMenu.dll` from the [latest Elysium release](https://github.com/Wextikit/ElysiumModMenu/releases/latest).
+Download `ElysiumModMenu.dll` from the [latest release](https://github.com/Wextikit/ElysiumModMenu/releases/latest) and place it here:
 
-Place the file here:
-
-```
+```text
 Among Us/BepInEx/plugins/ElysiumModMenu.dll
 ```
 
-If the `plugins` folder does not exist, create it manually inside the `BepInEx` folder.
+Create the `plugins` directory if BepInEx has not created it automatically.
 
-### 4. Launch and open the menu
+### 4. Open the menu
 
- ♡ Start Among Us.
+Start Among Us and press **Insert**. On compact keyboards, **Fn + Insert** may be required. The key can be changed later in the menu settings.
 
-Press **Insert** to open Elysium Mod Menu.
-On some keyboards, you may need to press **Fn + Insert** or enable/disable **Num Lock**.
+## Updating
 
-The menu key can be changed later in the menu settings.
+1. Close Among Us.
+2. Download the new `ElysiumModMenu.dll` from [Releases](https://github.com/Wextikit/ElysiumModMenu/releases/latest).
+3. Replace the previous DLL inside `Among Us/BepInEx/plugins/`.
+4. Start the game again.
 
-### Updating ☾ Elysium Mod Menu
+Existing menu configuration is stored separately from the DLL and is not removed when replacing the plugin file.
 
-To update the menu:
+## Configuration and useful files
 
-1. ♯ Close Among Us.
+Elysium keeps its own configuration and moderation lists under the game directory:
 
-2. ♯ Download the new `ElysiumModMenu.dll` from the [latest release](https://github.com/Wextikit/ElysiumModMenu/releases/latest).
-
-3. ♯ Replace the old file in:
-
-   ```
-   Among Us/BepInEx/plugins/
-   ```
-
-4. ♡ Start the game again.
-
-## Supported platforms
-
-| Platform                    | Status                                                |
-| :-------------------------- | :---------------------------------------------------- |
-| **Steam**                   | Supported                                             |
-| **Itch.io**                 | Supported                                             |
-| **Epic Games**              | Supported                                             |
-| **Microsoft Store**         | Supported                                             |
-| **Xbox App / PC Game Pass** | Supported                                             |
-| Cracked / unofficial builds | May work inconsistently; not recommended or supported |
-| Android                     | Not supported                                         |
-| iOS                         | Not supported                                         |
-| Switch / Xbox / PlayStation | Not supported                                         |
-
-The Platform Spoof option can display supported platform labels to other clients. These are spoofing targets, not platforms on which the mod itself can run.
-
-##  ♡ Community and support
-
-* Join the [ElysiumModMenu Discord](https://discord.gg/CdrpKJzFp) for announcements, help, previews, and community discussion.
-* Use [GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) for reproducible bugs and feature requests.
-* When reporting a problem, include the menu version, game platform, what happened, reproduction steps, and the relevant log excerpt.
-* Remove room codes, Friend Codes, PUIDs, chat messages, and personal paths before posting logs publicly.
-
-> [!TIP]
-> Check the [changelog](docs/CHANGELOG.md) before reporting an issue — the latest release may already contain the fix.
-
-## ♯ Useful files
-
-```
+```text
 Among Us/ElysiumModMenu/ElysiumModMenu.cfg
 Among Us/ElysiumModMenu/ElysiumModMenuBanList.txt
 Among Us/ElysiumModMenu/ElysiumBotBanList.txt
@@ -170,79 +157,108 @@ Among Us/ElysiumModMenu/ElysiumPlatformBanList.txt
 Among Us/ElysiumModMenu/ElysiumFriendEspIgnore.txt
 ```
 
+Menu profiles are separate from the Among Us player profile. A menu profile stores Elysium settings, while options such as `Save to profile` in Random Outfit write to the game's player customization data.
+
+## Cosmetics and Cosmicubes
+
+- **Unlock All except Cosmicubes** makes regular cosmetics available to the local selection UI.
+- **Unlock Cosmicubes** exposes Cosmicubes locally without changing completion progress or server ownership.
+- **Activate 100% Cosmicubes** allows a completed Cosmicube to be selected locally.
+
+These options affect local purchase checks and UI availability. They do not create purchases, currency, permanent server-side ownership or account progression.
+
+## Troubleshooting
+
 <details>
-<summary><strong>Build from source</strong></summary>
+<summary><strong>The menu does not appear</strong></summary>
 
-The project targets .NET 6 and requires local Among Us/BepInEx interop assemblies.
+- Confirm that the IL2CPP build of BepInEx is installed.
+- Confirm that `ElysiumModMenu.dll` is directly inside `BepInEx/plugins/`.
+- Launch the game once and inspect the BepInEx console or log for load errors.
+- Try **Insert** and **Fn + Insert**.
+- Check whether another overlay captures the same key.
 
-```
+</details>
+
+<details>
+<summary><strong>The game stops loading after an update</strong></summary>
+
+Game updates can invalidate BepInEx interop assemblies or plugin API signatures. Keep a copy of the previous working setup, update BepInEx when required and check the latest release notes before replacing files.
+
+</details>
+
+<details>
+<summary><strong>A host action is unavailable</strong></summary>
+
+Confirm that you are the current lobby host and that the required game object exists. Lobby, match, meeting and post-game screens expose different actions.
+
+</details>
+
+<details>
+<summary><strong>Preparing a useful bug report</strong></summary>
+
+Include the Elysium version, game platform, what happened, exact reproduction steps and the relevant log excerpt. Remove lobby codes, Friend Codes, PUIDs, chat messages and personal paths before posting logs publicly.
+
+</details>
+
+## Screenshots
+
+<details>
+<summary><strong>Open screenshot gallery</strong></summary>
+
+<img width="1919" height="1079" alt="Elysium Mod Menu screenshot 1" src="https://github.com/user-attachments/assets/e295ce9d-557e-4420-8f57-37f8b79e47b1" />
+<img width="1919" height="1079" alt="Elysium Mod Menu screenshot 2" src="https://github.com/user-attachments/assets/e1cc97d3-edfb-46d4-9049-0fcd95be5226" />
+<img width="1919" height="1079" alt="Elysium Mod Menu screenshot 3" src="https://github.com/user-attachments/assets/e9062d61-424a-471f-a739-ec4508858cc0" />
+<img width="1919" height="1079" alt="Elysium Mod Menu screenshot 4" src="https://github.com/user-attachments/assets/3bf4ade8-96d5-44d-a3f2-5607f101dc95" />
+
+</details>
+
+## Build from source
+
+The project targets .NET 6 and resolves local Among Us/BepInEx interop assemblies through `AmongUsDir` in the project file.
+
+```powershell
 dotnet build .\ElysiumModMenu.slnx -c Release
 ```
 
-</details>
+The build does not install or launch the plugin automatically.
 
-<details>
-<summary><strong>Screenshots</strong></summary>
+---
 
-<!-- Add screenshots here -->
+<div align="center">
 
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-22 131852" src="https://github.com/user-attachments/assets/e295ce9d-557e-4420-8f57-37f8b79e47b1" />
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-22 131643" src="https://github.com/user-attachments/assets/e1cc97d3-edfb-46d4-9049-0fcd95be5226" />
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-22 131614" src="https://github.com/user-attachments/assets/e9062d61-424a-471f-a739-ec4508858cc0" />
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-22 131538" src="https://github.com/user-attachments/assets/3bf4ade8-96d5-44d8-a3f2-5607f101dc95" />
+## 💬 Community
 
-</details>
+Joining the Discord is recommended — it is the main place for support, release updates, bug reports and feature requests.
 
-<details>
-<summary><strong>Menu function guide</strong></summary>
+<a href="https://discord.gg/elysiummodmenu">
+  <img src="https://img.shields.io/badge/Discord-ElysiumModMenu-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="ElysiumModMenu Discord">
+</a>
+<a href="https://discord.gg/elysiummodmenu">
+  <img src="https://img.shields.io/badge/Join-The%20Server-6366F1?style=for-the-badge" alt="Join the server">
+</a>
 
-| Tab            | Purpose                                                                                                     |
-| :------------- | :---------------------------------------------------------------------------------------------------------- |
-| **General**    | Information, language, saved settings, and configurable keybinds                                            |
-| **Self**       | Movement, identity and level spoofing, local abilities, outfits, and personal gameplay options              |
-| **Visuals**    | ESP information, roles, ghosts, protection effects, visibility filters, tracers, lighting, and camera tools |
-| **Players**    | Select players, inspect history, copy identifiers, report, teleport, morph, kill, revive, kick, or ban      |
-| **Sabotages**  | Trigger or repair systems, control vents, and open, close, or lock doors globally or by room                |
-| **Host Only**  | Lobby controls, role manager, Anti-Cheat, Auto Host, maps, task rules, starts, and end-game actions         |
-| **Votekick**   | View and control vote-kick behavior and related protection options                                          |
-| **Menu**       | Themes, background, performance, privacy, unlocks, notifications, logging, and reset options                |
-| **Animations** | Play supported task, scanner, camera, shield, and other local animation effects                             |
+[GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) · [Latest Release](https://github.com/Wextikit/ElysiumModMenu/releases/latest) · [Changelog](docs/CHANGELOG.md)
 
-Some actions are local-only, while actions marked as host or RPC tools can affect the lobby. Availability depends on the current game state and host permissions.
+</div>
 
-</details>
+---
 
-<details>
-<summary><strong>Cosmetics and Cosmicube unlocks</strong></summary>
-
-* **Unlock All except Cosmicubes** — locally makes regular cosmetics available for selection. It does not grant server-side ownership.
-* **Unlock Cosmicubes** — locally exposes Cosmicubes without changing their completion progress or server data.
-* **Activate 100% Cosmicubes** — allows a fully completed Cosmicube to be selected locally. No activation data is sent to the server.
-
-These options are located in the **Menu** tab. Unlock behavior is client-side, may reset after updates, and does not create purchases, currency, permanent ownership, or server-side progression.
-
-> ⚠️ **Warning**
-> Unlock features modify only the local game interface and purchase checks. Do not treat locally visible items or progress as permanently owned account content.
-
-</details>
-
-## Disclaimer 🥶
+## Disclaimer
 
 > [!IMPORTANT]
-> Elysium Mod Menu is an independent, unofficial modification. It is not affiliated with, endorsed by, sponsored by, or approved by Innersloth LLC. Among Us, its name, trademarks, and game assets belong to their respective owners.
+> Elysium Mod Menu is an independent, unofficial modification. It is not affiliated with, endorsed by, sponsored by or approved by Innersloth LLC. Among Us, its name, trademarks and game assets belong to their respective owners.
 
-The software is provided **as-is**, without warranties of functionality, compatibility, availability, security, or fitness for a particular purpose. Game updates may break features or cause crashes.
+The software is provided **as-is**, without warranties of functionality, compatibility, availability, security or fitness for a particular purpose. Game updates may break features or cause crashes.
 
-You are solely responsible for installing and using the mod, complying with applicable rules and laws, reviewing diagnostic data, and accepting any account, lobby, moderation, or data-loss consequences.
+You are responsible for installing and using the mod, complying with applicable rules and laws, reviewing diagnostic data and accepting any account, lobby, moderation or data-loss consequences.
 
-The maintainers are not responsible for bans, restrictions, corrupted files, lost progress, game instability, third-party modifications, misuse, or damage arising from use of this software.
+The maintainer is not responsible for bans, restrictions, corrupted files, lost progress, game instability, third-party modifications, misuse or damage arising from use of this software.
 
-Support is not provided for harassment, disruption, moderation evasion, unauthorized access, or other malicious activity.
+Support is not provided for harassment, disruption, moderation evasion, unauthorized access or other malicious activity.
 
+## License and author
 
-## ✨ Inspiration
+Elysium Mod Menu is distributed under the [GNU General Public License v3.0](LICENSE).
 
-- [SickoMenu](https://github.com/g0aty/SickoMenu) by [g0aty](https://github.com/g0aty)
-- [MalumMenu](https://github.com/scp222thj/MalumMenu) by [scp222thj](https://github.com/scp222thj)
-- [AmongUsMenu](https://github.com/BitCrackers/AmongUsMenu) by [BitCrackers](https://github.com/BitCrackers)
-- [EndlessHostRoles](https://github.com/Gurge44/EndlessHostRoles) by [Gurge44](https://github.com/Gurge44)
+Developed and maintained by **Meowchelo**.
