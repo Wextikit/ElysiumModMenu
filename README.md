@@ -164,7 +164,7 @@ Then open **Steam → Among Us → Properties → General → Launch Options** a
 WINEDLLOVERRIDES="winhttp.dll=n,b" %command%
 ```
 
-This makes Proton load BepInEx through `winhttp.dll` when the game starts.
+This makes Wine load BepInEx through `winhttp.dll` when the game starts.
 
 ### 4. Open the menu
 
