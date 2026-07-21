@@ -1,5 +1,4 @@
 #nullable disable
-using HarmonyLib;
 using UnityEngine;
 
 namespace ElysiumModMenu
@@ -11,87 +10,31 @@ namespace ElysiumModMenu
         public static bool localSnipeColor = false;
         public static int localSnipeColorId = 0;
 
-        private static PlayerControl localColorPlayer;
-        private static byte localColorRestoreId;
-        private static bool localColorRestoreReady;
-        private static bool restoringLocalColor;
         private static float nextColorSnipeAt;
         private static float nextFortegreenAt;
 
-        private static bool TryGetLocalColorOverride(out byte colorId)
-        {
-            colorId = 0;
-            if (!localAlwaysRed) return false;
-            if (AmongUsClient.Instance == null || AmongUsClient.Instance.AmHost || PlayerControl.LocalPlayer == null) return false;
-
-            colorId = 0;
-            return true;
-        }
-
-        private static void CaptureLocalColor(PlayerControl plr, byte colorId)
-        {
-            localColorPlayer = plr;
-            localColorRestoreId = colorId;
-            localColorRestoreReady = true;
-        }
-
         private static void ApplyLocalColorOverride()
         {
-            if (!TryGetLocalColorOverride(out byte colorId))
-            {
-                RestoreLocalColorOverride();
-                return;
-            }
-
-            PlayerControl plr = PlayerControl.LocalPlayer;
-            if (!localColorRestoreReady || localColorPlayer != plr)
-            {
-                localColorRestoreReady = false;
-                if (plr.Data != null && plr.Data.DefaultOutfit != null)
-                    CaptureLocalColor(plr, (byte)plr.Data.DefaultOutfit.ColorId);
-            }
-
-            if (plr.Data == null || plr.Data.DefaultOutfit == null || plr.Data.DefaultOutfit.ColorId != colorId)
-                plr.SetColor(colorId);
-
-            if (plr.Data != null && plr.Data.DefaultOutfit != null)
-                plr.Data.DefaultOutfit.ColorId = colorId;
+            if (localAlwaysRed)
+                SendAlwaysRed();
         }
 
-        private static void RestoreLocalColorOverride()
+        private static void SendAlwaysRed()
         {
-            if (!localColorRestoreReady) return;
-
             PlayerControl plr = PlayerControl.LocalPlayer;
-            if (plr != null && plr == localColorPlayer)
-            {
-                restoringLocalColor = true;
-                try
-                {
-                    plr.SetColor(localColorRestoreId);
-                    if (plr.Data != null && plr.Data.DefaultOutfit != null)
-                        plr.Data.DefaultOutfit.ColorId = localColorRestoreId;
-                }
-                finally
-                {
-                    restoringLocalColor = false;
-                }
-            }
+            if (plr == null) return;
 
-            localColorPlayer = null;
-            localColorRestoreReady = false;
+            try
+            {
+                plr.RpcSetColor(0);
+                if (plr.Data != null && plr.Data.DefaultOutfit != null)
+                    plr.Data.DefaultOutfit.ColorId = 0;
+            }
+            catch { }
         }
 
         private static void TickLocalColorOverride()
         {
-            if (PlayerControl.LocalPlayer == null)
-            {
-                localColorPlayer = null;
-                localColorRestoreReady = false;
-                return;
-            }
-
-            ApplyLocalColorOverride();
             TickFortegreenColor();
         }
 
@@ -182,45 +125,5 @@ namespace ElysiumModMenu
             nextFortegreenAt = 0f;
         }
 
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetColor))]
-        public static class LocalColor_SetColor_Patch
-        {
-            public static void Prefix(PlayerControl __instance, ref byte bodyColor)
-            {
-                if (restoringLocalColor || __instance == null || __instance != PlayerControl.LocalPlayer) return;
-                if (!TryGetLocalColorOverride(out byte colorId)) return;
-
-                if (!localColorRestoreReady || localColorPlayer != __instance || bodyColor != colorId)
-                    CaptureLocalColor(__instance, bodyColor);
-
-                bodyColor = colorId;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckColor))]
-        public static class LocalColor_CmdCheckColor_Patch
-        {
-            public static bool Prefix(PlayerControl __instance)
-            {
-                if (__instance == null || __instance != PlayerControl.LocalPlayer || !TryGetLocalColorOverride(out _))
-                    return true;
-
-                ApplyLocalColorOverride();
-                return false;
-            }
-        }
-
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.RpcSetColor))]
-        public static class LocalColor_RpcSetColor_Patch
-        {
-            public static bool Prefix(PlayerControl __instance)
-            {
-                if (__instance == null || __instance != PlayerControl.LocalPlayer || !TryGetLocalColorOverride(out _))
-                    return true;
-
-                ApplyLocalColorOverride();
-                return false;
-            }
-        }
     }
 }

@@ -108,7 +108,7 @@ private void DrawGeneralInfoTab()
                 DrawUpdateActionButton();
                 GUILayout.Space(6);
                 if (DrawColoredActionButton("Discord", new Color32(88, 101, 242, 255), 110f))
-                    OpenExternalLink("https://discord.gg/CdrpKJzFp", "Discord");
+                    OpenExternalLink("https://discord.gg/ZP8MgMcB8C", "Discord");
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(8);
@@ -172,7 +172,7 @@ private void DrawGeneralInfoTab()
                 GUILayout.Label($"<b><color=#{accentHex}>Found a bug or have a question?</color></b>", textStyle);
                 GUILayout.Space(4);
                 if (DrawColoredActionButton("Join Discord", new Color32(88, 101, 242, 255), 150f))
-                    OpenExternalLink("https://discord.gg/CdrpKJzFp", "Discord");
+                    OpenExternalLink("https://discord.gg/ZP8MgMcB8C", "Discord");
 
                 GUILayout.Space(10);
                 GUILayout.Label($"<b><color=#{contributorHex}>{L("Notes", "РџСЂРёРјРµС‡Р°РЅРёРµ")}</color></b>", textStyle);

@@ -34,7 +34,7 @@
       The Discord is the quickest place to reach the project and see release notes as they land.
     </td>
     <td align="center" width="48%">
-      <a href="https://discord.gg/elysiummodmenu">
+      <a href="https://discord.gg/ZP8MgMcB8C">
         <img src="https://img.shields.io/badge/Open%20Elysium%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Open Elysium Discord">
       </a><br>
       <sub>Support · previews · bug reports · ideas</sub>
@@ -261,7 +261,7 @@ The project is built around a small feedback loop: try a feature in a consenting
 
 | Place | Best for |
 | :---- | :------- |
-| [Elysium Discord](https://discord.gg/elysiummodmenu) | Live support, release updates, previews and feature ideas. |
+| [Elysium Discord](https://discord.gg/ZP8MgMcB8C) | Live support, release updates, previews and feature ideas. |
 | [GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) | Reproducible bugs and implementation requests. |
 | [Releases](https://github.com/Wextikit/ElysiumModMenu/releases) | DLL downloads and version history. |
 
