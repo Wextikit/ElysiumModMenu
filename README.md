@@ -154,6 +154,18 @@ Among Us/BepInEx/plugins/ElysiumModMenu.dll
 
 Create the `plugins` directory if BepInEx has not created it automatically.
 
+### Linux / Steam Proton
+
+On Linux or Steam Deck, install BepInEx and `ElysiumModMenu.dll` into the Among Us game directory the same way as above.
+
+Then open **Steam → Among Us → Properties → General → Launch Options** and add:
+
+```text
+WINEDLLOVERRIDES="winhttp.dll=n,b" %command%
+```
+
+This makes Proton load BepInEx through `winhttp.dll` when the game starts.
+
 ### 4. Open the menu
 
 Start Among Us and press **Insert**. On compact keyboards, **Fn + Insert** may be required. The key can be changed later in the menu settings.

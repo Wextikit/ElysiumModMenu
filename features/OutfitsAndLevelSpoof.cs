@@ -291,6 +291,9 @@ private void RollRandomOutfit()
                     return;
                 }
 
+                if (!CanApplyOutfitRpc("OUTFIT"))
+                    return;
+
                 HatManager hm = DestroyableSingleton<HatManager>.Instance;
                 if (hm == null)
                 {
@@ -416,7 +419,11 @@ private static void CopyOutfitFromPlayer(PlayerControl source)
                 if (PlayerControl.LocalPlayer == null || source == null || source.Data == null || source.Data.DefaultOutfit == null)
                     return;
 
+                if (!CanApplyOutfitRpc("OUTFIT"))
+                    return;
+
                 var outfit = source.Data.DefaultOutfit;
+                ElysiumNetGuard.NetworkGuard.TrustLocalCosmeticApply(PlayerControl.LocalPlayer);
                 PlayerControl.LocalPlayer.RpcSetSkin(outfit.SkinId);
                 PlayerControl.LocalPlayer.RpcSetHat(outfit.HatId);
                 PlayerControl.LocalPlayer.RpcSetVisor(outfit.VisorId);
@@ -550,12 +557,28 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
         private static void ApplyFavoriteOutfit(PlayerControl target, FavoriteOutfitSnapshot outfit)
         {
             if (target == null) return;
+            ElysiumNetGuard.NetworkGuard.TrustLocalCosmeticApply(target);
             target.RpcSetColor((byte)Mathf.Clamp(outfit.ColorId, 0, MaxOutfitColorId()));
             target.RpcSetSkin(outfit.SkinId ?? string.Empty);
             target.RpcSetHat(outfit.HatId ?? string.Empty);
             target.RpcSetVisor(outfit.VisorId ?? string.Empty);
             target.RpcSetNamePlate(outfit.NamePlateId ?? string.Empty);
             target.RpcSetPet(outfit.PetId ?? string.Empty);
+        }
+
+        private static bool CanApplyOutfitRpc(string actionName)
+        {
+            try
+            {
+                if (MeetingHud.Instance != null || ExileController.Instance != null || IntroCutscene.Instance != null)
+                {
+                    ShowNotification($"<color=#FFAA00>[{actionName}]</color> Blocked during meeting/exile/intro.");
+                    return false;
+                }
+
+                return true;
+            }
+            catch { return false; }
         }
 
         private static string SerializeFavoriteOutfit(FavoriteOutfitSnapshot outfit)
@@ -627,6 +650,9 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
 
             try
             {
+                if (!CanApplyOutfitRpc("OUTFIT"))
+                    return;
+
                 ApplyFavoriteOutfit(PlayerControl.LocalPlayer, outfit);
                 ShowNotification($"<color=#00FFAA>[OUTFIT]</color> Applied slot {index + 1}");
             }
