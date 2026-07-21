@@ -27,6 +27,28 @@
 
 </div>
 
+<table align="center">
+  <tr>
+    <td align="center" width="52%">
+      <strong>Need help or want to suggest a feature?</strong><br>
+      The Discord is the quickest place to reach the project and see release notes as they land.
+    </td>
+    <td align="center" width="48%">
+      <a href="https://discord.gg/elysiummodmenu">
+        <img src="https://img.shields.io/badge/Open%20Elysium%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Open Elysium Discord">
+      </a><br>
+      <sub>Support · previews · bug reports · ideas</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <a href="#main-features">Features</a> ·
+  <a href="#installation">Install</a> ·
+  <a href="#menu-guide">Menu guide</a> ·
+  <a href="#community">Community</a>
+</p>
+
 > [!CAUTION]
 > Elysium Mod Menu includes host, network, spoofing and moderation tools. Use them only in private, testing or consenting lobbies. Misuse can disrupt games and may result in account or server moderation. The project is not affiliated with Innersloth.
 
@@ -223,26 +245,17 @@ dotnet build .\ElysiumModMenu.slnx -c Release
 
 The build does not install or launch the plugin automatically.
 
----
+## Community
 
-<div align="center">
+The project is built around a small feedback loop: try a feature in a consenting lobby, report what happened, and include enough context to reproduce it.
 
-## 💬 Community
+| Place | Best for |
+| :---- | :------- |
+| [Elysium Discord](https://discord.gg/elysiummodmenu) | Live support, release updates, previews and feature ideas. |
+| [GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) | Reproducible bugs and implementation requests. |
+| [Releases](https://github.com/Wextikit/ElysiumModMenu/releases) | DLL downloads and version history. |
 
-Joining the Discord is recommended — it is the main place for support, release updates, bug reports and feature requests.
-
-<a href="https://discord.gg/elysiummodmenu">
-  <img src="https://img.shields.io/badge/Discord-ElysiumModMenu-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="ElysiumModMenu Discord">
-</a>
-<a href="https://discord.gg/elysiummodmenu">
-  <img src="https://img.shields.io/badge/Join-The%20Server-6366F1?style=for-the-badge" alt="Join the server">
-</a>
-
-[GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues) · [Latest Release](https://github.com/Wextikit/ElysiumModMenu/releases/latest) · [Changelog](docs/CHANGELOG.md)
-
-</div>
-
----
+When posting logs, remove lobby codes, Friend Codes, PUIDs, chat messages and personal filesystem paths.
 
 ## Disclaimer
 
