@@ -1,8 +1,8 @@
 <div align="center">
 
-# Elysium Mod Menu
+# Elysium Mod Menu (emm) - Among Us 
 
-**Dark IMGUI overlay for Among Us with local QoL, visual, host, lobby and moderation tools.**
+**Dark IMGUI overlay for Among Us with local visual, host, lobby and moderation tools.**
 
 <p>
   <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
