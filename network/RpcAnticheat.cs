@@ -54,6 +54,13 @@ private static readonly Dictionary<int, AntiCheatDisconnectNotice> pendingAntiCh
 
 private static readonly HashSet<int> ventExploitBannedOwners = new HashSet<int>();
 
+private struct VentKickRpcStep
+        {
+            public float RegisteredAt;
+        }
+
+private static readonly Dictionary<int, VentKickRpcStep> pendingVentKickRpcSteps = new Dictionary<int, VentKickRpcStep>();
+
 public static void RegisterAntiCheatDisconnectNotice(int clientId, string playerName, string reason, bool ban)
         {
             try
@@ -235,10 +242,10 @@ public static class ElysiumAnticheat
             }
         }
 
-private static bool BlockVentKickRpc(byte callId, Hazel.MessageReader reader)
+private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.MessageReader reader)
         {
             if (!ElysiumModMenuGUI.blockVentKickExploit) return false;
-            if (AmongUsClient.Instance == null || AmongUsClient.Instance.AmHost) return false;
+            if (AmongUsClient.Instance == null) return false;
             if (callId != (byte)RpcCalls.UpdateSystem || reader == null) return false;
 
             MessageReader copy = null;
@@ -249,56 +256,50 @@ private static bool BlockVentKickRpc(byte callId, Hazel.MessageReader reader)
                 PlayerControl plr = copy.ReadNetObject<PlayerControl>();
                 if (system != SystemTypes.Ventilation) return false;
 
-                ushort vent = copy.ReadUInt16();
+                ushort sequence = copy.ReadUInt16();
                 VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
-                if (op != VentilationSystem.Operation.BootImpostors && op != VentilationSystem.Operation.StartCleaning) return false;
+                byte vent = copy.ReadByte();
+                if (plr == null || plr == PlayerControl.LocalPlayer) return false;
+
+                int owner = ElysiumNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
+                if (owner < 0 && plr.Data != null) owner = plr.Data.ClientId;
+                if (owner < 0) owner = plr.OwnerId;
+                if (owner < 0) return false;
+
+                if (op == VentilationSystem.Operation.Enter && sequence == 0 && vent == 0)
+                {
+                    pendingVentKickRpcSteps[owner] = new VentKickRpcStep
+                    {
+                        RegisteredAt = Time.realtimeSinceStartup
+                    };
+                    return false;
+                }
+
+                if (op != VentilationSystem.Operation.BootImpostors || sequence != 1 || vent != 0)
+                    return false;
+
+                if (!pendingVentKickRpcSteps.TryGetValue(owner, out VentKickRpcStep step))
+                    return false;
+
+                pendingVentKickRpcSteps.Remove(owner);
+                if (Time.realtimeSinceStartup - step.RegisteredAt > 1f)
+                    return false;
 
                 string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
-                ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
+                if (AmongUsClient.Instance.AmHost)
+                {
+                    if (!IsProtectedFromAnticheat(owner))
+                        BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
+                }
+                else
+                {
+                    ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
+                }
+
                 return true;
             }
             catch { return false; }
             finally { try { copy?.Recycle(); } catch { } }
-        }
-
-private static bool HostBanVentExploitRpc(byte callId, Hazel.MessageReader reader)
-        {
-            if (!ElysiumModMenuGUI.blockVentKickExploit) return false;
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return false;
-            if (callId != (byte)RpcCalls.UpdateSystem || reader == null) return false;
-
-            MessageReader copy = null;
-            try
-            {
-                copy = MessageReader.Get(reader);
-                SystemTypes system = (SystemTypes)copy.ReadByte();
-                PlayerControl plr = copy.ReadNetObject<PlayerControl>();
-                if (system != SystemTypes.Ventilation) return false;
-
-                ushort vent = copy.ReadUInt16();
-                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
-                if (!IsBadVentOp(op)) return false;
-
-                if (plr == null || plr == PlayerControl.LocalPlayer) return true;
-                if (IsProtectedFromAnticheat(plr)) return false;
-
-                int owner = plr.OwnerId;
-                if (owner < 0 || owner == AmongUsClient.Instance.HostId) return true;
-
-                string room = GetVentRoomLabel(vent);
-                BanVentExploitOwner(plr, owner, $"Vent exploit {op} in {room}");
-                return true;
-            }
-            catch { return false; }
-            finally { try { copy?.Recycle(); } catch { } }
-        }
-
-private static bool IsBadVentOp(VentilationSystem.Operation op)
-        {
-            return op == VentilationSystem.Operation.Enter ||
-                   op == VentilationSystem.Operation.Exit ||
-                   op == VentilationSystem.Operation.Move ||
-                   op == VentilationSystem.Operation.BootImpostors;
         }
 
 private static string GetVentRoomLabel(ushort ventId)
@@ -364,18 +365,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
             {
                 if (ventExploitBannedOwners.Contains(owner)) return;
                 ventExploitBannedOwners.Add(owner);
-
-                SafePlayerIdentitySnapshot id;
-                bool ok = TryGetSafeIdentity(plr, out id);
-                string name = ok ? id.Name : (plr.Data != null ? plr.Data.PlayerName : $"Player {plr.PlayerId}");
-                string fc = ok ? id.FriendCode : "Unknown";
-                string puid = ok ? id.Puid : "Unknown";
-
-                if (!string.IsNullOrWhiteSpace(fc) && fc != "Unknown" && fc != "Hidden")
-                    AddToBanList(fc, puid, name, reason);
-
-                RegisterAntiCheatDisconnectNotice(owner, name, reason, true);
-                AmongUsClient.Instance.KickPlayer(owner, true);
+                ElysiumNetGuard.NetworkGuard.BanClient(owner, "Vent kick exploit", reason);
             }
             catch { }
         }
@@ -424,6 +414,18 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     !ElysiumModMenuGUI.blockChatFloodRpc &&
                     !ElysiumModMenuGUI.blockMeetingFloodRpc) return true;
                 if (__instance == null || __instance == PlayerControl.LocalPlayer || __instance.Data == null) return true;
+
+                if (ElysiumModMenuGUI.blockMeetingFloodRpc &&
+                    (callId == (byte)RpcCalls.StartMeeting || callId == (byte)RpcCalls.ReportDeadBody) &&
+                    (MeetingHud.Instance != null || ExileController.Instance != null))
+                {
+                    try
+                    {
+                        Plugin.Instance?.Log?.LogWarning((object)$"[ANTICHEAT] blocked duplicate meeting RPC from {__instance.Data.PlayerName}: {(RpcCalls)callId}");
+                    }
+                    catch { }
+                    return false;
+                }
 
                 int oldPos = reader.Position;
                 bool isCheat = false;
@@ -583,8 +585,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
         {
             public static bool Prefix(ShipStatus __instance, byte callId, Hazel.MessageReader reader)
             {
-                if (HostBanVentExploitRpc(callId, reader)) return false;
-                if (BlockVentKickRpc(callId, reader)) return false;
+                if (BlockVentKickRpc(__instance, callId, reader)) return false;
                 if (!ElysiumModMenuGUI.blockSabotageRPC) return true;
 
                 int oldPos = reader.Position;

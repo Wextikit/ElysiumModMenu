@@ -46,7 +46,7 @@ private int currentChatSubTab = 0;
 
 private int currentSelfChatSubTab = 0;
 
-private string[] chatSubTabs => new string[] { L("SETTINGS", "НАСТРОЙКИ"), L("PORTABLE", "ПОРТАТИВНЫЙ"), L("SYMBOLS", "СИМВОЛЫ") };
+private static readonly string[] chatSubTabs = { L("SETTINGS", "НАСТРОЙКИ"), L("PORTABLE", "ПОРТАТИВНЫЙ"), L("SYMBOLS", "СИМВОЛЫ") };
 
 public static List<string> portableChatLogs = new List<string>();
 
@@ -66,12 +66,12 @@ private int seenPortableChatLogVersion = -1;
 
 private Vector2 symbolScrollPos = Vector2.zero;
 
-private static readonly string[] chatSymbolRows = new string[]
+private static readonly string[][] chatSymbolRows = new string[][]
 {
-    "★ ☆ ✦ ✧ ✪ ✿ ♥ ♦ ♣ ♠",
-    "← → ↑ ↓ ↔ ↕ ✓ ✕ ! ?",
-    "α β γ δ λ π Ω ∞ ≠ ≈ ±",
-    "０ １ ２ ３ ４ ５ ６ ７ ８ ９"
+    new[] { "★", "☆", "✦", "✧", "✪", "✿", "♥", "♦", "♣", "♠" },
+    new[] { "←", "→", "↑", "↓", "↔", "↕", "✓", "✕", "!", "?" },
+    new[] { "α", "β", "γ", "δ", "λ", "π", "Ω", "∞", "≠", "≈", "±" },
+    new[] { "０", "１", "２", "３", "４", "５", "６", "７", "８", "９" }
 };
 
 private void DrawChatSettingsTab()
@@ -83,17 +83,22 @@ private void DrawChatSettingsTab()
             for (int i = 0; i < chatSubTabs.Length; i++)
             {
                 if (GUILayout.Button(chatSubTabs[i], currentChatSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(22), GUILayout.ExpandWidth(true)))
-                {
-                    currentChatSubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                    SetMultiTab("chat", ref currentChatSubTab, i, chatSubTabs.Length);
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
-            if (currentChatSubTab == 0) DrawChatSettingsContent();
-            else if (currentChatSubTab == 1) DrawPortableChatTab();
-            else if (currentChatSubTab == 2) DrawChatSymbolsTab();
+            BeginMultiTabContent("chat", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentChatSubTab == 0) DrawChatSettingsContent();
+                else if (currentChatSubTab == 1) DrawPortableChatTab();
+                else if (currentChatSubTab == 2) DrawChatSymbolsTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
 
             GUILayout.EndVertical();
         }
@@ -132,8 +137,8 @@ private void DrawChatSettingsContent()
             enableChatHistory = DrawToggle(enableChatHistory, L("Chat History (Up/Down)", "История чата (Стрелочки)"), 280);
             GUILayout.Space(2);
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("History size:", "Размер истории:")} <color=#{hexColor}>{chatHistoryLimit}</color>", new GUIStyle(toggleLabelStyle) { richText = true }, GUILayout.Height(22), GUILayout.Width(130));
-            chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 80f, sliderStyle, sliderThumbStyle, GUILayout.Width(145)), 5, 80);
+            GUILayout.Label($"{L("History size:", "Размер истории:")} <color=#{hexColor}>{chatHistoryLimit}</color>", toggleLabelStyle, GUILayout.Height(22), GUILayout.Width(130));
+            chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 300f, sliderStyle, sliderThumbStyle, GUILayout.Width(145)), 5, 300);
             TrimChatHistoryToLimit();
             GUILayout.EndHorizontal();
             GUILayout.Space(2);
@@ -173,25 +178,8 @@ private void DrawChatSettingsContent()
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Space(6);
 
-            GUIStyle macFieldStyle = new GUIStyle(GUI.skin.textField)
-            {
-                fontSize = 12,
-                alignment = TextAnchor.MiddleLeft
-            };
-            macFieldStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
-            macFieldStyle.padding = new RectOffset();
-            macFieldStyle.padding.left = 12;
-            macFieldStyle.padding.right = 12;
-            macFieldStyle.padding.top = 8;
-            macFieldStyle.padding.bottom = 8;
-            macFieldStyle.margin = new RectOffset();
-            macFieldStyle.margin.left = 4;
-            macFieldStyle.margin.right = 4;
-            macFieldStyle.margin.top = 4;
-            macFieldStyle.margin.bottom = 4;
-
             Rect chatInputRect = GUILayoutUtility.GetRect(10f, 34f, GUILayout.ExpandWidth(true), GUILayout.Height(34));
-            GUI.Box(chatInputRect, string.Empty, macFieldStyle);
+            GUI.Box(chatInputRect, string.Empty, chatSenderFieldStyle);
 
             string drawText = string.IsNullOrEmpty(customChatMessage)
                 ? L("Type a message...", "Введите сообщение...")
@@ -199,15 +187,6 @@ private void DrawChatSettingsContent()
 
             if (customChatInputFocused && (Time.unscaledTime % 1f) < 0.5f)
                 drawText += "|";
-
-            GUIStyle chatInputTextStyle = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                clipping = TextClipping.Clip,
-                richText = false,
-                fontSize = 12
-            };
-            chatInputTextStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
 
             Rect textRect = new Rect(chatInputRect.x + 12f, chatInputRect.y + 4f, chatInputRect.width - 24f, chatInputRect.height - 8f);
             GUI.Label(textRect, drawText, chatInputTextStyle);
@@ -268,7 +247,7 @@ private void DrawChatSettingsContent()
             GUILayout.Space(12);
 
             GUILayout.BeginHorizontal(GUILayout.Height(24));
-            GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Height(22), GUILayout.Width(122));
+            GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Height(22), GUILayout.Width(122));
             customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(300));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -281,26 +260,24 @@ private void DrawChatSettingsContent()
             GUILayout.Label($"<b><color=#{hexColor}>{L("COMMANDS & INFO", "КОМАНДЫ И ИНФОРМАЦИЯ")}</color></b>", toggleLabelStyle);
             GUILayout.Space(4);
 
-            GUILayout.Label($"<color=#FFAC1C><b>{L("Whisper:", "Шепот:")}</b></color> /w, /pm, /msg [Name/ID/Color] [Text]", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 });
-            GUILayout.Label($"<color=#777777>{L("Sends a private message to a player on your screen only.", "Отправляет личное сообщение выбранному игроку (видит только он и вы).")}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
+            GUILayout.Label($"<color=#FFAC1C><b>{L("Whisper:", "Шепот:")}</b></color> /w, /pm, /msg [Name/ID/Color] [Text]", richLabelStyle12);
+            GUILayout.Label($"<color=#FFAC1C><b>{L("Keep Whisper:", "Постоянный шепот:")}</b></color> /keepw [Name/ID/Color]  |  /unkeepw", richLabelStyle12);
+            GUILayout.Label($"<color=#777777>{L("After /keepw, normal chat text is sent privately to the saved player until /unkeepw.", "После /keepw обычный текст в чате уходит лично сохраненному игроку, пока не написать /unkeepw.")}</color>", richWrapLabelStyle11);
 
             GUILayout.Space(6);
 
-            GUILayout.Label($"<color=#777777><b>Log Info:</b> {L("ChatLog.txt clears every 3 game restarts.", "Файл ChatLog.txt очищается каждые 3 запуска игры.")}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
+            GUILayout.Label($"<color=#777777><b>Log Info:</b> {L("ChatLog.txt clears every 3 game restarts.", "Файл ChatLog.txt очищается каждые 3 запуска игры.")}</color>", richWrapLabelStyle11);
 
             GUILayout.EndVertical();
         }
 
-private void DrawPortableChatTab()
+private void DrawPortableChatTab(float width = 0f)
         {
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandHeight(false));
+            float contentWidth = width > 0f ? width : GetMenuWorkWidth(220f, 610f);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(contentWidth), GUILayout.ExpandHeight(false));
             DrawMenuSectionHeader(L("PORTABLE CHAT", "ПОРТАТИВНЫЙ ЧАТ"));
             GUILayout.Label(L("Read recent messages and send chat without opening the game chat panel.", "Читайте последние сообщения и отправляйте чат без открытия игровой панели."), menuDescStyle);
             GUILayout.Space(8);
-
-            GUIStyle logBoxStyle = new GUIStyle(boxStyle);
-            logBoxStyle.padding = CreateRectOffset(8, 8, 6, 6);
-            logBoxStyle.margin = CreateRectOffset(0, 0, 0, 0);
 
             float logHeight = Mathf.Clamp(windowRect.height - 235f, 120f, 285f);
             if (seenPortableChatLogVersion != portableChatLogVersion)
@@ -309,32 +286,18 @@ private void DrawPortableChatTab()
                 seenPortableChatLogVersion = portableChatLogVersion;
             }
 
-            GUILayout.BeginVertical(logBoxStyle, GUILayout.ExpandWidth(true), GUILayout.Height(logHeight));
+            GUILayout.BeginVertical(portableLogBoxStyle, GUILayout.ExpandWidth(true), GUILayout.Height(logHeight));
             portableChatScrollPos = GUILayout.BeginScrollView(portableChatScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             if (portableChatLogs.Count == 0)
             {
-                GUIStyle emptyStyle = new GUIStyle(menuDescStyle)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 12,
-                    wordWrap = true
-                };
                 GUILayout.FlexibleSpace();
-                GUILayout.Label(L("No messages yet.", "Сообщений пока нет."), emptyStyle, GUILayout.ExpandWidth(true));
+                GUILayout.Label(L("No messages yet.", "Сообщений пока нет."), portableEmptyStyle, GUILayout.ExpandWidth(true));
                 GUILayout.FlexibleSpace();
             }
             else
             {
-                GUIStyle rowStyle = new GUIStyle(GUI.skin.label)
-                {
-                    richText = true,
-                    wordWrap = true,
-                    fontSize = 12,
-                    normal = { textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f) }
-                };
-
                 foreach (string log in portableChatLogs)
-                    GUILayout.Label(log, rowStyle);
+                    GUILayout.Label(log, portableRowStyle);
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
@@ -344,10 +307,11 @@ private void DrawPortableChatTab()
             GUILayout.Space(8);
 
             GUILayout.BeginHorizontal(GUILayout.Height(28));
-            if (GUILayout.Button(L("Send", "Отправить"), btnStyle, GUILayout.Width(120), GUILayout.Height(28)))
+            float portableBtnWidth = Mathf.Clamp((contentWidth - 28f) * 0.5f, 54f, 120f);
+            if (GUILayout.Button(L("Send", "Отправить"), btnStyle, GUILayout.Width(portableBtnWidth), GUILayout.Height(28)))
                 SendPortableChatMessage();
 
-            if (GUILayout.Button(L("Clear Log", "Очистить лог"), btnStyle, GUILayout.Width(120), GUILayout.Height(28)))
+            if (GUILayout.Button(L("Clear Log", "Очистить лог"), btnStyle, GUILayout.Width(portableBtnWidth), GUILayout.Height(28)))
             {
                 portableChatLogs.Clear();
                 lastPortableChatLogKey = string.Empty;
@@ -368,11 +332,10 @@ private void DrawChatSymbolsTab()
             GUILayout.Space(8);
 
             symbolScrollPos = GUILayout.BeginScrollView(symbolScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none);
-            foreach (string row in chatSymbolRows)
+            foreach (string[] row in chatSymbolRows)
             {
                 GUILayout.BeginHorizontal();
-                string[] symbols = row.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string symbol in symbols)
+                foreach (string symbol in row)
                 {
                     if (GUILayout.Button(symbol, btnStyle, GUILayout.Width(42), GUILayout.Height(34)))
                         InsertSymbolIntoChatInputs(symbol);
@@ -398,30 +361,13 @@ private void DrawChatSymbolsTab()
 
 private void DrawChatTextInput(ref string input, ref bool focused, string placeholder, int maxLength)
         {
-            GUIStyle fieldStyle = new GUIStyle(GUI.skin.textField)
-            {
-                fontSize = 12,
-                alignment = TextAnchor.MiddleLeft,
-                clipping = TextClipping.Clip,
-                padding = CreateRectOffset(12, 12, 8, 8)
-            };
-            fieldStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
-
             Rect inputRect = GUILayoutUtility.GetRect(10f, 34f, GUILayout.ExpandWidth(true), GUILayout.Height(34));
-            GUI.Box(inputRect, string.Empty, fieldStyle);
+            GUI.Box(inputRect, string.Empty, chatFieldStyle);
 
             string drawText = string.IsNullOrEmpty(input) ? placeholder : input;
             if (focused && (Time.unscaledTime % 1f) < 0.5f) drawText += "|";
 
-            GUIStyle textStyle = new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleLeft,
-                clipping = TextClipping.Clip,
-                richText = false,
-                fontSize = 12
-            };
-            textStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
-            GUI.Label(new Rect(inputRect.x + 12f, inputRect.y + 4f, inputRect.width - 24f, inputRect.height - 8f), drawText, textStyle);
+            GUI.Label(new Rect(inputRect.x + 12f, inputRect.y + 4f, inputRect.width - 24f, inputRect.height - 8f), drawText, chatInputTextStyle);
 
             Event e = Event.current;
             if (e == null) return;

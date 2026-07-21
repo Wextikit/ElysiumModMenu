@@ -41,17 +41,45 @@ using Vector3 = UnityEngine.Vector3;
 [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.KickPlayer))]
 public static class AmongUsClient_KickPlayer_BanList_Patch
 {
-    public static bool Prefix(InnerNetClient __instance, int clientId, bool ban)
+    public static bool Prefix(InnerNetClient __instance, ref int clientId, bool ban)
     {
-        if (ElysiumModMenuGUI.IsMeowcheloProtected(clientId))
-            return false;
+        PlayerControl pc = null;
+        if (PlayerControl.AllPlayerControls != null)
+        {
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                if (player == null || player.Data == null) continue;
+                if (player.Data.ClientId != clientId && (int)player.OwnerId != clientId) continue;
+                pc = player;
+                break;
+            }
+        }
 
-        if (ban && PlayerControl.AllPlayerControls != null && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        if (pc != null)
         {
             try
             {
-                var pc = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(p => p.OwnerId == clientId);
-                if (pc != null && pc.Data != null)
+                var client = __instance.GetClientFromCharacter(pc);
+                if (client != null)
+                    clientId = client.Id;
+                else if (pc.Data.ClientId >= 0)
+                    clientId = pc.Data.ClientId;
+            }
+            catch
+            {
+                if (pc.Data.ClientId >= 0)
+                    clientId = pc.Data.ClientId;
+            }
+        }
+
+        if (ElysiumModMenuGUI.IsMeowcheloProtected(clientId))
+            return false;
+
+        if (ban && pc != null && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+        {
+            try
+            {
+                if (pc.Data != null)
                 {
                     string fc = string.IsNullOrEmpty(pc.Data.FriendCode) ? "Unknown" : pc.Data.FriendCode;
                     string name = pc.Data.PlayerName ?? "Unknown";
@@ -60,7 +88,10 @@ public static class AmongUsClient_KickPlayer_BanList_Patch
                     try
                     {
                         var client = AmongUsClient.Instance.GetClientFromCharacter(pc);
-                        if (client != null) puid = ElysiumModMenuGUI.GetPlayerPuid(pc);
+                        if (client != null && !string.IsNullOrWhiteSpace(client.ProductUserId))
+                            puid = client.ProductUserId.Trim();
+                        else
+                            puid = ElysiumModMenuGUI.GetPlayerPuid(pc);
                     }
                     catch { }
 

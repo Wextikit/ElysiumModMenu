@@ -416,6 +416,8 @@ private static void CaptureSafeIdentity(ClientData client)
                     }
                     safeIdentityCaptureAttempts.Remove(clientId);
                     safeIdentityNextCaptureAt.Remove(clientId);
+                    ventExploitBannedOwners.Remove(clientId);
+                    pendingVentKickRpcSteps.Remove(clientId);
                 }
                 catch { }
             }
@@ -458,9 +460,15 @@ public static string GetPlayerPuid(PlayerControl player)
             try
             {
                 string puid = player.Puid;
-                return string.IsNullOrWhiteSpace(puid) ? "Unknown" : puid.Trim();
+                if (!string.IsNullOrWhiteSpace(puid)) return puid.Trim();
+
+                ClientData client = AmongUsClient.Instance != null ? AmongUsClient.Instance.GetClientFromCharacter(player) : null;
+                if (client != null && !string.IsNullOrWhiteSpace(client.ProductUserId))
+                    return client.ProductUserId.Trim();
             }
-            catch { return "Unknown"; }
+            catch { }
+
+            return "Unknown";
         }
 
 private static string FormatPlatformHistory(PlayerHistoryEntry entry)

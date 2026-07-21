@@ -82,7 +82,7 @@ private void DrawLobbySettingsTab()
                 GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(w), GUILayout.Height(86f));
                 DrawMenuSectionHeader("LOBBY SETTINGS");
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("Game options not ready.", new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleCenter }, GUILayout.Height(24));
+                GUILayout.Label(L("Game options not ready.", "Настройки игры ещё не готовы."), centeredToggleLabelStyle, GUILayout.Height(24));
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();
                 return;
@@ -246,8 +246,8 @@ private void LoadLobbySettingsFromGame(bool force)
             TryGetClassicRoleOpt((RoleTypes)12, out roleDetectiveCount, out roleDetectiveChance, "Detective");
             TryGetClassicRoleOpt((RoleTypes)18, out roleViperCount, out roleViperChance, "Viper");
             LoadClassicRoleDetails();
-            if (TryGetGameFloat(out float hideTime, "HidingTime", "HideTime", "HnSHidingTime")) hnsSetHideTime = hideTime;
-            if (TryGetGameFloat(out float finalTime, "FinalHideTime", "FinaleTime", "FinalTime")) hnsSetFinalTime = finalTime;
+            if (TryGetGameFloat(out float hideTime, "TotalHideTime", "totalHideTime", "CurrentHideTime", "currentHideTime", "HidingTime", "CategorizedHidingTime", "HideTime", "HnSHidingTime")) hnsSetHideTime = hideTime;
+            if (TryGetGameFloat(out float finalTime, "TotalFinalHideTime", "totalFinalHideTime", "CurrentFinalHideTime", "currentFinalHideTime", "FinalHideTime", "CategorizedFinalHideTime", "FinaleTime", "FinalTime")) hnsSetFinalTime = finalTime;
             if (TryGetGameFloat(out float finalSpeed, "SeekerFinalSpeed", "FinalSeekerSpeed")) hnsSetFinalSpeed = finalSpeed;
             if (TryGetGameFloat(out float ventCd, "CrewmateVentCooldown")) hnsSetVentCd = ventCd;
             if (TryGetGameInt(out int ventUses, "CrewmateVentUses")) hnsSetVentUses = ventUses;
@@ -261,19 +261,19 @@ private void DrawLobbySettingsButtons(float width, bool hns)
             float gap = 6f;
             float btnW = Mathf.Floor((width - gap * 2f) / 3f);
             GUILayout.BeginHorizontal(GUILayout.Width(width));
-            if (GUILayout.Button("Apply", activeTabStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
+            if (GUILayout.Button(L("Apply", "ПРИМЕНИТЬ"), activeTabStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
             {
                 if (hns) ApplyHnsSettings();
                 else ApplyLobbySettings();
             }
             GUILayout.Space(gap);
-            if (GUILayout.Button("Sync Settings", btnStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
+            if (GUILayout.Button(L("Sync Settings", "СИНХРОНИЗИРОВАТЬ"), btnStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
             {
                 LoadLobbySettingsFromGame(true);
                 ShowNotification("<color=#00FFAA>[SETTINGS]</color> Synced from room.");
             }
             GUILayout.Space(gap);
-            if (GUILayout.Button("Copy Lobby", btnStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
+            if (GUILayout.Button(L("Copy Lobby", "КОПИРОВАТЬ ЛОББИ"), btnStyle, GUILayout.Width(btnW), GUILayout.Height(23f)))
                 CopyLobbyCode();
             GUILayout.EndHorizontal();
         }
@@ -320,7 +320,7 @@ private void DrawClassicRolesSettings(float width, bool compact)
 private void DrawRoleSettingRow(string label, float width, ref int count, ref int chance)
         {
             float labW = Mathf.Max(56f, width - 92f);
-            GUIStyle labSt = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip };
+            GUIStyle labSt = lobbyLabelStyle11;
             GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(24f));
             GUILayout.Label(label, labSt, GUILayout.Width(labW), GUILayout.Height(22f));
             DrawTinyIntField("c_" + label, ref count, 1, 30f);
@@ -428,7 +428,7 @@ private void DrawLocalFloatRow(string label, float width, ref float val, float s
             if (!lobbySetInputs.ContainsKey(key) || !edit)
                 lobbySetInputs[key] = FormatLobbyFloat(val);
 
-            GUIStyle labSt = new GUIStyle(toggleLabelStyle) { richText = true, fontSize = 11, clipping = TextClipping.Clip };
+            GUIStyle labSt = lobbyRichLabelStyle11;
             GUIStyle fldSt = MakeLobbyNumFieldStyle(edit);
 
             GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(24f));
@@ -476,7 +476,7 @@ private void DrawLocalIntRow(string label, float width, ref int val, int min, in
             if (!lobbySetInputs.ContainsKey(key) || !edit)
                 lobbySetInputs[key] = val.ToString();
 
-            GUIStyle labSt = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip };
+            GUIStyle labSt = lobbyLabelStyle11;
             GUIStyle fldSt = MakeLobbyNumFieldStyle(edit);
 
             GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(24f));
@@ -550,10 +550,31 @@ private static string FormatLobbyFloat(float val)
             return val.ToString("0.######", CultureInfo.InvariantCulture);
         }
 
+private Color GetLobbyNumTextColor()
+        {
+            if (whiteMenuTheme)
+                return new Color(0.12f, 0.12f, 0.12f, 1f);
+
+            Color c = GetMenuAccentColor(false);
+            if (GetLobbyColorLight(c) >= 0.38f)
+                return c;
+
+            c = GetMenuControlAccentColor();
+            if (GetLobbyColorLight(c) >= 0.38f)
+                return c;
+
+            return new Color(0.92f, 0.92f, 0.92f, 1f);
+        }
+
+private static float GetLobbyColorLight(Color c)
+        {
+            return c.r * 0.299f + c.g * 0.587f + c.b * 0.114f;
+        }
+
 private GUIStyle MakeLobbyNumFieldStyle(bool edit)
         {
-            GUIStyle st = new GUIStyle(inputBlockStyle ?? btnStyle ?? GUI.skin.textField);
-            Color c = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : GetMenuAccentColor();
+            GUIStyle st = edit ? lobbyNumEditStyle : lobbyNumFieldStyle;
+            Color c = GetLobbyNumTextColor();
             st.alignment = TextAnchor.MiddleCenter;
             st.fontSize = 11;
             st.fontStyle = FontStyle.Bold;

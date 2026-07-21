@@ -12,6 +12,7 @@ namespace ElysiumModMenu
         private static void DrawEspBoxes()
         {
             if (!showEspBoxes) return;
+            if (Event.current == null || Event.current.type != EventType.Repaint) return;
             if (MeetingHud.Instance != null || ExileController.Instance != null || IntroCutscene.Instance != null) return;
             if (PlayerControl.LocalPlayer == null || PlayerControl.AllPlayerControls == null || Camera.main == null) return;
 

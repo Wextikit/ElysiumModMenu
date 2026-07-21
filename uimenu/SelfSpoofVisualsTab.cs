@@ -43,6 +43,9 @@ namespace ElysiumModMenu
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
 
+        private static float identityCardHeight = 175f;
+        private bool completeLocalTasksRunning = false;
+
 private static string FilterHexInput(string input, int maxChars)
         {
             string value = (input ?? string.Empty).Trim();
@@ -627,112 +630,210 @@ private static void TryAutoBanCustomPlatformsTick()
             catch { }
         }
 
+        [HideFromIl2Cpp]
+        private bool DrawDeviceRandomButton()
+        {
+            return GUILayout.Button("*", btnStyle, GUILayout.Width(26f), GUILayout.Height(22f));
+        }
+
+        [HideFromIl2Cpp]
+        private static void ResetIdentityEditors()
+        {
+            isEditingName = false;
+            isEditingLevel = false;
+            isEditingFriendCode = false;
+            isEditingLocalFriendCode = false;
+            isEditingDeviceId = false;
+            isEditingGhostChatColor = false;
+        }
+
+        [HideFromIl2Cpp]
+        private static bool IsIdentityValueDisabled(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) || string.Equals(value.Trim(), "0", StringComparison.Ordinal);
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawIdentityLabel(string label, bool active, float labelWidth)
+        {
+            identityLabelStyle.normal.textColor = active ? GetMenuAccentColor() : GUI.contentColor;
+            GUILayout.Label(label, identityLabelStyle, GUILayout.Width(labelWidth), GUILayout.Height(22f));
+        }
+
+        [HideFromIl2Cpp]
+        private static bool IsIdentitySubmitKeyPressed(bool editing)
+        {
+            Event e = Event.current;
+            return editing && e != null && e.type == EventType.KeyDown &&
+                (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter);
+        }
+
+        [HideFromIl2Cpp]
+        private void CommitIdentityText(ref bool enabled, ref string value, System.Action apply, System.Action reset)
+        {
+            value = (value ?? string.Empty).Trim();
+            enabled = !IsIdentityValueDisabled(value);
+
+            if (enabled) apply?.Invoke();
+            else reset?.Invoke();
+
+            settingsDirty = true;
+            SaveConfig();
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawIdentityTextRow(ref bool enabled, string label, ref string value, ref bool editing,
+            System.Action apply, System.Action reset, int maxChars, float labelWidth, bool canRandomize = false)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Height(22f));
+            DrawIdentityLabel(label, enabled, labelWidth);
+            GUILayout.Space(4f);
+
+            bool clickedInput = DrawPseudoInputButton(value, editing, 22f, maxChars);
+            bool submit = IsIdentitySubmitKeyPressed(editing);
+            if (clickedInput || submit)
+            {
+                bool wasEditing = editing;
+                editing = !editing;
+                if (wasEditing || submit)
+                {
+                    editing = false;
+                    CommitIdentityText(ref enabled, ref value, apply, reset);
+                }
+                else
+                {
+                    ResetIdentityEditors();
+                    editing = true;
+                }
+                if (submit) Event.current.Use();
+            }
+
+            if (canRandomize && DrawDeviceRandomButton())
+            {
+                value = Guid.NewGuid().ToString("N");
+                ResetIdentityEditors();
+                CommitIdentityText(ref enabled, ref value, apply, reset);
+            }
+
+            if (GUILayout.Button(enabled ? "Enabled" : "Disabled", enabled ? activeTabStyle : btnStyle, GUILayout.Width(52f), GUILayout.Height(22f)))
+            {
+                editing = false;
+                if (enabled)
+                {
+                    enabled = false;
+                    reset?.Invoke();
+                    settingsDirty = true;
+                    SaveConfig();
+                }
+                else if (!IsIdentityValueDisabled(value))
+                {
+                    CommitIdentityText(ref enabled, ref value, apply, reset);
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        [HideFromIl2Cpp]
+private void CommitIdentityLevel()
+        {
+            spoofLevelString = (spoofLevelString ?? string.Empty).Trim();
+            bool hasLevel = uint.TryParse(spoofLevelString, out uint level) && level > 0;
+            bool wasEnabled = enableLevelSpoof;
+            enableLevelSpoof = hasLevel;
+
+            if (hasLevel) ApplyLevelSpoofValue(level);
+            else if (wasEnabled) RestoreLevelSpoofDefault();
+
+            lastLevelSpoofInput = spoofLevelString;
+            settingsDirty = true;
+            SaveConfig();
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawIdentityLevelRow(float labelWidth)
+        {
+            if (!isEditingLevel)
+                lastLevelSpoofInput = spoofLevelString ?? string.Empty;
+            else if (!string.Equals(lastLevelSpoofInput, spoofLevelString ?? string.Empty, StringComparison.Ordinal))
+                CommitIdentityLevel();
+
+            GUILayout.BeginHorizontal(GUILayout.Height(22f));
+            DrawIdentityLabel("Level Spoof", enableLevelSpoof, labelWidth);
+            GUILayout.Space(4f);
+
+            bool clickedInput = DrawPseudoInputButton(spoofLevelString, isEditingLevel, 22f, 32);
+            bool submit = IsIdentitySubmitKeyPressed(isEditingLevel);
+            if (clickedInput || submit)
+            {
+                bool wasEditing = isEditingLevel;
+                isEditingLevel = !isEditingLevel;
+                if (wasEditing || submit)
+                {
+                    isEditingLevel = false;
+                    CommitIdentityLevel();
+                }
+                else
+                {
+                    ResetIdentityEditors();
+                    isEditingLevel = true;
+                }
+                if (submit) Event.current.Use();
+            }
+
+            if (GUILayout.Button("-", btnStyle, GUILayout.Width(24f), GUILayout.Height(22f)))
+            {
+                uint level = uint.TryParse(spoofLevelString, out uint parsed) ? parsed : 0;
+                spoofLevelString = level > 0 ? (level - 1).ToString() : "0";
+                isEditingLevel = false;
+                CommitIdentityLevel();
+            }
+            if (GUILayout.Button("+", btnStyle, GUILayout.Width(24f), GUILayout.Height(22f)))
+            {
+                uint level = uint.TryParse(spoofLevelString, out uint parsed) ? parsed : 0;
+                spoofLevelString = Mathf.Min(level + 1u, 999999u).ToString();
+                isEditingLevel = false;
+                CommitIdentityLevel();
+            }
+            GUILayout.EndHorizontal();
+        }
+
 private void DrawSelfSpoof()
         {
             float contentWidth = GetMenuWorkWidth(220f, 610f);
             GUIStyle compactCard = CreateCompactMenuCardStyle();
-            GUIStyle statusStyle = new GUIStyle(toggleLabelStyle) { fontSize = 10, alignment = TextAnchor.MiddleCenter, richText = true, clipping = TextClipping.Clip };
+            GUIStyle statusStyle = compactStatusStyle;
             float sideWidth = 150f;
             float mainWidth = contentWidth - sideWidth - 8f;
-            float identityLabelWidth = Mathf.Clamp(mainWidth * 0.38f, 118f, 140f);
-            float okWidth = 34f;
-
-            void ResetSelfEditors()
-            {
-                isEditingName = false;
-                isEditingLevel = false;
-                isEditingFriendCode = false;
-                isEditingLocalFriendCode = false;
-                isEditingDeviceId = false;
-                isEditingGhostChatColor = false;
-
-            }
-
-            void DrawIdentityRow(ref bool enabled, string toggleText, ref string value, ref bool editing, System.Action apply, int maxChars)
-            {
-                GUILayout.BeginHorizontal(GUILayout.Height(22));
-
-                Rect animSwitchRect = GUILayoutUtility.GetRect(28f, 14f, GUILayout.Width(28f), GUILayout.Height(14f));
-                bool clickedBox = GUI.Button(animSwitchRect, "", enabled ? trackOnStyle : trackOffStyle);
-                DrawAnimatedSwitch(animSwitchRect, enabled, "Identity:" + toggleText);
-                GUILayout.Space(6);
-
-                GUIStyle identityLabelStyle = new GUIStyle(toggleLabelStyle)
-                {
-                    fontSize = 11,
-                    clipping = TextClipping.Clip,
-                    wordWrap = false,
-                    richText = true,
-                    stretchWidth = false,
-                    alignment = TextAnchor.MiddleLeft
-                };
-                Rect textRect = GUILayoutUtility.GetRect(identityLabelWidth, 16f, GUILayout.Width(identityLabelWidth), GUILayout.Height(16f));
-                GUI.Label(textRect, toggleText, identityLabelStyle);
-                bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
-                if (clickedText) Event.current.Use();
-
-                if (clickedBox || clickedText)
-                {
-                    enabled = !enabled;
-                    settingsDirty = true;
-                    apply?.Invoke();
-                    SaveConfig();
-                }
-
-                GUILayout.Space(4);
-                if (DrawPseudoInputButton(value, editing, 22f, maxChars))
-                {
-                    bool newEditing = !editing;
-                    ResetSelfEditors();
-                    editing = newEditing;
-                }
-                if (GUILayout.Button("OK", btnStyle, GUILayout.Width(okWidth), GUILayout.Height(22)))
-                {
-                    editing = false;
-                    apply?.Invoke();
-                    SaveConfig();
-                }
-                GUILayout.EndHorizontal();
-            }
+            float identityLabelWidth = Mathf.Clamp(mainWidth * 0.31f, 100f, 132f);
+            const float platformCardHeight = 84f;
+            const float taskCardHeight = 85f;
+            const float sideCardGap = 6f;
 
             GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
 
-            GUILayout.BeginVertical(compactCard, GUILayout.Width(mainWidth), GUILayout.Height(175));
+            GUILayout.BeginVertical(compactCard, GUILayout.Width(mainWidth), GUILayout.Height(identityCardHeight));
             DrawMenuSectionHeader("IDENTITY");
             GUILayout.Space(2);
-            DrawIdentityRow(ref enableLevelSpoof, "Level Spoof", ref spoofLevelString, ref isEditingLevel, () =>
-            {
-                if (enableLevelSpoof && uint.TryParse(spoofLevelString, out uint parsedLvl)) ApplyLevelSpoofValue(parsedLvl);
-                else if (!enableLevelSpoof) RestoreLevelSpoofDefault();
-            }, 32);
+            DrawIdentityLevelRow(identityLabelWidth);
             GUILayout.Space(3);
-            DrawIdentityRow(ref enableLocalNameSpoof, "Local Name", ref customNameInput, ref isEditingName, () =>
-            {
-                if (enableLocalNameSpoof) ApplyLocalNameSelf(customNameInput, true);
-                else RestoreLocalNameSelf();
-            }, 54);
+            DrawIdentityTextRow(ref enableLocalNameSpoof, "Local Name", ref customNameInput, ref isEditingName,
+                () => ApplyLocalNameSelf(customNameInput, true), RestoreLocalNameSelf, 54, identityLabelWidth);
             GUILayout.Space(3);
-            DrawIdentityRow(ref enableLocalFriendCodeSpoof, "Local Friend Code", ref localFriendCodeInput, ref isEditingLocalFriendCode, () =>
-            {
-                if (enableLocalFriendCodeSpoof) ApplyLocalFriendCodeSelf(localFriendCodeInput, true);
-                else RestoreLocalFriendCodeSelf();
-            }, 54);
+            DrawIdentityTextRow(ref enableLocalFriendCodeSpoof, "Local Friend Code", ref localFriendCodeInput, ref isEditingLocalFriendCode,
+                () => ApplyLocalFriendCodeSelf(localFriendCodeInput, true), RestoreLocalFriendCodeSelf, 54, identityLabelWidth);
             GUILayout.Space(3);
-            DrawIdentityRow(ref enableFriendCodeSpoof, "Public Friend Code", ref spoofFriendCodeInput, ref isEditingFriendCode, () =>
-            {
-                spoofFriendCodeInput = SanitizeSpoofFriendCode(spoofFriendCodeInput);
-            }, 54);
+            DrawIdentityTextRow(ref enableFriendCodeSpoof, "Public Friend Code", ref spoofFriendCodeInput, ref isEditingFriendCode,
+                () => spoofFriendCodeInput = SanitizeSpoofFriendCode(spoofFriendCodeInput), null, 54, identityLabelWidth);
             GUILayout.Space(3);
-            DrawIdentityRow(ref enableDeviceIdSpoof, "Device ID", ref spoofedDeviceId, ref isEditingDeviceId, () =>
-            {
-                spoofedDeviceId = (spoofedDeviceId ?? "").Trim();
-            }, 64);
+            DrawIdentityTextRow(ref enableDeviceIdSpoof, "Device ID", ref spoofedDeviceId, ref isEditingDeviceId,
+                () => spoofedDeviceId = (spoofedDeviceId ?? "").Trim(), null, 64, identityLabelWidth, true);
             GUILayout.EndVertical();
+            Rect identityCardRect = GUILayoutUtility.GetLastRect();
 
             GUILayout.Space(8);
 
             GUILayout.BeginVertical(GUILayout.Width(sideWidth));
-            GUILayout.BeginVertical(compactCard, GUILayout.Width(sideWidth), GUILayout.Height(74));
+            GUILayout.BeginVertical(compactCard, GUILayout.Width(sideWidth), GUILayout.Height(platformCardHeight));
             DrawMenuSectionHeader("PLATFORM");
             if (GUILayout.Button(enablePlatformSpoof ? "SPOOF ON" : "SPOOF OFF", enablePlatformSpoof ? activeTabStyle : btnStyle, GUILayout.Height(22)))
             {
@@ -749,34 +850,143 @@ private void DrawSelfSpoof()
             }
             GUILayout.EndVertical();
 
-            GUILayout.Space(6);
+            GUILayout.Space(sideCardGap);
 
-            GUILayout.BeginVertical(compactCard, GUILayout.Width(sideWidth), GUILayout.Height(70));
+            GUILayout.BeginVertical(compactCard, GUILayout.Width(sideWidth), GUILayout.Height(taskCardHeight));
             DrawMenuSectionHeader("TASKS");
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Complete", btnStyle, GUILayout.Height(24)))
-            {
-                if (PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.myTasks != null)
-                    foreach (var task in PlayerControl.LocalPlayer.myTasks)
-                        if (task != null && !task.IsComplete) PlayerControl.LocalPlayer.RpcCompleteTask((uint)task.Id);
-            }
+                CompleteLocalTasks();
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
+            Rect tasksCardRect = GUILayoutUtility.GetLastRect();
             GUILayout.EndVertical();
 
+            // A fixed height can be smaller than the enlarged controls at some menu
+            // scales. On repaint, match the visible lower edge to TASKS itself.
+            if (Event.current != null && Event.current.type == EventType.Repaint)
+            {
+                float correction = tasksCardRect.yMax - identityCardRect.yMax;
+                if (Mathf.Abs(correction) > 0.5f)
+                    identityCardHeight = Mathf.Max(1f, identityCardHeight + correction);
+            }
+
             GUILayout.EndHorizontal();
+        }
+
+private void CompleteLocalTasks()
+        {
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                AmongUsClient client = AmongUsClient.Instance;
+                if (local == null || local.myTasks == null || client == null)
+                    return;
+
+                if (client.NetworkMode != NetworkModes.FreePlay && client.GameState != InnerNetClient.GameStates.Started)
+                    return;
+
+                if (completeLocalTasksRunning)
+                {
+                    ShowNotification("<color=#FFAA00>[TASKS]</color> Already completing tasks.");
+                    return;
+                }
+
+                if (client.NetworkMode != NetworkModes.FreePlay && IsLocalImpostorRole() && !allowTasksAsImpostor)
+                {
+                    ShowNotification("<color=#FF4444>[TASKS]</color> Blocked for impostor. Enable Allow Tasks (Imp).");
+                    return;
+                }
+
+                List<PlayerTask> tasks = new List<PlayerTask>();
+                foreach (var task in local.myTasks)
+                {
+                    if (task == null || task.IsComplete) continue;
+                    tasks.Add(task);
+                }
+
+                if (tasks.Count == 0)
+                {
+                    ShowNotification("<color=#AAAAAA>[TASKS]</color> No incomplete tasks.");
+                    return;
+                }
+
+                this.StartCoroutine(CompleteLocalTasksCoroutine(tasks).WrapToIl2Cpp());
+            }
+            catch { }
+        }
+
+private IEnumerator CompleteLocalTasksCoroutine(List<PlayerTask> tasks)
+        {
+            completeLocalTasksRunning = true;
+            int done = 0;
+
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                PlayerTask task = tasks[i];
+                if (task != null && !task.IsComplete && CompleteLocalTask(task))
+                    done++;
+
+                if (i < tasks.Count - 1)
+                    yield return new WaitForSeconds(0.85f);
+            }
+
+            completeLocalTasksRunning = false;
+            if (done > 0)
+                ShowNotification($"<color=#00FFAA>[TASKS]</color> Completed {done} task(s).");
+        }
+
+private static bool CompleteLocalTask(PlayerTask task)
+        {
+            if (task == null || task.IsComplete) return false;
+
+            PlayerControl local = PlayerControl.LocalPlayer;
+            AmongUsClient client = AmongUsClient.Instance;
+            if (local == null || client == null) return false;
+
+            try
+            {
+                if (client.NetworkMode == NetworkModes.FreePlay)
+                {
+                    local.RpcCompleteTask(task.Id);
+                    return true;
+                }
+
+                if (IsLocalImpostorRole() && !allowTasksAsImpostor)
+                    return false;
+
+                var host = client.GetHost();
+                if (host == null || host.Character == null || host.Character.Data == null || host.Character.Data.Disconnected)
+                    return false;
+
+                local.RpcCompleteTask(task.Id);
+                return true;
+            }
+            catch { }
+
+            return false;
         }
 
 private void DrawVisualsTab()
         {
             GUILayout.BeginHorizontal();
             for (int i = 0; i < visualsSubTabs.Length; i++)
+            {
                 if (GUILayout.Button(visualsSubTabs[i], currentVisualsSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                { currentVisualsSubTab = i; scrollPosition = Vector2.zero; }
+                    SetMultiTab("visuals", ref currentVisualsSubTab, i, visualsSubTabs.Length);
+            }
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
-            if (currentVisualsSubTab == 0) DrawVisualsInGame();
-            else if (currentVisualsSubTab == 1) DrawOutfitsTab();
+            BeginMultiTabContent("visuals", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentVisualsSubTab == 0) DrawVisualsInGame();
+                else if (currentVisualsSubTab == 1) DrawOutfitsTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 
 [HarmonyPatch(typeof(PlayerBanData), nameof(PlayerBanData.BanPoints), MethodType.Setter)]
@@ -820,6 +1030,21 @@ private void DrawVisualsTab()
 [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Start))]
         public static class ShowLobbyTimer_Patch
         {
+            public static void Prefix(GameStartManager __instance)
+            {
+                if (__instance == null) return;
+
+                try
+                {
+                    if (__instance.StartButtonGlyph == null)
+                        __instance.StartButtonGlyph = __instance.GetComponentInChildren<ActionMapGlyphDisplay>(true);
+
+                    if (__instance.StartButtonGlyphContainer == null && __instance.StartButtonGlyph != null)
+                        __instance.StartButtonGlyphContainer = __instance.StartButtonGlyph.gameObject;
+                }
+                catch { }
+            }
+
             public static void Postfix(GameStartManager __instance)
             {
                 if (!ElysiumModMenuGUI.alwaysShowLobbyTimer) return;
@@ -830,6 +1055,25 @@ private void DrawVisualsTab()
                 if (HudManager.Instance != null)
                 {
                     HudManager.Instance.ShowLobbyTimer(600);
+                }
+            }
+        }
+
+[HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.ToggleButtonGlyphs))]
+        public static class GameStartManager_ToggleButtonGlyphs_Guard_Patch
+        {
+            public static bool Prefix(GameStartManager __instance)
+            {
+                try
+                {
+                    return __instance != null &&
+                           __instance.gameObject != null &&
+                           __instance.StartButtonGlyph != null &&
+                           __instance.StartButtonGlyphContainer != null;
+                }
+                catch
+                {
+                    return false;
                 }
             }
         }

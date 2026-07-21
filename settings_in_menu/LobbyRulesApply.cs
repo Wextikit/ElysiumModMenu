@@ -165,18 +165,35 @@ private static void LoadClassicRoleDetails()
         {
             var eng = GetRoleOpt<EngineerRoleOptionsV10>(RoleTypes.Engineer);
             if (eng != null) { roleEngineerCd = eng.EngineerCooldown; roleEngineerVent = eng.EngineerInVentMaxTime; }
+            if (TryGetGameFloat(out float engCd, "1300", "EngineerCooldown", "VentUseCooldown", "VentCooldown")) roleEngineerCd = engCd;
+            if (TryGetGameFloat(out float engVent, "1301", "EngineerInVentMaxTime", "MaxTimeInVents", "VentDuration")) roleEngineerVent = engVent;
             var sci = GetRoleOpt<ScientistRoleOptionsV10>(RoleTypes.Scientist);
             if (sci != null) { roleScientistCd = sci.ScientistCooldown; roleScientistBattery = sci.ScientistBatteryCharge; }
+            if (TryGetGameFloat(out float sciCd, "1200", "ScientistCooldown", "VitalsDisplayCooldown", "VitalsCooldown")) roleScientistCd = sciCd;
+            if (TryGetGameFloat(out float sciBattery, "1201", "ScientistBatteryCharge", "BatteryDuration", "BatteryCharge")) roleScientistBattery = sciBattery;
             var ga = GetRoleOpt<GuardianAngelRoleOptionsV10>(RoleTypes.GuardianAngel);
             if (ga != null) { roleGuardianCd = ga.GuardianAngelCooldown; roleGuardianTime = ga.ProtectionDurationSeconds; roleGuardianImpSee = ga.ImpostorsCanSeeProtect; }
+            if (TryGetGameFloat(out float gaCd, "1101", "GuardianAngelCooldown", "ProtectCooldown")) roleGuardianCd = gaCd;
+            if (TryGetGameFloat(out float gaTime, "1100", "ProtectionDurationSeconds", "ProtectionDuration")) roleGuardianTime = gaTime;
+            if (TryGetGameBool(out bool gaSee, "1100", "ImpostorsCanSeeProtect", "ProtectVisibleToImpostors")) roleGuardianImpSee = gaSee;
             var ss = GetRoleOpt<ShapeshifterRoleOptionsV10>(RoleTypes.Shapeshifter);
             if (ss != null) { roleShifterCd = ss.ShapeshifterCooldown; roleShifterTime = ss.ShapeshifterDuration; roleShifterSkin = ss.ShapeshifterLeaveSkin; }
+            if (TryGetGameFloat(out float ssCd, "1000", "ShapeshifterCooldown", "ShapeshiftCooldown")) roleShifterCd = ssCd;
+            if (TryGetGameFloat(out float ssTime, "1001", "ShapeshifterDuration", "ShapeshiftDuration")) roleShifterTime = ssTime;
+            if (TryGetGameBool(out bool ssSkin, "1000", "ShapeshifterLeaveSkin", "LeaveShapeshiftingEvidence")) roleShifterSkin = ssSkin;
             var nm = GetRoleOpt<NoisemakerRoleOptionsV10>((RoleTypes)8);
             if (nm != null) { roleNoisemakerTime = nm.NoisemakerAlertDuration; roleNoisemakerImpAlert = nm.NoisemakerImpostorAlert; }
+            if (TryGetGameFloat(out float nmTime, "1600", "NoisemakerAlertDuration", "AlertDuration")) roleNoisemakerTime = nmTime;
+            if (TryGetGameBool(out bool nmAlert, "1600", "NoisemakerImpostorAlert", "ImpostorAlert")) roleNoisemakerImpAlert = nmAlert;
             var tr = GetRoleOpt<TrackerRoleOptionsV10>((RoleTypes)10);
             if (tr != null) { roleTrackerCd = tr.TrackerCooldown; roleTrackerTime = tr.TrackerDuration; roleTrackerDelay = tr.TrackerDelay; }
+            if (TryGetGameFloat(out float trCd, "1550", "TrackerCooldown")) roleTrackerCd = trCd;
+            if (TryGetGameFloat(out float trTime, "1551", "TrackerDuration")) roleTrackerTime = trTime;
+            if (TryGetGameFloat(out float trDelay, "1552", "TrackerDelay")) roleTrackerDelay = trDelay;
             var ph = GetRoleOpt<PhantomRoleOptionsV10>((RoleTypes)9);
             if (ph != null) { rolePhantomCd = ph.PhantomCooldown; rolePhantomTime = ph.PhantomDuration; }
+            if (TryGetGameFloat(out float phCd, "1500", "PhantomCooldown")) rolePhantomCd = phCd;
+            if (TryGetGameFloat(out float phTime, "1501", "PhantomDuration")) rolePhantomTime = phTime;
             var dt = GetRoleOpt<DetectiveRoleOptionsV10>((RoleTypes)12);
             if (dt != null) roleDetectiveLimit = dt.DetectiveSuspectLimit;
             var vp = GetRoleOpt<ViperRoleOptionsV10>((RoleTypes)18);
@@ -187,18 +204,35 @@ private static void ApplyClassicRoleDetails()
         {
             var eng = GetRoleOpt<EngineerRoleOptionsV10>(RoleTypes.Engineer);
             if (eng != null) { eng.EngineerCooldown = roleEngineerCd; eng.EngineerInVentMaxTime = roleEngineerVent; }
+            TrySetGameFloat(roleEngineerCd, "1300", "EngineerCooldown", "VentUseCooldown", "VentCooldown");
+            TrySetGameFloat(roleEngineerVent, "1301", "EngineerInVentMaxTime", "MaxTimeInVents", "VentDuration");
             var sci = GetRoleOpt<ScientistRoleOptionsV10>(RoleTypes.Scientist);
             if (sci != null) { sci.ScientistCooldown = roleScientistCd; sci.ScientistBatteryCharge = roleScientistBattery; }
+            TrySetGameFloat(roleScientistCd, "1200", "ScientistCooldown", "VitalsDisplayCooldown", "VitalsCooldown");
+            TrySetGameFloat(roleScientistBattery, "1201", "ScientistBatteryCharge", "BatteryDuration", "BatteryCharge");
             var ga = GetRoleOpt<GuardianAngelRoleOptionsV10>(RoleTypes.GuardianAngel);
             if (ga != null) { ga.GuardianAngelCooldown = roleGuardianCd; ga.ProtectionDurationSeconds = roleGuardianTime; ga.ImpostorsCanSeeProtect = roleGuardianImpSee; }
+            TrySetGameFloat(roleGuardianCd, "1101", "GuardianAngelCooldown", "ProtectCooldown");
+            TrySetGameFloat(roleGuardianTime, "1100", "ProtectionDurationSeconds", "ProtectionDuration");
+            TrySetGameBool(roleGuardianImpSee, "1100", "ImpostorsCanSeeProtect", "ProtectVisibleToImpostors");
             var ss = GetRoleOpt<ShapeshifterRoleOptionsV10>(RoleTypes.Shapeshifter);
             if (ss != null) { ss.ShapeshifterCooldown = roleShifterCd; ss.ShapeshifterDuration = roleShifterTime; ss.ShapeshifterLeaveSkin = roleShifterSkin; }
+            TrySetGameFloat(roleShifterCd, "1000", "ShapeshifterCooldown", "ShapeshiftCooldown");
+            TrySetGameFloat(roleShifterTime, "1001", "ShapeshifterDuration", "ShapeshiftDuration");
+            TrySetGameBool(roleShifterSkin, "1000", "ShapeshifterLeaveSkin", "LeaveShapeshiftingEvidence");
             var nm = GetRoleOpt<NoisemakerRoleOptionsV10>((RoleTypes)8);
             if (nm != null) { nm.NoisemakerAlertDuration = roleNoisemakerTime; nm.NoisemakerImpostorAlert = roleNoisemakerImpAlert; }
+            TrySetGameFloat(roleNoisemakerTime, "1600", "NoisemakerAlertDuration", "AlertDuration");
+            TrySetGameBool(roleNoisemakerImpAlert, "1600", "NoisemakerImpostorAlert", "ImpostorAlert");
             var tr = GetRoleOpt<TrackerRoleOptionsV10>((RoleTypes)10);
             if (tr != null) { tr.TrackerCooldown = roleTrackerCd; tr.TrackerDuration = roleTrackerTime; tr.TrackerDelay = roleTrackerDelay; }
+            TrySetGameFloat(roleTrackerCd, "1550", "TrackerCooldown");
+            TrySetGameFloat(roleTrackerTime, "1551", "TrackerDuration");
+            TrySetGameFloat(roleTrackerDelay, "1552", "TrackerDelay");
             var ph = GetRoleOpt<PhantomRoleOptionsV10>((RoleTypes)9);
             if (ph != null) { ph.PhantomCooldown = rolePhantomCd; ph.PhantomDuration = rolePhantomTime; }
+            TrySetGameFloat(rolePhantomCd, "1500", "PhantomCooldown");
+            TrySetGameFloat(rolePhantomTime, "1501", "PhantomDuration");
             var dt = GetRoleOpt<DetectiveRoleOptionsV10>((RoleTypes)12);
             if (dt != null) dt.DetectiveSuspectLimit = roleDetectiveLimit;
             var vp = GetRoleOpt<ViperRoleOptionsV10>((RoleTypes)18);
@@ -367,7 +401,7 @@ private void ApplyHnsSettings()
             if (!CanApplyLobbySettings()) return;
             if (!lobbySettingsDirty)
             {
-                TouchGameOptions();
+                TouchHnsGameOptions();
                 ShowNotification("<color=#00FFAA>[H&S]</color> Synced.");
                 return;
             }
@@ -383,14 +417,15 @@ private void ApplyHnsSettings()
             TrySetGameInt(lobbySetCommon, "NumCommonTasks", "CommonTasks", "numCommonTasks");
             TrySetGameInt(lobbySetLong, "NumLongTasks", "LongTasks", "numLongTasks");
             TrySetGameInt(lobbySetShort, "NumShortTasks", "ShortTasks", "numShortTasks");
-            TrySetGameFloat(hnsSetHideTime, "HidingTime", "HideTime", "HnSHidingTime");
-            TrySetGameFloat(hnsSetFinalTime, "FinalHideTime", "FinaleTime", "FinalTime");
+            TrySetGameFloatAll(hnsSetHideTime, "TotalHideTime", "totalHideTime", "CurrentHideTime", "currentHideTime", "HidingTime", "CategorizedHidingTime", "HideTime", "HnSHidingTime");
+            TrySetGameFloatAll(hnsSetFinalTime, "TotalFinalHideTime", "totalFinalHideTime", "CurrentFinalHideTime", "currentFinalHideTime", "FinalHideTime", "CategorizedFinalHideTime", "FinaleTime", "FinalTime");
             TrySetGameFloat(hnsSetFinalSpeed, "SeekerFinalSpeed", "FinalSeekerSpeed");
             TrySetGameFloat(hnsSetVentCd, "CrewmateVentCooldown");
             TrySetGameInt(hnsSetVentUses, "CrewmateVentUses");
             TrySetGameFloat(hnsSetPingCd, "SeekerPingCooldown", "PingCooldown", "MaxPingTime");
             TrySetGameBool(hnsSetFinalMap, "SeekerFinalMap", "FinalMap");
-            TouchGameOptions();
+            ApplyClassicRoles();
+            TouchHnsGameOptions();
             lobbySettingsDirty = false;
             lobbySetEditKey = "";
             lobbySettingsLoaded = false;
@@ -611,7 +646,7 @@ private float DrawSettingSlider(string label, float width, float val, float min,
             float shown = step >= 1f ? Mathf.Round(val) : Mathf.Round(val / step) * step;
             string fmt = step >= 1f ? "0" : "0.##";
             GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(23f));
-            GUILayout.Label($"{label}: <color=#{GetMenuAccentHex()}>{shown.ToString(fmt)}{suffix}</color>", new GUIStyle(toggleLabelStyle) { richText = true, fontSize = 11, clipping = TextClipping.Clip }, GUILayout.Width(labelW), GUILayout.Height(22f));
+            GUILayout.Label($"{label}: <color=#{GetMenuAccentHex()}>{shown.ToString(fmt)}{suffix}</color>", lobbyRichLabelStyle11, GUILayout.Width(labelW), GUILayout.Height(22f));
             float next = GUILayout.HorizontalSlider(val, min, max, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderW));
             GUILayout.EndHorizontal();
             return Mathf.Clamp(Mathf.Round(next / step) * step, min, max);
@@ -619,7 +654,7 @@ private float DrawSettingSlider(string label, float width, float val, float min,
 
 private void DrawMissingGameOption(string label, float width)
         {
-            GUIStyle st = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip };
+            GUIStyle st = lobbyLabelStyle11;
             st.normal.textColor = whiteMenuTheme ? new Color(0.42f, 0.42f, 0.42f, 1f) : new Color(0.42f, 0.42f, 0.42f, 1f);
             GUILayout.Label($"{label}: n/a", st, GUILayout.Width(width), GUILayout.Height(22f));
         }
@@ -672,37 +707,55 @@ private static bool TryGetGameBool(out bool val, params string[] names)
 private static bool TryGetGameOption(out object val, string typedGetter, params string[] names)
         {
             val = null;
-            object opts = GetGameOptionsObj();
-            if (opts == null) return false;
-
-            Type t = opts.GetType();
-            foreach (string n in names)
+            foreach (object opts in GetGameOptionsObjs())
             {
-                PropertyInfo p = FindGameProp(t, n);
-                if (p != null)
+                if (opts == null) continue;
+                Type t = opts.GetType();
+
+                foreach (string n in names)
                 {
-                    try { val = p.GetValue(opts); return true; } catch { }
+                    try
+                    {
+                        object member = GetMemberValue(opts, n);
+                        if (member != null) { val = member; return true; }
+                    }
+                    catch { }
+
+                    PropertyInfo p = FindGameProp(t, n);
+                    if (p != null)
+                    {
+                        try { val = p.GetValue(opts); return true; } catch { }
+                    }
+
+                    MethodInfo m0 = t.GetMethod("Get" + n, BindingFlags.Public | BindingFlags.Instance);
+                    if (m0 != null && m0.GetParameters().Length == 0)
+                    {
+                        try { val = m0.Invoke(opts, null); return true; } catch { }
+                    }
                 }
 
-                MethodInfo m0 = t.GetMethod("Get" + n, BindingFlags.Public | BindingFlags.Instance);
-                if (m0 != null && m0.GetParameters().Length == 0)
-                {
-                    try { val = m0.Invoke(opts, null); return true; } catch { }
-                }
+                MethodInfo m = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .FirstOrDefault(x => x.Name == typedGetter && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType.IsEnum);
+                if (m == null) continue;
+
+                object e = FindGameEnum(m.GetParameters()[0].ParameterType, names);
+                if (e == null) continue;
+                try { val = m.Invoke(opts, new object[] { e }); return true; } catch { }
             }
-
-            MethodInfo m = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .FirstOrDefault(x => x.Name == typedGetter && x.GetParameters().Length == 1 && x.GetParameters()[0].ParameterType.IsEnum);
-            if (m == null) return false;
-
-            object e = FindGameEnum(m.GetParameters()[0].ParameterType, names);
-            if (e == null) return false;
-            try { val = m.Invoke(opts, new object[] { e }); return true; } catch { return false; }
+            return false;
         }
 
 private static bool TrySetGameFloat(float val, params string[] names) => TrySetGameOption(val, "SetFloat", names);
 private static bool TrySetGameInt(int val, params string[] names) => TrySetGameOption(val, "SetInt", names);
 private static bool TrySetGameBool(bool val, params string[] names) => TrySetGameOption(val, "SetBool", names);
+
+private static bool TrySetGameFloatAll(float val, params string[] names)
+        {
+            bool ok = false;
+            foreach (string n in names)
+                ok |= TrySetGameFloat(val, n);
+            return ok;
+        }
 
 private static bool TrySetGameOption(object val, string typedSetter, params string[] names)
         {
@@ -714,6 +767,7 @@ private static bool TrySetGameOption(object val, string typedSetter, params stri
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "currentNormalGameOptions"), val, typedSetter, names);
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "currentGameOptions"), val, typedSetter, names);
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "CurrentGameOptions"), val, typedSetter, names);
+                ok |= TrySetGameOptionObj(GetMemberValue(mgr, "currentHideNSeekGameOptions"), val, typedSetter, names);
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "GameHostOptions"), val, typedSetter, names);
             }
             catch { }
@@ -727,6 +781,9 @@ private static bool TrySetGameOptionObj(object opts, object val, string typedSet
 
             foreach (string n in names)
             {
+                if (TrySetMemberValue(opts, val, n))
+                    return true;
+
                 PropertyInfo p = FindGameProp(t, n);
                 if (p != null && p.CanWrite)
                 {
@@ -764,6 +821,14 @@ private static PropertyInfo FindGameProp(Type t, string name)
 private static object FindGameEnum(Type enumType, string[] names)
         {
             if (enumType == null || !enumType.IsEnum || names == null) return null;
+            foreach (string n in names)
+            {
+                if (int.TryParse(n, NumberStyles.Integer, CultureInfo.InvariantCulture, out int raw))
+                {
+                    try { return Enum.ToObject(enumType, raw); } catch { }
+                }
+            }
+
             Array vals = Enum.GetValues(enumType);
             foreach (object v in vals)
             {
@@ -819,6 +884,7 @@ private static object GetMemberValue(object obj, string name)
 private static void TouchGameOptions()
         {
             settingsDirty = true;
+            lobbySettingsSyncHns = false;
             RepairHostGameOptions();
             GameOptionsManager mgr = null;
             IGameOptions opts = null;
@@ -831,6 +897,37 @@ private static void TouchGameOptions()
             catch { }
 
             QueueLobbySettingsSync(0.25f);
+        }
+
+private static void TouchHnsGameOptions()
+        {
+            settingsDirty = true;
+            lobbySettingsSyncHns = true;
+            RepairHostGameOptions();
+            try
+            {
+                GameOptionsManager mgr = GameOptionsManager.Instance;
+                IGameOptions opts = GetHnsGameOptionsObj(mgr);
+                if (mgr != null && opts != null)
+                    mgr.GameHostOptions = opts;
+            }
+            catch { }
+
+            QueueLobbySettingsSync(0.25f);
+        }
+
+private static IGameOptions GetHnsGameOptionsObj(GameOptionsManager mgr = null)
+        {
+            try
+            {
+                if (mgr == null) mgr = GameOptionsManager.Instance;
+                object raw = GetMemberValue(mgr, "currentHideNSeekGameOptions");
+                if (raw is IGameOptions opts) return opts;
+                if (raw is Il2CppInterop.Runtime.InteropTypes.Il2CppObjectBase obj)
+                    return obj.Cast<IGameOptions>();
+            }
+            catch { }
+            return null;
         }
 
 internal static bool BlockDirectSettingsSync()
@@ -880,11 +977,13 @@ private static void SyncLobbySettingsNow()
         {
             GameOptionsManager mgr = null;
             IGameOptions opts = null;
+            bool syncHns = lobbySettingsSyncHns;
 
             try
             {
                 mgr = GameOptionsManager.Instance;
-                opts = mgr?.CurrentGameOptions;
+                opts = syncHns ? GetHnsGameOptionsObj(mgr) : mgr?.CurrentGameOptions;
+                if (opts == null) opts = mgr?.CurrentGameOptions;
                 if (mgr != null && opts != null)
                     mgr.GameHostOptions = opts;
             }
@@ -905,9 +1004,10 @@ private static void SyncLobbySettingsNow()
             finally
             {
                 lobbySettingsSyncRun = false;
+                lobbySettingsSyncHns = false;
             }
 
-            if (noSettingLimit) return;
+            if (noSettingLimit && !syncHns) return;
 
             lobbySettingsSyncRun = true;
             try

@@ -46,16 +46,7 @@ public static class DarkMode_ChatBubblePatch
     {
         try
         {
-            if (!ElysiumModMenuGUI.enableChatDarkMode) return;
-
-            Transform bg = __instance.transform.Find("Background");
-            if (bg != null)
-            {
-                var sr = bg.GetComponent<SpriteRenderer>();
-                if (sr != null) sr.color = new Color32(35, 35, 35, 255);
-            }
-            if (__instance.TextArea != null)
-                __instance.TextArea.color = Color.white;
+            DarkChatTheme.ApplyBubble(__instance, ElysiumModMenuGUI.enableChatDarkMode);
         }
         catch { }
     }

@@ -35,16 +35,10 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
     private string _last;
     private int _pid;
 
-    // ⚠️ Не используем UnityEngine.Debug.Log - он роняет IL2CPP при вызове из фонового потока (Dial).
-    // Console.WriteLine - чистый .NET, безопасен из любого потока и попадает в консоль BepInEx.
-    [HideFromIl2Cpp]
-    private static void Log(string m) => System.Console.WriteLine("[ElysiumRPC] " + m);
-
     public void Start()
     {
         _start = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         try { _pid = Process.GetCurrentProcess().Id; } catch { _pid = 0; }
-        Log("Start(): component alive, pid=" + _pid + ", platform=" + (int)Application.platform);
     }
 
     public void Update()
@@ -105,7 +99,6 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                     {
                         if (gen != _gen) { try { p.Dispose(); } catch { } _pipe = null; return; }
                         _up = true;
-                        Log("Connected to discord-ipc-" + i);
                         return;
                     }
                     try { p.Dispose(); } catch { }
@@ -113,7 +106,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                 }
                 catch { try { p?.Dispose(); } catch { } }
             }
-            if (gen == _gen) { _pipe = null; _dialFail = true; Log("Dial failed: no discord-ipc pipe found (is desktop Discord running?)"); }
+            if (gen == _gen) { _pipe = null; _dialFail = true; }
         }
         finally { _dialing = false; }
     }
@@ -160,7 +153,6 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
         string body = sb.ToString();
         if (body == _last) return;
         _last = body;
-        Log("Push activity: " + details + " | " + state);
 
         sb.Append("}},\"nonce\":\"").Append(Guid.NewGuid().ToString()).Append("\"}");
         Frame(1, sb.ToString());

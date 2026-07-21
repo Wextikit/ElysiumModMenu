@@ -44,11 +44,9 @@ public static class RPCSniffer_Patch
 {
     private static readonly HashSet<byte> VanillaRPCs = ElysiumModMenuGUI.VanillaRpcIds;
 
-    public static class RPCSnifferAndShieldPatch
-    {
-        private static readonly Dictionary<byte, (string Name, string Color)> KnownMods = BuildKnownMods();
+    private static readonly Dictionary<byte, (string Name, string Color)> KnownMods = BuildKnownMods();
 
-        private static Dictionary<byte, (string Name, string Color)> BuildKnownMods()
+    private static Dictionary<byte, (string Name, string Color)> BuildKnownMods()
         {
             Dictionary<byte, (string Name, string Color)> known = new Dictionary<byte, (string, string)>();
             int count = Mathf.Min(ElysiumModMenuGUI.spoofMenuRPCs.Length, ElysiumModMenuGUI.spoofMenuNames.Length);
@@ -61,13 +59,13 @@ public static class RPCSniffer_Patch
             return known;
         }
 
-        private static string CleanSpoofMenuName(string name)
+    private static string CleanSpoofMenuName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return "Known Mod";
             return Regex.Replace(name, @"\s*\(\d+\)\s*$", string.Empty).Trim();
         }
 
-        private static string ColorForKnownRpc(byte rpc)
+    private static string ColorForKnownRpc(byte rpc)
         {
             if (rpc == 89 || rpc == 133) return "#00FFFF";
             if (rpc == 176 || rpc == 151 || rpc == 152 || (rpc >= 212 && rpc <= 219)) return "#008000";
@@ -76,7 +74,6 @@ public static class RPCSniffer_Patch
             if (rpc == 202) return "#FF8C00";
             return "#FF0000";
         }
-    
 
     public static bool Prefix(PlayerControl __instance, byte callId, MessageReader reader)
     {
@@ -105,9 +102,27 @@ public static class RPCSniffer_Patch
                 }
             }
         }
+
+        if (ElysiumModMenuGUI.blockSpoofRPC &&
+            AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost &&
+            !VanillaRPCs.Contains(callId))
+        {
+            int clientId = ElysiumNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(__instance, callId);
+            if (clientId < 0 && __instance.Data != null) clientId = __instance.Data.ClientId;
+            if (clientId < 0) clientId = __instance.OwnerId;
+
+            if (clientId >= 0 && !ElysiumModMenuGUI.IsProtectedFromAnticheat(clientId) &&
+                !ElysiumModMenuGUI.IsProtectedFromAnticheat(__instance))
+            {
+                string rpcName = KnownMods.TryGetValue(callId, out var modInfo) ? modInfo.Name : "Unknown";
+                ElysiumNetGuard.NetworkGuard.ApplyMenuProtection(clientId, "Custom RPC", $"{rpcName} ({callId})");
+            }
+
+            return false;
+        }
+
         return true;
     }
-}
 }
 
 [HarmonyPatch(typeof(InnerNetClient), "HandleGameData")]

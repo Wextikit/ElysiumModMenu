@@ -42,14 +42,57 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private void UpdateRoomPlayers()
+        {
+            int count = 0;
+            try
+            {
+                foreach (PlayerControl player in lockedPlayersList)
+                {
+                    try
+                    {
+                        if (player == null || player == PlayerControl.LocalPlayer || player.Data == null || player.Data.Disconnected || NetworkedClones.IsClone(player))
+                            continue;
+
+                        SafePlayerIdentitySnapshot identity;
+                        bool hasIdentity = TryGetSafeIdentity(player, out identity);
+                        string playerName = Regex.Replace(hasIdentity ? identity.Name : $"Player {player.PlayerId}", "<.*?>", string.Empty);
+                        if (playerName.Length > 18) playerName = playerName.Substring(0, 15) + "...";
+
+                        int level = 1;
+                        try { level = (int)player.Data.PlayerLevel + 1; } catch { }
+
+                        RoomPlayerActionEntry entry;
+                        if (count < roomPlayers.Count)
+                        {
+                            entry = roomPlayers[count];
+                        }
+                        else
+                        {
+                            entry = new RoomPlayerActionEntry();
+                            roomPlayers.Add(entry);
+                        }
+
+                        entry.ownerId = (int)player.OwnerId;
+                        entry.playerName = playerName;
+                        entry.friendCode = hasIdentity ? identity.FriendCode : string.Empty;
+                        entry.puid = hasIdentity ? identity.Puid : "Unknown";
+                        entry.label = $"{playerName}  <color=#777777>Lv:{level}</color>";
+                        count++;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            if (roomPlayers.Count > count)
+                roomPlayers.RemoveRange(count, roomPlayers.Count - count);
+        }
+
 private void DrawAntiCheatTab()
         {
-            Event wheelEvent = Event.current;
-            if (wheelEvent != null && wheelEvent.type == EventType.ScrollWheel)
-            {
-                scrollPosition.y = Mathf.Max(0f, scrollPosition.y + wheelEvent.delta.y * 32f);
-                wheelEvent.Use();
-            }
+            if (Event.current != null && Event.current.type == EventType.Layout)
+                UpdateRoomPlayers();
 
             float outerContentWidth = GetMenuWorkWidth(220f, 760f);
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
@@ -59,10 +102,10 @@ private void DrawAntiCheatTab()
             float antiCheatColumnWidth = Mathf.Floor(Mathf.Max(156f, (outerContentWidth - antiCheatGap) / 2f));
             int antiCheatToggleWidth = Mathf.RoundToInt(Mathf.Max(128f, antiCheatColumnWidth - cardPaddingWidth - 8f));
             float antiCheatAvailableHeight = Mathf.Max(330f, windowRect.height - 96f);
-            float banListCardHeight = Mathf.Clamp(antiCheatAvailableHeight * 0.54f, 185f, 230f);
+            float banListCardHeight = Mathf.Clamp(antiCheatAvailableHeight * 0.36f, 145f, 185f);
             float roomActionsCardHeight = Mathf.Max(132f, antiCheatAvailableHeight - banListCardHeight - 8f);
             float banListScrollHeight = Mathf.Max(82f, banListCardHeight - 100f);
-            float roomActionsScrollHeight = Mathf.Max(74f, roomActionsCardHeight - 48f);
+            float roomActionsScrollHeight = Mathf.Max(120f, roomActionsCardHeight - 48f);
             float antiCheatInnerWidth = Mathf.Max(124f, antiCheatColumnWidth - cardPaddingWidth - 8f);
 
             GUILayout.BeginHorizontal(GUILayout.Width(outerContentWidth));
@@ -75,8 +118,6 @@ private void DrawAntiCheatTab()
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Mode:", "Режим:"), toggleLabelStyle, GUILayout.Width(60));
 
-            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() } };
-
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(25), GUILayout.Height(25)))
             {
                 punishmentMode--;
@@ -84,7 +125,7 @@ private void DrawAntiCheatTab()
                 settingsDirty = true;
             }
 
-            GUILayout.Label(punishmentNames[punishmentMode], middleLabelStyle, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+            GUILayout.Label(punishmentNames[punishmentMode], accentValueStyle, GUILayout.ExpandWidth(true), GUILayout.Height(25));
 
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(25), GUILayout.Height(25)))
             {
@@ -102,7 +143,7 @@ private void DrawAntiCheatTab()
                 3 => "<color=#FF0000>Ban: Игрок будет забанен (Host Only).</color>",
                 _ => ""
             };
-            GUILayout.Label(modeDesc, new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
+            GUILayout.Label(modeDesc, richWrapLabelStyle11);
 
             GUILayout.Space(12);
             DrawMenuSectionHeader(L("RPC PROTECTIONS", "ЗАЩИТА RPC"));
@@ -127,7 +168,7 @@ private void DrawAntiCheatTab()
             GUILayout.Space(5);
             enablePasosLimit = DrawToggle(enablePasosLimit, L("RPC Anti-Cheat", "RPC Античит"), antiCheatToggleWidth);
             GUILayout.Space(5);
-            oldAntiCheatVersion = DrawToggle(oldAntiCheatVersion, L("anti-cheat old version", "anti-cheat old version"), antiCheatToggleWidth);
+            oldAntiCheatVersion = DrawToggle(oldAntiCheatVersion, L("anti-cheat old version", "античит старой версии"), antiCheatToggleWidth);
             GUILayout.Space(5);
             banMalformedPacketSender = DrawToggle(banMalformedPacketSender, L("Ban Malformed Sender (Host)", "Бан за кривые пакеты (Хост)"), antiCheatToggleWidth);
             GUILayout.Space(5);
@@ -142,7 +183,7 @@ private void DrawAntiCheatTab()
             GUILayout.Space(5);
             banVoteKickVoters = DrawToggle(banVoteKickVoters, L("Ban Vote-Kick Voters (Host)", "Бан за vote-kick (Хост)"), antiCheatToggleWidth);
             GUILayout.Space(5);
-            blockVentKickExploit = DrawToggle(blockVentKickExploit, L("Block Vent Kick", "Блокировать vent kick"), antiCheatToggleWidth);
+            blockVentKickExploit = DrawToggle(blockVentKickExploit, L("Block Vent-Kick Exploit", "Блокировать vent kick"), antiCheatToggleWidth);
             GUILayout.Space(5);
             blockServerTeleports = DrawToggle(blockServerTeleports, L("Block Server Teleports", "Блокировать server TP"), antiCheatToggleWidth);
             GUILayout.Space(5);
@@ -151,7 +192,7 @@ private void DrawAntiCheatTab()
             if (autoKickBugs)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(L("Timer:", "Таймер:"), new GUIStyle(toggleLabelStyle), GUILayout.Height(22), GUILayout.Width(62));
+                GUILayout.Label(L("Timer:", "Таймер:"), toggleLabelStyle, GUILayout.Height(22), GUILayout.Width(62));
                 autoKickTimer = GUILayout.HorizontalSlider(autoKickTimer, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(112));
                 GUILayout.Space(8);
                 GUILayout.Label(autoKickTimer.ToString("0.0") + "s", menuBadgeStyle, GUILayout.Width(46), GUILayout.Height(22));
@@ -165,7 +206,7 @@ private void DrawAntiCheatTab()
             if (autoKickLowLevelEnabled)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(L("Min level:", "Мин. уровень:"), new GUIStyle(toggleLabelStyle), GUILayout.Height(22), GUILayout.Width(86));
+                GUILayout.Label(L("Min level:", "Мин. уровень:"), toggleLabelStyle, GUILayout.Height(22), GUILayout.Width(86));
                 int oldMinLevel = autoKickMinLevel;
                 autoKickMinLevel = Mathf.Clamp((int)GUILayout.HorizontalSlider(autoKickMinLevel, 1f, 300f, sliderStyle, sliderThumbStyle, GUILayout.Width(112)), 1, 300);
                 if (oldMinLevel != autoKickMinLevel) settingsDirty = true;
@@ -215,7 +256,7 @@ private void DrawAntiCheatTab()
             if (bannedEntries.Count == 0)
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label($"<color=#777777>{L("Ban list is empty.", "Бан лист пуст.")}</color>", new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+                GUILayout.Label($"<color=#777777>{L("Ban list is empty.", "Бан лист пуст.")}</color>", centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
             else
@@ -225,15 +266,11 @@ private void DrawAntiCheatTab()
                     string entry = bannedEntries[i];
                     if (string.IsNullOrWhiteSpace(entry)) continue;
 
-                    string[] parts = entry.Split('|');
-                    string disp = parts.Length >= 3 ? $"{parts[2]} ({parts[0]})" : entry;
+                    string disp = i < bannedEntryLabels.Count ? bannedEntryLabels[i] : entry;
 
                     GUILayout.BeginHorizontal(boxStyle);
-                    GUILayout.Label(disp, new GUIStyle(GUI.skin.label) { fontSize = 12 }, GUILayout.Width(185));
+                    GUILayout.Label(disp, labelStyle12, GUILayout.Width(185));
                     GUILayout.FlexibleSpace();
-
-                    GUIStyle redCrossStyle = new GUIStyle(btnStyle);
-                    redCrossStyle.normal.textColor = new Color(1f, 0.3f, 0.3f);
 
                     bool removedEntry = false;
                     if (GUILayout.Button("X", redCrossStyle, GUILayout.Width(25), GUILayout.Height(22)))
@@ -253,47 +290,11 @@ private void DrawAntiCheatTab()
             DrawMenuSectionHeader("BAN / KICK PLAYER");
             GUILayout.Space(4f);
 
-            List<RoomPlayerActionEntry> roomPlayers = new List<RoomPlayerActionEntry>();
-            try
-            {
-                if (PlayerControl.AllPlayerControls != null)
-                {
-                    foreach (PlayerControl player in PlayerControl.AllPlayerControls)
-                    {
-                        try
-                        {
-                            if (player == null || player == PlayerControl.LocalPlayer || player.Data == null || player.Data.Disconnected)
-                                continue;
-
-                            SafePlayerIdentitySnapshot identity;
-                            bool hasIdentity = TryGetSafeIdentity(player, out identity);
-                            string playerName = Regex.Replace(hasIdentity ? identity.Name : $"Player {player.PlayerId}", "<.*?>", string.Empty);
-                            if (playerName.Length > 18) playerName = playerName.Substring(0, 15) + "...";
-
-                            int level = 1;
-                            try { level = (int)player.Data.PlayerLevel + 1; } catch { }
-
-                            roomPlayers.Add(new RoomPlayerActionEntry
-                            {
-                                ownerId = (int)player.OwnerId,
-                                playerName = playerName,
-                                level = level,
-                                friendCode = hasIdentity ? identity.FriendCode : string.Empty,
-                                puid = hasIdentity ? identity.Puid : "Unknown"
-                            });
-                        }
-                        catch { }
-                    }
-                }
-            }
-            catch { }
-
-            roomPlayerActionsScroll = GUILayout.BeginScrollView(roomPlayerActionsScroll, GUILayout.Height(roomActionsScrollHeight));
+            roomPlayerActionsScroll = GUILayout.BeginScrollView(roomPlayerActionsScroll, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none, GUILayout.Height(roomActionsScrollHeight));
             foreach (RoomPlayerActionEntry player in roomPlayers)
             {
                 GUILayout.BeginHorizontal(boxStyle);
-                GUILayout.Label($"{player.playerName}  <color=#777777>Lv:{player.level}</color>",
-                    new GUIStyle(GUI.skin.label) { fontSize = 11, richText = true }, GUILayout.ExpandWidth(true));
+                GUILayout.Label(player.label, richLabelStyle11, GUILayout.ExpandWidth(true));
 
                 bool previousEnabled = GUI.enabled;
                 bool canHostAction = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost;
@@ -315,8 +316,6 @@ private void DrawAntiCheatTab()
                 }
 
                 GUI.enabled = previousEnabled && canHostAction;
-                GUIStyle banButtonStyle = new GUIStyle(btnStyle);
-                banButtonStyle.normal.textColor = new Color(1f, 0.35f, 0.35f);
                 if (GUILayout.Button("BAN", banButtonStyle, GUILayout.Width(45f), GUILayout.Height(22f)))
                 {
                     try
@@ -341,7 +340,7 @@ private void DrawAntiCheatTab()
             {
                 GUILayout.FlexibleSpace();
                 GUILayout.Label("<color=#777777>No players in the room.</color>",
-                    new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+                    centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
             GUILayout.EndScrollView();

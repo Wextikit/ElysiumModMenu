@@ -63,6 +63,8 @@ internal static class NetworkInboundSenderPatch
 	{
 		if (!ElysiumModMenu.ElysiumModMenuGUI.oldAntiCheatVersion &&
 			!ElysiumModMenu.ElysiumModMenuGUI.banVoteKickVoters &&
+			!ElysiumModMenu.ElysiumModMenuGUI.blockVentKickExploit &&
+			!ElysiumModMenu.ElysiumModMenuGUI.blockSpoofRPC &&
 			!(ElysiumModMenu.ElysiumModMenuGUI.overflowProtection && __instance != null && __instance.AmHost))
 			return;
 		using (ElysiumNetGuard.NetGuardProfiler.Sample("Net.TrackSender"))

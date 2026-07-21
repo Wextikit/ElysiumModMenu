@@ -49,7 +49,7 @@ private void DrawPlayersRoles()
             DrawMenuSectionHeader("PRE-GAME ROLE MANAGER");
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Height(25))) enablePreGameRoleForce = !enablePreGameRoleForce;
-            if (GUILayout.Button("Random 2 Imps", btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
+            if (GUILayout.Button(L("Random 2 Imps", "2 СЛУЧАЙНЫХ ИМПОСТЕРА"), btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
             {
                 autoTwoImpostorPlayerIds.Clear();
                 autoTwoImpostorsLastLobbyFingerprint = 0;
@@ -70,7 +70,7 @@ private void DrawPlayersRoles()
                     autoTwoImpostorsLastLobbyFingerprint = 0;
                 }
             }
-            if (GUILayout.Button("Clear All Roles", btnStyle, GUILayout.Width(110), GUILayout.Height(25))) { autoTwoImpostors = false; autoTwoImpostorPlayerIds.Clear(); autoTwoImpostorsLastLobbyFingerprint = 0; forcedPreGameRoles.Clear(); forcedImpostors.Clear(); forcedPreGameRoleFcs.Clear(); forcedImpostorFcs.Clear(); }
+            if (GUILayout.Button(L("Clear All Roles", "ОЧИСТИТЬ ВСЕ РОЛИ"), btnStyle, GUILayout.Width(110), GUILayout.Height(25))) { autoTwoImpostors = false; autoTwoImpostorPlayerIds.Clear(); autoTwoImpostorsLastLobbyFingerprint = 0; forcedPreGameRoles.Clear(); forcedImpostors.Clear(); forcedPreGameRoleFcs.Clear(); forcedImpostorFcs.Clear(); }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -80,20 +80,13 @@ private void DrawPlayersRoles()
             DrawMenuSectionHeader("LIVE ROLE DISTRIBUTOR (HOST)");
             GUILayout.BeginHorizontal();
 
-            GUIStyle allRoleMidStyle = new GUIStyle(btnStyle)
-            {
-                fontStyle = FontStyle.Bold,
-                normal = { background = null, textColor = GetMenuAccentColor() },
-                alignment = TextAnchor.MiddleCenter
-            };
-
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
                 allPlayersRoleAssignIdx--;
                 if (allPlayersRoleAssignIdx < 0) allPlayersRoleAssignIdx = roleAssignOptions.Length - 1;
             }
 
-            GUILayout.Label(roleAssignNames[allPlayersRoleAssignIdx], allRoleMidStyle, GUILayout.Height(25), GUILayout.ExpandWidth(true));
+            GUILayout.Label(roleAssignNames[allPlayersRoleAssignIdx], accentValueStyle, GUILayout.Height(25), GUILayout.ExpandWidth(true));
 
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
@@ -103,7 +96,7 @@ private void DrawPlayersRoles()
             GUILayout.EndHorizontal();
 
             GUILayout.Space(5);
-            if (GUILayout.Button("SET ALL PLAYERS ROLE", activeTabStyle, GUILayout.Height(28)))
+            if (GUILayout.Button(L("SET ALL PLAYERS ROLE", "ВЫДАТЬ РОЛЬ ВСЕМ"), activeTabStyle, GUILayout.Height(28)))
             {
                 if (IsGhostRoleSelection(allPlayersRoleAssignIdx))
                     SetAllPlayersGhost();
@@ -114,14 +107,14 @@ private void DrawPlayersRoles()
             }
             GUILayout.Space(4);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("ALL -> GHOST", btnStyle, GUILayout.Height(26)))
+            if (GUILayout.Button(L("ALL -> GHOST", "ВСЕ -> ПРИЗРАКИ"), btnStyle, GUILayout.Height(26)))
                 SetAllPlayersGhost();
-            if (GUILayout.Button("REVIVE ALL", activeTabStyle, GUILayout.Height(26)))
+            if (GUILayout.Button(L("REVIVE ALL", "ВОСКРЕСИТЬ ВСЕХ"), activeTabStyle, GUILayout.Height(26)))
                 ReviveAllPlayers();
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("ALL -> GHOST IMP", btnStyle, GUILayout.Height(26)))
+            if (GUILayout.Button(L("ALL -> GHOST IMP", "ВСЕ -> ПРИЗРАКИ-ИМПОСТЕРЫ"), btnStyle, GUILayout.Height(26)))
                 SetAllPlayersGhost(true);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -129,7 +122,7 @@ private void DrawPlayersRoles()
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(150), GUILayout.Height(315));
-            preRolesListScrollPos = GUILayout.BeginScrollView(preRolesListScrollPos, GUILayout.ExpandHeight(true));
+            preRolesListScrollPos = GUILayout.BeginScrollView(preRolesListScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.ExpandHeight(true));
             foreach (var pc in lockedPlayersList)
             {
                 if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
@@ -147,52 +140,51 @@ private void DrawPlayersRoles()
 
             GUILayout.Space(8);
             GUILayout.BeginVertical(menuCardStyle, GUILayout.ExpandWidth(true), GUILayout.Height(315));
-            preRolesActionScrollPos = GUILayout.BeginScrollView(preRolesActionScrollPos, GUILayout.ExpandHeight(true));
+            preRolesActionScrollPos = GUILayout.BeginScrollView(preRolesActionScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.ExpandHeight(true));
             PlayerControl target = !string.IsNullOrEmpty(selectedPreRoleFc)
                 ? lockedPlayersList.FirstOrDefault(p => GetRoleForceKey(p) == selectedPreRoleFc)
                 : lockedPlayersList.FirstOrDefault(p => p.PlayerId == selectedPreRoleId);
             if (target != null && target.Data != null)
             {
-                GUIStyle infoStyle = new GUIStyle(GUI.skin.label) { richText = true, fontSize = 14 };
-                GUILayout.Label($"<color=#aaaaaa>Selecting role for:</color> {target.Data.PlayerName}", infoStyle);
+                GUILayout.Label($"<color=#aaaaaa>Selecting role for:</color> {target.Data.PlayerName}", richLabelStyle14);
                 RoleTypes currentForced = TryGetForcedRole(target, out RoleTypes targetRole) ? targetRole : RoleTypes.Crewmate;
                 bool isForced = IsForced(target);
                 string roleNameStr = currentForced.ToString().Replace("9", "Phantom").Replace("10", "Tracker").Replace("8", "Noisemaker").Replace("12", "Detective").Replace("18", "Viper");
                 if (IsForcedImp(target)) roleNameStr = "Impostor";
                 string targetFc = GetRoleForceKey(target);
-                GUILayout.Label($"<color=#aaaaaa>Status:</color> {(isForced ? $"<color=#00FF00>Forced ({roleNameStr})</color>" : "<color=#FF0000>Not Forced (Random)</color>")}", infoStyle);
-                GUILayout.Label($"<color=#aaaaaa>FC:</color> {(string.IsNullOrEmpty(targetFc) ? "none, fallback PlayerId" : targetFc)}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 });
+                GUILayout.Label($"<color=#aaaaaa>Status:</color> {(isForced ? $"<color=#00FF00>Forced ({roleNameStr})</color>" : "<color=#FF0000>Not Forced (Random)</color>")}", richLabelStyle14);
+                GUILayout.Label($"<color=#aaaaaa>FC:</color> {(string.IsNullOrEmpty(targetFc) ? "none, fallback PlayerId" : targetFc)}", richLabelStyle11);
                 GUILayout.Space(15);
                 DrawMenuSectionHeader("IMPOSTOR ROLES (Red Team)");
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Impostor", btnStyle, GUILayout.Height(24))) SetForcedImp(target);
-                if (GUILayout.Button("Shapeshifter", btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Shapeshifter);
-                if (GUILayout.Button("Phantom", btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)9);
-                if (GUILayout.Button("Viper", btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)18);
+            if (GUILayout.Button(L("Impostor", "Импостер"), btnStyle, GUILayout.Height(24))) SetForcedImp(target);
+            if (GUILayout.Button(L("Shapeshifter", "Шейпшифтер"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Shapeshifter);
+            if (GUILayout.Button(L("Phantom", "Фантом"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)9);
+            if (GUILayout.Button(L("Viper", "Гадюка"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)18);
                 GUILayout.EndHorizontal();
                 GUILayout.Space(10);
                 DrawMenuSectionHeader("CREWMATE ROLES (Blue Team)");
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Crewmate", btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Crewmate);
-                if (GUILayout.Button("Engineer", btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Engineer);
-                if (GUILayout.Button("Scientist", btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Scientist);
-                if (GUILayout.Button("Tracker", btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)10);
+            if (GUILayout.Button(L("Crewmate", "Крюмен"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Crewmate);
+            if (GUILayout.Button(L("Engineer", "Инженер"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Engineer);
+            if (GUILayout.Button(L("Scientist", "Учёный"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.Scientist);
+            if (GUILayout.Button(L("Tracker", "Трекер"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)10);
                 GUILayout.EndHorizontal();
                 GUILayout.Space(5);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Noisemaker", btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)8);
-                if (GUILayout.Button("Guardian Angel", btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.GuardianAngel);
-                if (GUILayout.Button("Detective", btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)12);
+            if (GUILayout.Button(L("Noisemaker", "Шумовик"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)8);
+            if (GUILayout.Button(L("Guardian Angel", "Ангел-хранитель"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.GuardianAngel);
+            if (GUILayout.Button(L("Detective", "Детектив"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)12);
                 GUILayout.EndHorizontal();
                 GUILayout.Space(15);
-                if (GUILayout.Button("REMOVE FORCED ROLE", activeTabStyle, GUILayout.Height(35))) ClearForcedRole(target);
+            if (GUILayout.Button(L("REMOVE FORCED ROLE", "УБРАТЬ ВЫДАННУЮ РОЛЬ"), activeTabStyle, GUILayout.Height(35))) ClearForcedRole(target);
                 GUILayout.Space(20);
-                GUILayout.Label("<color=#777777><b>Hide & Seek Notice:</b>\nР’С‹Р±РѕСЂ Impostor/Shapeshifter/Phantom/Viper СЂР°СЃС€РёСЂРёС‚ Р»РёРјРёС‚ РјР°РЅСЊСЏРєРѕРІ (Seekers) РІ РџСЂСЏС‚РєР°С…!</color>", new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true });
+            GUILayout.Label($"<color=#777777><b>{L("Hide & Seek Notice:", "Важно для Hide & Seek:")}</b>\n{L("Selecting Impostor/Shapeshifter/Phantom/Viper expands the Seeker limit in Hide & Seek.", "Выбор импостера, шейпшифтера, фантома или гадюки увеличивает лимит искателей в Hide & Seek.")}</color>", richWrapLabelStyle12);
             }
             else
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("<color=#777777>Select a player to set their role</color>", new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+            GUILayout.Label($"<color=#777777>{L("Select a player to set their role", "Выберите игрока для выдачи роли")}</color>", centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
             GUILayout.EndScrollView();

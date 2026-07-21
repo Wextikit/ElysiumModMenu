@@ -44,7 +44,8 @@ namespace ElysiumModMenu
     {
 private bool DrawColoredActionButton(string text, Color color, float width, float height = 24f, bool exactWidth = false)
         {
-            GUIStyle style = new GUIStyle(btnStyle);
+            text = MenuText(text);
+            GUIStyle style = coloredActionButtonStyle;
             Color themedColor = RgbMenuTextActive() ? GetMenuAccentColor() : (whiteMenuTheme ? GetThemeAccentColor(color) : color);
             Color hoverColor = whiteMenuTheme
                 ? Color.Lerp(themedColor, Color.black, 0.18f)
@@ -57,29 +58,24 @@ private bool DrawColoredActionButton(string text, Color color, float width, floa
             style.clipping = exactWidth ? TextClipping.Clip : TextClipping.Overflow;
             style.wordWrap = false;
 
-            float minContentWidth = Mathf.Ceil(style.CalcSize(new GUIContent(text)).x) + 32f;
+            float minContentWidth = Mathf.Ceil(style.CalcSize(GUIContent.Temp(text)).x) + 32f;
             float finalButtonWidth = exactWidth ? width : Mathf.Max(width, minContentWidth);
             return GUILayout.Button(text, style, GUILayout.Width(finalButtonWidth), GUILayout.Height(height));
         }
 
 private GUIStyle CreateClippedButtonStyle(GUIStyle sourceStyle)
         {
-            GUIStyle style = new GUIStyle(sourceStyle);
-            style.clipping = TextClipping.Clip;
-            style.wordWrap = false;
-            return style;
+            return sourceStyle == activeTabStyle ? clippedActiveButtonStyle : clippedButtonStyle;
         }
 
 private GUIStyle CreateCompactMenuCardStyle()
         {
-            GUIStyle style = new GUIStyle(menuCardStyle);
-            style.padding = CreateRectOffset(8, 8, 6, 6);
-            style.margin = CreateRectOffset(0, 0, 0, 6);
-            return style;
+            return compactMenuCardStyle;
         }
 
 private bool DrawCompactToggle(bool value, string text, int width = 0)
         {
+            text = MenuText(text);
             int finalWidth = width > 0 ? Mathf.Max(width, 44) : 168;
             GUILayout.BeginHorizontal(GUILayout.Width(finalWidth), GUILayout.Height(17));
 
@@ -89,19 +85,9 @@ private bool DrawCompactToggle(bool value, string text, int width = 0)
 
             GUILayout.Space(4);
 
-            GUIStyle toggleTextStyle = new GUIStyle(toggleLabelStyle)
-            {
-                fontSize = 11,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                richText = true,
-                stretchWidth = false,
-                alignment = TextAnchor.MiddleLeft
-            };
-
             float textWidth = Mathf.Max(42f, finalWidth - 36f);
             Rect textRect = GUILayoutUtility.GetRect(textWidth, 16f, GUILayout.Width(textWidth), GUILayout.Height(16f));
-            GUI.Label(textRect, new GUIContent(text), toggleTextStyle);
+            GUI.Label(textRect, text, compactToggleTextStyle);
 
             bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
             if (clickedText) Event.current.Use();
@@ -114,16 +100,12 @@ private bool DrawCompactToggle(bool value, string text, int width = 0)
 
 private bool DrawFixedMenuButton(string text, GUIStyle sourceStyle, float width, float height)
         {
-            return GUILayout.Button(text, CreateClippedButtonStyle(sourceStyle), GUILayout.Width(width), GUILayout.Height(height));
+            return GUILayout.Button(MenuText(text), CreateClippedButtonStyle(sourceStyle), GUILayout.Width(width), GUILayout.Height(height));
         }
 
 private bool DrawPseudoInputButton(string value, bool editing, float height = 28f, int maxChars = 52)
         {
-            GUIStyle style = new GUIStyle(editing ? activeTabStyle : inputBlockStyle);
-            style.alignment = TextAnchor.MiddleLeft;
-            style.clipping = TextClipping.Clip;
-            style.wordWrap = false;
-            style.padding = CreateRectOffset(10, 10, 0, 0);
+            GUIStyle style = editing ? activePseudoInputStyle : pseudoInputStyle;
 
             Rect rect = GUILayoutUtility.GetRect(GUIContent.none, style, GUILayout.ExpandWidth(true), GUILayout.Height(height));
             return GUI.Button(rect, FormatInputPreview(value, editing, maxChars), style);
@@ -131,16 +113,8 @@ private bool DrawPseudoInputButton(string value, bool editing, float height = 28
 
 private void DrawClippedHint(string text, float height = 13f)
         {
-            GUIStyle style = new GUIStyle(toggleLabelStyle)
-            {
-                fontSize = 10,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                alignment = TextAnchor.MiddleLeft
-            };
-
-            Rect rect = GUILayoutUtility.GetRect(GUIContent.none, style, GUILayout.ExpandWidth(true), GUILayout.Height(height));
-            GUI.Label(rect, text, style);
+            Rect rect = GUILayoutUtility.GetRect(GUIContent.none, clippedHintStyle, GUILayout.ExpandWidth(true), GUILayout.Height(height));
+            GUI.Label(rect, text, clippedHintStyle);
         }
 
 private void OpenExternalLink(string url, string label)

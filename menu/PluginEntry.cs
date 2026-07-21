@@ -43,7 +43,7 @@ namespace ElysiumModMenu
     [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.4.3";
+        public const string PluginVersion = "1.4.4";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;
@@ -137,6 +137,8 @@ namespace ElysiumModMenu
             ThrottleDefaultLogsConfig = MenuConfig.Bind("ElysiumModMenu.Diagnostics", "ThrottleDefaultLogs", true, "Legacy compatibility setting. DetailedLogsEnabled now controls routine log output.");
             DetailedLogsEnabledConfig = MenuConfig.Bind("ElysiumModMenu.Diagnostics", "DetailedLogsEnabled", false, "Enables verbose Unity/BepInEx Message, Info and Debug output. Warnings and errors are always shown.");
             ShowEspFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Visuals", "ShowEspFriendCode", true, "Show Friend Code in ESP player info.");
+            ElysiumModMenuGUI.detailedLogsEnabled = DetailedLogsEnabledConfig.Value;
+            RepeatedLogFilter.Install();
 
             ClassInjector.RegisterTypeInIl2Cpp<ElysiumModMenuGUI>();
             ClassInjector.RegisterTypeInIl2Cpp<ModPlayer>();
@@ -156,7 +158,6 @@ namespace ElysiumModMenu
 
             var harmony = new Harmony("com.elysiummodmenu.harmony");
             harmony.PatchAll();
-            RepeatedLogFilter.Install();
         }
 
         private static int DetectNativePlatformIndex()

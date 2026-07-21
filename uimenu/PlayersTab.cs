@@ -44,18 +44,45 @@ namespace ElysiumModMenu
     {
 private void DrawPlayersTab()
         {
+            if (lastPlayersSubTabForScroll != currentPlayersSubTab)
+            {
+                ResetPlayersTabScrolls();
+                lastPlayersSubTabForScroll = currentPlayersSubTab;
+            }
+
             GUILayout.BeginHorizontal();
             for (int i = 0; i < playersSubTabs.Length; i++)
+            {
                 if (GUILayout.Button(playersSubTabs[i], currentPlayersSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                { currentPlayersSubTab = i; scrollPosition = Vector2.zero; }
+                {
+                    if (SetMultiTab("players", ref currentPlayersSubTab, i, playersSubTabs.Length))
+                    {
+                        ResetPlayersTabScrolls();
+                        lastPlayersSubTabForScroll = currentPlayersSubTab;
+                    }
+                    else
+                    {
+                        scrollPosition = Vector2.zero;
+                    }
+                }
+            }
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
 
-            if (currentPlayersSubTab == 1)
+            BeginMultiTabContent("players", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
             {
-                DrawPlayersHistoryTab();
-                return;
-            }
+                if (currentPlayersSubTab == 1)
+                {
+                    DrawPlayersHistoryTab();
+                    return;
+                }
+
+                if (currentPlayersSubTab == 2)
+                {
+                    DrawPlayersClonesTab();
+                    return;
+                }
 
             float playersTabWidth = GetMenuWorkWidth(220f, 760f);
             bool stackPlayers = playersTabWidth < 430f;
@@ -65,36 +92,48 @@ private void DrawPlayersTab()
 
             if (stackPlayers) GUILayout.BeginVertical(GUILayout.Width(playersTabWidth));
             else GUILayout.BeginHorizontal(GUILayout.Width(playersTabWidth));
-
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(playerListWidth), stackPlayers ? GUILayout.Height(112f) : GUILayout.ExpandHeight(true));
-            playerListScrollPos = GUILayout.BeginScrollView(playerListScrollPos, false, false, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none);
-            if (lockedPlayersList.Count > 0)
+            try
             {
-                foreach (var pc in lockedPlayersList)
+
+                GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(playerListWidth), stackPlayers ? GUILayout.Height(112f) : GUILayout.ExpandHeight(true));
+                try
                 {
-                    if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
-                    string pName = pc.Data.PlayerName ?? "Unknown";
-
-                    if (TryGetForcedRole(pc, out _)) pName += " [*]";
-                    else if (IsForcedImp(pc)) pName += " [Imp]";
-
-                    bool isSelected = selectedAntiCheatPlayerId == pc.PlayerId;
-
-                    GUI.contentColor = Color.white;
-                    try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch { }
-
-                    if (GUILayout.Button(pName, isSelected ? activeTabStyle : btnStyle, GUILayout.Height(30)))
+                    playerListScrollPos = GUILayout.BeginScrollView(playerListScrollPos, false, false, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none);
+                    try
                     {
-                        selectedAntiCheatPlayerId = pc.PlayerId;
-                    }
-                    GUI.contentColor = Color.white;
-                }
-            }
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
+                        if (lockedPlayersList.Count > 0)
+                        {
+                            foreach (var pc in lockedPlayersList)
+                            {
+                                if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
+                                string pName = pc.Data.PlayerName ?? "Unknown";
 
-            GUILayout.Space(playerActionGapMain); GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(playerActionPanelWidth), GUILayout.ExpandHeight(true));
-            playerActionScrollPos = GUILayout.BeginScrollView(playerActionScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none, GUILayout.Width(playerActionPanelWidth - 8f));
+                                if (TryGetForcedRole(pc, out _)) pName += " [*]";
+                                else if (IsForcedImp(pc)) pName += " [Imp]";
+
+                                bool isSelected = selectedAntiCheatPlayerId == pc.PlayerId;
+
+                                GUI.contentColor = Color.white;
+                                try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch { }
+
+                                if (GUILayout.Button(pName, isSelected ? activeTabStyle : btnStyle, GUILayout.Height(30)))
+                                {
+                                    selectedAntiCheatPlayerId = pc.PlayerId;
+                                }
+                                GUI.contentColor = Color.white;
+                            }
+                        }
+                    }
+                    finally { GUILayout.EndScrollView(); }
+                }
+                finally { GUILayout.EndVertical(); }
+
+                GUILayout.Space(playerActionGapMain); GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(playerActionPanelWidth), GUILayout.ExpandHeight(true));
+                try
+                {
+                    playerActionScrollPos = GUILayout.BeginScrollView(playerActionScrollPos, false, false, GUIStyle.none, GUIStyle.none, GUIStyle.none, GUILayout.Width(playerActionPanelWidth - 8f));
+                    try
+                    {
 
             PlayerControl target = null;
             try { target = lockedPlayersList.FirstOrDefault(p => p != null && p.PlayerId == selectedAntiCheatPlayerId); }
@@ -108,7 +147,7 @@ private void DrawPlayersTab()
                 float playerActionHalfWidth = Mathf.Floor((playerActionContentWidth - playerActionGap) / 2f);
                 float playerActionButtonHeight = 23f;
 
-                GUILayout.Label($"<color=#aaaaaa>Selected:</color> {target.Data.PlayerName}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 });
+                GUILayout.Label($"<color=#aaaaaa>Selected:</color> {target.Data.PlayerName}", richLabelStyle12);
                 GUILayout.Space(5);
                 GUILayout.BeginHorizontal();
 
@@ -136,7 +175,7 @@ private void DrawPlayersTab()
                 if (DrawFixedMenuButton("TP TO", activeTabStyle, playerActionThirdWidth, playerActionButtonHeight))
                 {
                     teleportToPlayer(target);
-                    ShowNotification($"<color=#00FF00>[TELEPORT]</color> РўРµР»РµРїРѕСЂС‚РёСЂРѕРІР°РЅ Рє <b>{target.Data.PlayerName}</b>!");
+                    ShowNotification($"<color=#00FF00>[TELEPORT]</color> Teleported to <b>{target.Data.PlayerName}</b>!");
                 }
 
                 GUILayout.Space(playerActionGap);
@@ -227,13 +266,12 @@ private void DrawPlayersTab()
                 DrawMenuSectionHeader("TARGET ROLE CONTROL");
 
                 GUILayout.BeginHorizontal();
-                GUIStyle roleMidStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() }, alignment = TextAnchor.MiddleCenter };
                 if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(22)))
                 {
                     targetRoleAssignIdx--;
                     if (targetRoleAssignIdx < 0) targetRoleAssignIdx = roleAssignOptions.Length - 1;
                 }
-                GUILayout.Label(roleAssignNames[targetRoleAssignIdx], roleMidStyle, GUILayout.Height(22), GUILayout.ExpandWidth(true));
+                GUILayout.Label(roleAssignNames[targetRoleAssignIdx], accentValueStyle, GUILayout.Height(22), GUILayout.ExpandWidth(true));
                 if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(22)))
                 {
                     targetRoleAssignIdx++;
@@ -247,7 +285,7 @@ private void DrawPlayersTab()
                 {
                     if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
                     {
-                        ShowNotification("<color=#FF0000>[РћРЁРР‘РљРђ]</color> РўСЂРµР±СѓСЋС‚СЃСЏ РїСЂР°РІР° С…РѕСЃС‚Р°!");
+                        ShowNotification("<color=#FF0000>[ERROR]</color> Host permissions required!");
                     }
                     else
                     {
@@ -282,7 +320,7 @@ private void DrawPlayersTab()
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(8);
-                GUILayout.Label("<color=#aaaaaa>Morph Target:</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 });
+                GUILayout.Label($"<color=#aaaaaa>{L("Morph Target:", "Цель морфа:")}</color>", richLabelStyle11);
                 GUILayout.BeginHorizontal();
 
                 int mIdx = lockedPlayersList.FindIndex(p => p.PlayerId == selectedMorphTargetId);
@@ -298,14 +336,7 @@ private void DrawPlayersTab()
                 if (mIdx >= 0 && mIdx < lockedPlayersList.Count) morphName = lockedPlayersList[mIdx].Data.PlayerName;
                 if (morphName.Length > 10) morphName = morphName.Substring(0, 10) + "..";
 
-                GUIStyle morphLabelStyle = new GUIStyle(btnStyle);
-                morphLabelStyle.normal.background = null;
-                morphLabelStyle.hover.background = null;
-                morphLabelStyle.normal.textColor = GetMenuAccentColor();
-                morphLabelStyle.fontStyle = FontStyle.Bold;
-                morphLabelStyle.alignment = TextAnchor.MiddleCenter;
-
-                GUILayout.Label(morphName, morphLabelStyle, GUILayout.Height(25), GUILayout.ExpandWidth(true));
+                GUILayout.Label(morphName, morphValueStyle, GUILayout.Height(25), GUILayout.ExpandWidth(true));
 
                 GUI.backgroundColor = GetMenuControlAccentColor();
                 if (GUILayout.Button(">", btnStyle, GUILayout.Width(25), GUILayout.Height(25)))
@@ -318,7 +349,7 @@ private void DrawPlayersTab()
                 GUILayout.FlexibleSpace();
 
                 GUI.backgroundColor = GetMenuControlAccentColor();
-                if (GUILayout.Button("MORPH TARGET", btnStyle, GUILayout.Width(160), GUILayout.Height(25)))
+                if (GUILayout.Button(L("MORPH TARGET", "МОРФ В ЦЕЛЬ"), btnStyle, GUILayout.Width(160), GUILayout.Height(25)))
                 {
                     var morphTarget = lockedPlayersList.FirstOrDefault(p => p.PlayerId == selectedMorphTargetId) ?? target;
                     this.StartCoroutine(AttemptShapeshiftFrame(target, morphTarget).WrapToIl2Cpp());
@@ -332,10 +363,6 @@ private void DrawPlayersTab()
                 DrawMenuSectionHeader("SET PLAYER COLOR");
                 GUILayout.BeginVertical();
 
-                GUIStyle roundedColorBtnStyle = new GUIStyle();
-                roundedColorBtnStyle.normal.background = texColorBtn;
-                roundedColorBtnStyle.margin = CreateRectOffset(2, 2, 2, 2);
-
                 int colorsPerRow = Mathf.Clamp(Mathf.FloorToInt(playerActionContentWidth / 36f), 4, 7);
                 for (int i = 0; i < Palette.PlayerColors.Length; i++)
                 {
@@ -343,7 +370,7 @@ private void DrawPlayersTab()
 
                     GUI.color = Palette.PlayerColors[i];
 
-                    if (GUILayout.Button("", roundedColorBtnStyle, GUILayout.Width(32), GUILayout.Height(30)))
+                    if (GUILayout.Button("", roundedColorButtonStyle, GUILayout.Width(32), GUILayout.Height(30)))
                         target.RpcSetColor((byte)i);
 
                     if (i % colorsPerRow == colorsPerRow - 1 || i == Palette.PlayerColors.Length - 1)
@@ -356,7 +383,7 @@ private void DrawPlayersTab()
                 DrawMenuSectionHeader("PLAYER INFO & REPORT");
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("COPY PUID", btnStyle, GUILayout.Height(25)))
+                if (GUILayout.Button(L("COPY PUID", "КОПИРОВАТЬ PUID"), btnStyle, GUILayout.Height(25)))
                 {
                     string puid = GetPlayerPuid(target);
                     if (!string.IsNullOrWhiteSpace(puid) && puid != "Unknown")
@@ -367,7 +394,7 @@ private void DrawPlayersTab()
                     else ShowNotification("<color=#FF0000>[COPY]</color> PUID is unavailable.");
                 }
 
-                if (GUILayout.Button("COPY FRIEND CODE", btnStyle, GUILayout.Height(25)))
+                if (GUILayout.Button(L("COPY FRIEND CODE", "КОПИРОВАТЬ FRIEND CODE"), btnStyle, GUILayout.Height(25)))
                 {
                     string friendCode = GetDisplayedFriendCode(target.Data, string.Empty);
                     if (!string.IsNullOrWhiteSpace(friendCode))
@@ -379,21 +406,21 @@ private void DrawPlayersTab()
                 }
                 GUILayout.EndHorizontal();
 
-                if (GUILayout.Button("ADD TO BAN LIST", btnStyle, GUILayout.Height(25)))
+                if (GUILayout.Button(L("ADD TO BAN LIST", "ДОБАВИТЬ В БАН-ЛИСТ"), btnStyle, GUILayout.Height(25)))
                     AddSelectedPlayerToBanList(target);
 
-                if (GUILayout.Button("ADD TO FRIENDS", btnStyle, GUILayout.Height(25)))
+                if (GUILayout.Button(L("ADD TO FRIENDS", "ДОБАВИТЬ В ДРУЗЬЯ"), btnStyle, GUILayout.Height(25)))
                     SendFriendInviteToPlayer(target);
 
                 GUILayout.Space(8);
-                GUILayout.Label("Report reason:", new GUIStyle(GUI.skin.label) { fontSize = 11 });
+                GUILayout.Label(L("Report reason:", "Причина репорта:"), labelStyle11);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
                 {
                     selectedPlayerReportReasonIdx--;
                     if (selectedPlayerReportReasonIdx < 0) selectedPlayerReportReasonIdx = selectedPlayerReportReasons.Length - 1;
                 }
-                GUILayout.Label(selectedPlayerReportReasonNames[selectedPlayerReportReasonIdx], roleMidStyle, GUILayout.Height(24), GUILayout.ExpandWidth(true));
+                GUILayout.Label(selectedPlayerReportReasonNames[selectedPlayerReportReasonIdx], accentValueStyle, GUILayout.Height(24), GUILayout.ExpandWidth(true));
                 if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
                 {
                     selectedPlayerReportReasonIdx++;
@@ -403,7 +430,7 @@ private void DrawPlayersTab()
 
                 GUILayout.Space(5);
                 GUI.backgroundColor = new Color(0.8f, 0.25f, 0.2f, 1f);
-                if (GUILayout.Button("REPORT PLAYER", btnStyle, GUILayout.Height(27)))
+                if (GUILayout.Button(L("REPORT PLAYER", "ЗАРЕПОРТИТЬ ИГРОКА"), btnStyle, GUILayout.Height(27)))
                 {
                     try
                     {
@@ -432,15 +459,36 @@ private void DrawPlayersTab()
             else
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("<color=#777777>Select a player...</color>", new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+                GUILayout.Label($"<color=#777777>{L("Select a player...", "Выберите игрока...")}</color>", centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
 
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
+                    }
+                    finally { GUILayout.EndScrollView(); }
+                }
+                finally { GUILayout.EndVertical(); }
 
-            if (stackPlayers) GUILayout.EndVertical();
-            else GUILayout.EndHorizontal();
+            }
+            finally
+            {
+                if (stackPlayers) GUILayout.EndVertical();
+                else GUILayout.EndHorizontal();
+            }
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
+        }
+
+private void ResetPlayersTabScrolls()
+        {
+            scrollPosition = Vector2.zero;
+            playerListScrollPos = Vector2.zero;
+            playerActionScrollPos = Vector2.zero;
+            playersHistoryScroll = Vector2.zero;
+            playersClonesScroll = Vector2.zero;
+            cloneTargetScroll = Vector2.zero;
         }
 
     }

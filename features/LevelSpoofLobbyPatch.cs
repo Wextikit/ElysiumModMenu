@@ -43,7 +43,9 @@ public static class LobbyStart_ApplyLevelSpoof
 {
     public static void Postfix()
     {
-        if (ElysiumModMenuGUI.enableLevelSpoof && !ElysiumModMenuGUI.isEditingLevel && uint.TryParse(ElysiumModMenuGUI.spoofLevelString, out uint parsedLvl))
+        ElysiumModMenuGUI.ResetRandomOutfitForLobby();
+
+        if (ElysiumModMenuGUI.enableLevelSpoof && !ElysiumModMenuGUI.isEditingLevel && uint.TryParse(ElysiumModMenuGUI.spoofLevelString, out uint parsedLvl) && parsedLvl > 0)
         {
             ElysiumModMenuGUI.ApplyLevelSpoofValue(parsedLvl);
         }

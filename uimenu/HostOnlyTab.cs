@@ -42,11 +42,11 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
-private string[] visualsSubTabs => new string[] { L("IN-GAME", "В ИГРЕ"), L("OUTFITS", "ОДЕЖДА") };
+private static readonly string[] visualsSubTabs = { L("IN-GAME", "В ИГРЕ"), L("OUTFITS", "ОДЕЖДА") };
 
 private int currentSelfSubTab = 0;
 
-private string[] selfSubTabs = { "SELF", "ROLES", "MOVEMENT", "CHAT" };
+private string[] selfSubTabs = { "SPOOF", "ROLES", "MOVEMENT", "CHAT" };
 
 public static bool fakeStartCounterTroll = false;
 
@@ -97,6 +97,8 @@ private static uint levelSpoofRestoreLevel = 0;
 private static uint lastAppliedLevelSpoofValue = uint.MaxValue;
 
 private static int lastLevelSpoofGameId = int.MinValue;
+
+private static string lastLevelSpoofInput = string.Empty;
 
 public static string customNameInput = "хыхых";
 
@@ -171,7 +173,7 @@ public static bool isEditingFpsLimit = false;
 
 public static bool limitFps = true;
 
-public static int chatHistoryLimit = 20;
+public static int chatHistoryLimit = 80;
 
 public static int currentPlatformIndex = 1;
 
@@ -268,6 +270,10 @@ public static List<string> bannedEntries = new List<string>();
 
 private static readonly HashSet<string> bannedFriendCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+private static readonly HashSet<string> bannedProductUserIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+private static readonly List<string> bannedEntryLabels = new List<string>();
+
 private static bool noTaskOptionsApplied;
 
 private static int noTaskOptionsGameId = int.MinValue;
@@ -288,13 +294,15 @@ private Vector2 banListScroll = Vector2.zero;
 
 private Vector2 roomPlayerActionsScroll = Vector2.zero;
 
+private readonly List<RoomPlayerActionEntry> roomPlayers = new List<RoomPlayerActionEntry>();
+
 private sealed class RoomPlayerActionEntry
         {
             public int ownerId;
             public string playerName;
-            public int level;
             public string friendCode;
             public string puid;
+            public string label;
         }
 
 public static bool autoBanEnabled = true;
@@ -341,13 +349,34 @@ public static void LoadBanList()
 private static void RebuildBannedFriendCodeIndex()
         {
             bannedFriendCodes.Clear();
+            bannedProductUserIds.Clear();
+            bannedEntryLabels.Clear();
             foreach (string entry in bannedEntries)
             {
-                if (string.IsNullOrWhiteSpace(entry)) continue;
-                int separator = entry.IndexOf('|');
-                string friendCode = (separator >= 0 ? entry.Substring(0, separator) : entry).Trim();
-                if (!string.IsNullOrEmpty(friendCode)) bannedFriendCodes.Add(friendCode);
+                if (string.IsNullOrWhiteSpace(entry))
+                {
+                    bannedEntryLabels.Add(string.Empty);
+                    continue;
+                }
+                int first = entry.IndexOf('|');
+                int second = first >= 0 ? entry.IndexOf('|', first + 1) : -1;
+                string friendCode = (first >= 0 ? entry.Substring(0, first) : entry).Trim();
+                string puid = first < 0 ? string.Empty : (second >= 0 ? entry.Substring(first + 1, second - first - 1) : entry.Substring(first + 1)).Trim();
+                if (HasBanId(friendCode)) bannedFriendCodes.Add(friendCode);
+                if (HasBanId(puid)) bannedProductUserIds.Add(puid);
+                bannedEntryLabels.Add(GetBanEntryLabel(entry));
             }
+        }
+
+private static string GetBanEntryLabel(string entry)
+        {
+            int first = entry.IndexOf('|');
+            if (first < 0) return entry;
+            int second = entry.IndexOf('|', first + 1);
+            if (second < 0) return entry;
+            int third = entry.IndexOf('|', second + 1);
+            string name = third < 0 ? entry.Substring(second + 1) : entry.Substring(second + 1, third - second - 1);
+            return $"{name} ({entry.Substring(0, first)})";
         }
 
 private static bool IsFriendCodeBanned(string friendCode)
@@ -355,22 +384,46 @@ private static bool IsFriendCodeBanned(string friendCode)
             return !string.IsNullOrWhiteSpace(friendCode) && bannedFriendCodes.Contains(friendCode.Trim());
         }
 
+private static bool HasBanId(string id)
+        {
+            return !string.IsNullOrWhiteSpace(id) &&
+                   !id.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                   !id.Equals("Hidden", StringComparison.OrdinalIgnoreCase) &&
+                   id != "----";
+        }
+
+private static bool IsPlayerBanned(PlayerControl pc)
+        {
+            if (pc == null || pc.Data == null) return false;
+
+            string friendCode = GetDisplayedFriendCode(pc.Data, string.Empty);
+            if (IsFriendCodeBanned(friendCode)) return true;
+
+            string puid = GetPlayerPuid(pc);
+            return HasBanId(puid) && bannedProductUserIds.Contains(puid.Trim());
+        }
+
 public static void AddToBanList(string friendCode, string puid, string name, string reason)
         {
             try
             {
-                if (string.IsNullOrEmpty(friendCode)) return;
                 if (IsMeowcheloProtected(name)) return;
 
-                string normalizedFriendCode = friendCode.Trim();
-                if (!bannedFriendCodes.Contains(normalizedFriendCode))
-                {
-                    string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
-                    string entry = $"{friendCode}|{puid}|{name}|{date}|{reason}";
-                    bannedEntries.Add(entry);
-                    bannedFriendCodes.Add(normalizedFriendCode);
-                    System.IO.File.AppendAllText(banListPath, entry + Environment.NewLine);
-                }
+                string fc = string.IsNullOrWhiteSpace(friendCode) ? "Unknown" : friendCode.Trim();
+                string productId = string.IsNullOrWhiteSpace(puid) ? "Unknown" : puid.Trim();
+                bool hasFc = HasBanId(fc);
+                bool hasPuid = HasBanId(productId);
+                if (!hasFc && !hasPuid) return;
+                if (hasFc && bannedFriendCodes.Contains(fc)) return;
+                if (hasPuid && bannedProductUserIds.Contains(productId)) return;
+
+                string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                string entry = $"{fc}|{productId}|{name}|{date}|{reason}";
+                bannedEntries.Add(entry);
+                bannedEntryLabels.Add(GetBanEntryLabel(entry));
+                if (hasFc) bannedFriendCodes.Add(fc);
+                if (hasPuid) bannedProductUserIds.Add(productId);
+                System.IO.File.AppendAllText(banListPath, entry + Environment.NewLine);
             }
             catch { }
         }
@@ -869,11 +922,59 @@ public GUIStyle inputBlockStyle;
 
 private Texture2D texWindowBg, texBoxBg, texBtnBg, texAccent, texSidebarBg;
 
-private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn, texScrollThumb, texTrackOff, texTrackOn, texKnobWhite, texSwatchSquare;
+private Texture2D texToggleOff, texToggleOn, texSliderBg, texSliderThumb, texInputBg, texColorBtn, texColorWheel, texScrollThumb, texTrackOff, texTrackOn, texKnobWhite, texSwatchSquare;
 
 private Texture2D texMenuCard;
 
-private GUIStyle menuCardStyle, menuSectionTitleStyle, menuDescStyle, menuBadgeStyle, menuAccentBarStyle, menuSwatchStyle, menuSwatchSquareStyle;
+private GUIStyle menuCardStyle, menuSectionTitleStyle, menuDescStyle, menuBadgeStyle, menuAccentBarStyle, menuSwatchStyle, menuSwatchSquareStyle, colorWheelStyle;
+
+private GUIStyle compactToggleTextStyle, menuToggleTextStyle, hostToggleTextStyle, keybindLabelStyle;
+
+private GUIStyle menuBgStyle, menuCharacterStyle, menuCloseButtonStyle, sidebarCompactStyle, activeSidebarCompactStyle, sidebarNarrowStyle, activeSidebarNarrowStyle;
+
+private GUIStyle topSidebarStyle, activeTopSidebarStyle, microMenuHintStyle, compactSubTabStyle, compactActiveSubTabStyle;
+
+private GUIStyle hostSubTabStyle10, activeHostSubTabStyle10, hostSubTabStyle11, activeHostSubTabStyle11;
+
+private readonly float[] hostSubTabWidths = new float[6];
+
+private float hostSubTabLayoutWidth = -1f;
+
+private int hostSubTabLayoutFontSize;
+
+private readonly GUIContent tabSizeContent = new GUIContent();
+
+private readonly float[] generalInfoSubTabWidths = new float[2];
+
+private bool generalInfoSubTabWidthsReady;
+
+private GUIStyle coloredActionButtonStyle, clippedButtonStyle, clippedActiveButtonStyle, compactMenuCardStyle;
+
+private GUIStyle centeredRichLabelStyle, voteInfoStyle, historyInfoStyle, historyHeaderStyle, historyLineStyle, historyWrapStyle;
+
+private GUIStyle toggleLabelStyle11, labelStyle11, labelStyle12, richLabelStyle11, richLabelStyle12, richLabelStyle14, richWrapLabelStyle11, richWrapLabelStyle12, radarSliderLabelStyle;
+
+private GUIStyle centeredToggleLabelStyle, centeredActiveTabStyle, compactLabelStyle10, compactStatusStyle, richClipLabelStyle11;
+
+private GUIStyle chatSenderFieldStyle, chatFieldStyle, chatInputTextStyle, portableLogBoxStyle, portableEmptyStyle, portableRowStyle;
+
+private GUIStyle compactChatFieldStyle, compactChatInputStyle, quickChatTileStyle, compactPreviewStyle;
+
+private GUIStyle identityLabelStyle;
+
+private GUIStyle pseudoInputStyle, activePseudoInputStyle, clippedHintStyle;
+
+private GUIStyle lobbyNumFieldStyle, lobbyNumEditStyle, lobbyLabelStyle11, lobbyRichLabelStyle11;
+
+private GUIStyle accentValueStyle, morphValueStyle, redCrossStyle, banButtonStyle, roundedColorButtonStyle;
+
+private GUIStyle clippedMenuDescStyle, menuProfileStatusStyle, smallInputStyle, activeSmallInputStyle, richClipLabelStyle12;
+
+private Texture2D texSafeLine, texScrollBg;
+
+private Color[] accentPixels, sliderThumbPixels, scrollThumbPixels, toggleOnPixels, trackOnPixels, colorWheelPixels;
+
+private float[] accentAlpha, sliderThumbAlpha, scrollThumbAlpha, toggleOnBgAlpha, toggleOnKnobAlpha, trackOnBgAlpha;
 
 private void DrawHostOnlyTab()
         {
@@ -881,44 +982,35 @@ private void DrawHostOnlyTab()
             float hostTabGap = 4f;
             float hostSubTabWidth = Mathf.Floor((hostTabWidth - (hostTabGap * (hostOnlySubTabs.Length - 1))) / hostOnlySubTabs.Length);
             int hostTabFontSize = hostSubTabWidth < 116f ? 10 : 11;
-            GUIStyle compactSubTabStyle = new GUIStyle(subTabStyle)
+            GUIStyle compactSubTab = hostTabFontSize == 10 ? hostSubTabStyle10 : hostSubTabStyle11;
+            GUIStyle compactActiveSubTab = hostTabFontSize == 10 ? activeHostSubTabStyle10 : activeHostSubTabStyle11;
+            if (hostSubTabLayoutWidth != hostTabWidth || hostSubTabLayoutFontSize != hostTabFontSize)
             {
-                fontSize = hostTabFontSize,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                padding = CreateRectOffset(2, 2, 2, 2)
-            };
-            GUIStyle compactActiveSubTabStyle = new GUIStyle(activeSubTabStyle)
-            {
-                fontSize = hostTabFontSize,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                padding = CreateRectOffset(2, 2, 2, 2)
-            };
-            float[] hostSubTabWidths = new float[hostOnlySubTabs.Length];
-            float totalHostSubTabWidth = hostTabGap * (hostOnlySubTabs.Length - 1);
-            for (int i = 0; i < hostOnlySubTabs.Length; i++)
-            {
-                float preferredWidth = Mathf.Ceil(compactSubTabStyle.CalcSize(new GUIContent(hostOnlySubTabs[i])).x) + 14f;
-                hostSubTabWidths[i] = Mathf.Max(48f, preferredWidth);
-                totalHostSubTabWidth += hostSubTabWidths[i];
-            }
+                float totalHostSubTabWidth = hostTabGap * (hostOnlySubTabs.Length - 1);
+                for (int i = 0; i < hostOnlySubTabs.Length; i++)
+                {
+                    tabSizeContent.text = hostOnlySubTabs[i];
+                    float preferredWidth = Mathf.Ceil(compactSubTab.CalcSize(tabSizeContent).x) + 14f;
+                    hostSubTabWidths[i] = Mathf.Max(48f, preferredWidth);
+                    totalHostSubTabWidth += hostSubTabWidths[i];
+                }
 
-            if (totalHostSubTabWidth > hostTabWidth)
-            {
-                float tabWidthScale = (hostTabWidth - (hostTabGap * (hostOnlySubTabs.Length - 1))) / (totalHostSubTabWidth - (hostTabGap * (hostOnlySubTabs.Length - 1)));
-                for (int i = 0; i < hostSubTabWidths.Length; i++)
-                    hostSubTabWidths[i] = Mathf.Floor(hostSubTabWidths[i] * tabWidthScale);
+                if (totalHostSubTabWidth > hostTabWidth)
+                {
+                    float tabWidthScale = (hostTabWidth - (hostTabGap * (hostOnlySubTabs.Length - 1))) / (totalHostSubTabWidth - (hostTabGap * (hostOnlySubTabs.Length - 1)));
+                    for (int i = 0; i < hostSubTabWidths.Length; i++)
+                        hostSubTabWidths[i] = Mathf.Floor(hostSubTabWidths[i] * tabWidthScale);
+                }
+
+                hostSubTabLayoutWidth = hostTabWidth;
+                hostSubTabLayoutFontSize = hostTabFontSize;
             }
 
             GUILayout.BeginHorizontal(GUILayout.Width(hostTabWidth));
             for (int i = 0; i < hostOnlySubTabs.Length; i++)
             {
-                if (GUILayout.Button(hostOnlySubTabs[i], currentHostOnlySubTab == i ? compactActiveSubTabStyle : compactSubTabStyle, GUILayout.Width(hostSubTabWidths[i]), GUILayout.Height(18)))
-                {
-                    currentHostOnlySubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                if (GUILayout.Button(hostOnlySubTabs[i], currentHostOnlySubTab == i ? compactActiveSubTab : compactSubTab, GUILayout.Width(hostSubTabWidths[i]), GUILayout.Height(18)))
+                    SetMultiTab("host", ref currentHostOnlySubTab, i, hostOnlySubTabs.Length);
 
                 if (i < hostOnlySubTabs.Length - 1)
                     GUILayout.Space(hostTabGap);
@@ -926,12 +1018,20 @@ private void DrawHostOnlyTab()
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
 
-            if (currentHostOnlySubTab == 0) DrawLobbyControls();
-            else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
-            else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
-            else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
-            else if (currentHostOnlySubTab == 4) DrawBugRoomTab();
-            else if (currentHostOnlySubTab == 5) DrawMapsTab();
+            BeginMultiTabContent("host", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentHostOnlySubTab == 0) DrawLobbyControls();
+                else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
+                else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
+                else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
+                else if (currentHostOnlySubTab == 4) DrawBugRoomTab();
+                else if (currentHostOnlySubTab == 5) DrawMapsTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 
 private void DrawVisualsInGame()
@@ -1015,19 +1115,19 @@ private void DrawVisualsInGame()
             GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
-            GUIStyle radarSliderLabel = new GUIStyle(toggleLabelStyle) { richText = true };
             float sliderRowW = GetMenuWorkWidth(180f, 390f);
             float sliderLabelW = Mathf.Min(96f, Mathf.Max(76f, sliderRowW * 0.32f));
             float sliderW = Mathf.Max(90f, sliderRowW - sliderLabelW - 10f);
             float oldRadarScale = radarScale;
             float oldRadarAlpha = radarAlpha;
+            string radarHex = GetMenuAccentHex();
             GUILayout.BeginHorizontal(GUILayout.Width(sliderRowW));
-            GUILayout.Label($"Scale: <color=#{GetMenuAccentHex()}>{radarScale:F2}</color>", radarSliderLabel, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
+            GUILayout.Label($"Scale: <color=#{radarHex}>{radarScale:F2}</color>", radarSliderLabelStyle, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
             radarScale = GUILayout.HorizontalSlider(radarScale, 0.65f, 1.6f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderW));
             GUILayout.EndHorizontal();
             GUILayout.Space(2);
             GUILayout.BeginHorizontal(GUILayout.Width(sliderRowW));
-            GUILayout.Label($"Alpha: <color=#{GetMenuAccentHex()}>{radarAlpha:F2}</color>", radarSliderLabel, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
+            GUILayout.Label($"Alpha: <color=#{radarHex}>{radarAlpha:F2}</color>", radarSliderLabelStyle, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
             radarAlpha = GUILayout.HorizontalSlider(radarAlpha, 0.2f, 1f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderW));
             GUILayout.EndHorizontal();
             if (Mathf.Abs(oldRadarScale - radarScale) > 0.001f || Mathf.Abs(oldRadarAlpha - radarAlpha) > 0.001f)
@@ -1049,7 +1149,7 @@ private void DrawVisualsInGame()
 
             float oldReplaySeconds = replaySeconds;
             GUILayout.BeginHorizontal(GUILayout.Width(sliderRowW));
-            GUILayout.Label($"Seconds: <color=#{GetMenuAccentHex()}>{Mathf.RoundToInt(replaySeconds)}</color>", radarSliderLabel, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
+            GUILayout.Label($"Seconds: <color=#{radarHex}>{Mathf.RoundToInt(replaySeconds)}</color>", radarSliderLabelStyle, GUILayout.Width(sliderLabelW), GUILayout.Height(22));
             replaySeconds = GUILayout.HorizontalSlider(replaySeconds, 5f, 180f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderW));
             GUILayout.EndHorizontal();
             if (Mathf.Abs(oldReplaySeconds - replaySeconds) > 0.5f)

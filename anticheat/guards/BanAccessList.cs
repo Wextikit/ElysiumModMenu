@@ -65,8 +65,9 @@ internal static class BanAccessList
 			if (target == null) return false;
 			if (ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(target)) return false;
 			string fc = target.FriendCode;
-			if (string.IsNullOrEmpty(fc)) return false;
-			ElysiumModMenu.ElysiumModMenuGUI.AddToBanList(fc, string.IsNullOrEmpty(target.ProductUserId) ? "Unknown" : target.ProductUserId, string.IsNullOrEmpty(target.PlayerName) ? "Unknown" : target.PlayerName, reason);
+			string puid = target.ProductUserId;
+			if (string.IsNullOrEmpty(fc) && string.IsNullOrEmpty(puid)) return false;
+			ElysiumModMenu.ElysiumModMenuGUI.AddToBanList(string.IsNullOrEmpty(fc) ? "Unknown" : fc, string.IsNullOrEmpty(puid) ? "Unknown" : puid, string.IsNullOrEmpty(target.PlayerName) ? "Unknown" : target.PlayerName, reason);
 			return true;
 		}
 		catch { return false; }

@@ -45,10 +45,11 @@ namespace ElysiumModMenu
     {
 private void DrawMenuSectionHeader(string title)
         {
+            title = MenuText(title);
             GUILayout.BeginHorizontal();
             GUILayout.Label(GUIContent.none, menuAccentBarStyle, GUILayout.Width(3), GUILayout.Height(16));
             GUILayout.Space(8);
-            GUILayout.Label(title, menuSectionTitleStyle, GUILayout.Height(16));
+            GUILayout.Label(MenuAccentPairActive() ? ApplyMenuAccentGradient(title) : title, menuSectionTitleStyle, GUILayout.Height(16));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
@@ -75,7 +76,7 @@ private void DrawMenuTab()
                 if (!rgbTaskBar) RestoreRgbTaskBar();
                 menuPrefsChanged = true;
             }
-            GUILayout.Label("Recolors the in-game task progress bar.", menuDescStyle);
+            GUILayout.Label(L("Recolors the in-game task progress bar.", "Перекрашивает полоску прогресса тасков в игре."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevRgbText = rgbMenuText;
@@ -86,7 +87,7 @@ private void DrawMenuTab()
                 UpdateAccentColor(currentAccentColor);
                 menuPrefsChanged = true;
             }
-            GUILayout.Label("When off, RGB Menu Mode does not recolor menu text.", menuDescStyle);
+            GUILayout.Label(L("When off, RGB Menu Mode does not recolor menu text.", "В выключенном состоянии RGB-режим не перекрашивает текст меню."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevBoldMenuText = boldMenuText;
@@ -97,7 +98,7 @@ private void DrawMenuTab()
                 UpdateAccentColor(currentAccentColor);
                 menuPrefsChanged = true;
             }
-            GUILayout.Label("Switches menu text between bold and normal. Default: bold.", menuDescStyle);
+            GUILayout.Label(L("Switches menu text between bold and normal. Default: bold.", "Переключает текст меню между жирным и обычным. По умолчанию — жирный."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevWhiteTheme = whiteMenuTheme;
@@ -118,10 +119,31 @@ private void DrawMenuTab()
             GUILayout.Label(L("Put 'MenuBG.png' or .jpg in BepInEx/config to add a background image.", "РџРѕР»РѕР¶РёС‚Рµ 'MenuBG.png' РёР»Рё .jpg РІ BepInEx/config РґР»СЏ С„РѕРЅР°."), menuDescStyle);
             GUILayout.Space(8);
 
+            bool prevMenuCharacter = enableMenuCharacter;
+            enableMenuCharacter = DrawToggle(enableMenuCharacter, L("Character", "Персонаж"), 260);
+            if (enableMenuCharacter && !prevMenuCharacter)
+            {
+                LoadMenuCharacter();
+            }
+            else if (!enableMenuCharacter && prevMenuCharacter && menuCharacterTexture != null)
+            {
+                UnityEngine.Object.Destroy(menuCharacterTexture);
+                menuCharacterTexture = null;
+            }
+            if (prevMenuCharacter != enableMenuCharacter) menuPrefsChanged = true;
+            GUILayout.Label(L("Put 'Char.png' in the ElysiumModMenu folder. It is drawn under the menu controls and does not block clicks.", "Поместите Char.png в папку ElysiumModMenu. Картинка рисуется под контролами меню и не блокирует клики."), menuDescStyle);
+            GUILayout.Space(8);
+
             bool prevWatermark = showWatermark;
             showWatermark = DrawToggle(showWatermark, L("Show Watermark", "РџРѕРєР°Р·С‹РІР°С‚СЊ РІРѕС‚РµСЂРјР°СЂРє"), 260);
             if (prevWatermark != showWatermark) menuPrefsChanged = true;
             GUILayout.Label(L("Shows the ElysiumModMenu watermark near ping and FPS.", "РџРѕРєР°Р·С‹РІР°РµС‚ РІРѕС‚РµСЂРјР°СЂРє ElysiumModMenu СЂСЏРґРѕРј СЃ ping Рё FPS."), menuDescStyle);
+            GUILayout.Space(8);
+
+            bool prevWatermarkInfo = showWatermarkInfo;
+            showWatermarkInfo = DrawToggle(showWatermarkInfo, "Show Info", 260);
+            if (prevWatermarkInfo != showWatermarkInfo) menuPrefsChanged = true;
+            GUILayout.Label(L("Shows only PING / FPS / Host when watermark is off.", "Показывает только PING / FPS / хоста, когда вотермарк выключен."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevHardMenu = hardMenu;
@@ -133,7 +155,7 @@ private void DrawMenuTab()
             bool prevAutoCopyCode = autoCopyCodeAndLeave;
             autoCopyCodeAndLeave = DrawToggle(autoCopyCodeAndLeave, "Copy Code On Disconnect", 260);
             if (prevAutoCopyCode != autoCopyCodeAndLeave) menuPrefsChanged = true;
-            GUILayout.Label("Copies the room code when you leave, get kicked, banned, or disconnected.", menuDescStyle);
+            GUILayout.Label(L("Copies the room code when you leave, get kicked, banned, or disconnected.", "Копирует код комнаты при выходе, кике, бане или отключении."), menuDescStyle);
             GUILayout.Space(8);
 
             bool previousBlockTelemetry = blockInnerslothTelemetry;
@@ -143,19 +165,19 @@ private void DrawMenuTab()
                 ApplyTelemetryPreference();
                 menuPrefsChanged = true;
             }
-            GUILayout.Label("Disables Unity Analytics, device statistics, and performance reporting.", menuDescStyle);
+            GUILayout.Label(L("Disables Unity Analytics, device statistics, and performance reporting.", "Отключает Unity Analytics, статистику устройства и отчёты о производительности."), menuDescStyle);
             GUILayout.Space(8);
 
             bool previousRemovePenalty = removePenalty;
             removePenalty = DrawToggle(removePenalty, "No Disconnect Penalty", 260);
             if (previousRemovePenalty != removePenalty) menuPrefsChanged = true;
-            GUILayout.Label("Prevents matchmaking cooldown when leaving or disconnecting.", menuDescStyle);
+            GUILayout.Label(L("Prevents matchmaking cooldown when leaving or disconnecting.", "Убирает кд матчмейкинга при выходе или отключении."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevAprilDate = spoofAprilFoolsDate;
             spoofAprilFoolsDate = DrawToggle(spoofAprilFoolsDate, "Spoof April Date", 260);
             if (prevAprilDate != spoofAprilFoolsDate) menuPrefsChanged = true;
-            GUILayout.Label("Makes the client use April Fools date locally.", menuDescStyle);
+            GUILayout.Label(L("Makes the client use April Fools date locally.", "Локально включает дату первоапрельского режима."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevGuestExtra = guestExtraFeatures;
@@ -173,27 +195,27 @@ private void DrawMenuTab()
             bool previousUnlockAll = unlockCosmetics;
             unlockCosmetics = DrawToggle(unlockCosmetics, "Unlock All (except Cosmicubes)", 280);
             if (previousUnlockAll != unlockCosmetics) menuPrefsChanged = true;
-            GUILayout.Label("Locally unlocks all cosmetics except Cosmicubes.", menuDescStyle);
+            GUILayout.Label(L("Locally unlocks all cosmetics except Cosmicubes.", "Локально открывает всю косметику, кроме Cosmicubes."), menuDescStyle);
             GUILayout.Space(8);
 
             bool previousUnlockCosmicubes = unlockCosmicubes;
             unlockCosmicubes = DrawToggle(unlockCosmicubes, "Unlock Cosmicubes", 280);
             if (previousUnlockCosmicubes != unlockCosmicubes) menuPrefsChanged = true;
-            GUILayout.Label("Locally unlocks all Cosmicubes without changing their progress.", menuDescStyle);
+            GUILayout.Label(L("Locally unlocks all Cosmicubes without changing their progress.", "Локально открывает все Cosmicubes без изменения их прогресса."), menuDescStyle);
             GUILayout.Space(8);
 
             bool previousActivateCompleted = activateCompletedCosmicubes;
             activateCompletedCosmicubes = DrawToggle(activateCompletedCosmicubes, "Activate 100% Cosmicubes", 280);
             if (previousActivateCompleted != activateCompletedCosmicubes) menuPrefsChanged = true;
-            GUILayout.Label("Allows a 100% completed Cosmicube to be activated locally; no data is sent to the server.", menuDescStyle);
+            GUILayout.Label(L("Allows a 100% completed Cosmicube to be activated locally; no data is sent to the server.", "Позволяет локально активировать Cosmicube на 100%; данные на сервер не отправляются."), menuDescStyle);
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader("PANIC");
-            GUILayout.Label("Turns off menu flags, hides the watermark and unpatches Harmony until restart.", menuDescStyle);
+            GUILayout.Label(L("Turns off menu flags, hides the watermark and unpatches Harmony until restart.", "Выключает флаги меню, скрывает вотермарк и снимает патчи Harmony до перезапуска."), menuDescStyle);
             GUILayout.Space(6);
             GUI.backgroundColor = new Color(0.85f, 0.12f, 0.10f, 1f);
-            if (GUILayout.Button("PANIC MODE", btnStyle, GUILayout.Height(30), GUILayout.Width(180)))
+            if (GUILayout.Button(L("PANIC MODE", "ПАНИКА"), btnStyle, GUILayout.Height(30), GUILayout.Width(180)))
                 ApplyPanicMode();
             GUI.backgroundColor = Color.white;
             GUILayout.EndVertical();
@@ -212,7 +234,7 @@ private void DrawMenuTab()
 
             GUILayout.BeginHorizontal();
             GUI.enabled = limitFps;
-            GUILayout.Label(L("FPS Limit", "Р›РёРјРёС‚ FPS"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
+            GUILayout.Label(L("FPS Limit", "Р›РёРјРёС‚ FPS"), toggleLabelStyle, GUILayout.Height(25), GUILayout.Width(110));
             int newFpsLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(fpsLimit, 1f, 560f, sliderStyle, sliderThumbStyle, GUILayout.Width(180)), 1, 560);
             GUILayout.Space(10);
             if (!isEditingFpsLimit) fpsLimitInput = fpsLimit.ToString();
@@ -242,16 +264,14 @@ private void DrawMenuTab()
             GUILayout.Space(12);
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(L("Accent Color", "Р¦РІРµС‚ Р°РєС†РµРЅС‚Р°"), new GUIStyle(toggleLabelStyle), GUILayout.Height(25), GUILayout.Width(110));
-            Color prevGuiColor = GUI.color;
-            GUI.color = GetMenuControlAccentColor();
-            GUILayout.Label(GUIContent.none, menuSwatchStyle, GUILayout.Width(22), GUILayout.Height(22));
-            GUI.color = prevGuiColor;
+            GUILayout.Label(L("Accent Color", "Р¦РІРµС‚ Р°РєС†РµРЅС‚Р°"), toggleLabelStyle, GUILayout.Height(25), GUILayout.Width(110));
+            Rect swatchRect = GUILayoutUtility.GetRect(28f, 25f, GUILayout.Width(28f), GUILayout.Height(25f));
+            GUI.Label(new Rect(swatchRect.x, swatchRect.y, 25f, 25f), GUIContent.none, colorWheelStyle);
             GUILayout.Space(8);
             GUI.enabled = !rgbMenuMode;
-            GUIStyle middleColorStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetMenuAccentColor() }, fontStyle = FontStyle.Bold };
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex--; if (currentMenuColorIndex < 0) currentMenuColorIndex = menuColors.Length - 1; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
-            GUILayout.Label(rgbMenuMode ? "RGB" : menuColorNames[currentMenuColorIndex], middleColorStyle, GUILayout.Width(120), GUILayout.Height(25));
+            string colorLabel = rgbMenuMode ? "RGB" : menuColorNames[currentMenuColorIndex];
+            GUILayout.Label(!rgbMenuMode && HasMenuAccentPair() ? ApplyMenuAccentGradient(colorLabel) : colorLabel, accentValueStyle, GUILayout.Width(120), GUILayout.Height(25));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25))) { currentMenuColorIndex++; if (currentMenuColorIndex >= menuColors.Length) currentMenuColorIndex = 0; if (!rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]); menuPrefsChanged = true; }
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
@@ -267,10 +287,9 @@ private void DrawMenuTab()
             GUILayout.Space(8);
             float spoofRowWidth = GetMenuWorkWidth(160f, 360f);
             float spoofNameWidth = Mathf.Clamp(spoofRowWidth - 76f, 150f, 260f);
-            GUILayout.Label(L("Fake Name", "РџРѕРґРґРµР»СЊРЅРѕРµ РёРјСЏ"), new GUIStyle(toggleLabelStyle), GUILayout.Height(16), GUILayout.ExpandWidth(false));
+            GUILayout.Label(L("Fake Name", "РџРѕРґРґРµР»СЊРЅРѕРµ РёРјСЏ"), toggleLabelStyle, GUILayout.Height(16), GUILayout.ExpandWidth(false));
             GUILayout.BeginHorizontal(GUILayout.Width(spoofNameWidth + 68f));
             GUI.enabled = SpoofMenuEnabled;
-            GUIStyle middleLabelStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, normal = { background = null, textColor = GetMenuAccentColor() } };
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; customSpoofRpcInputFocused = selectedSpoofMenuIndex == spoofMenuNames.Length - 1 && customSpoofRpcInputFocused; menuPrefsChanged = true; }
             GUILayout.Space(6);
             if (selectedSpoofMenuIndex == spoofMenuNames.Length - 1)
@@ -284,7 +303,7 @@ private void DrawMenuTab()
             }
             else
             {
-                GUILayout.Label(spoofMenuNames[selectedSpoofMenuIndex], middleLabelStyle, GUILayout.Width(spoofNameWidth), GUILayout.Height(25));
+                GUILayout.Label(spoofMenuNames[selectedSpoofMenuIndex], accentValueStyle, GUILayout.Width(spoofNameWidth), GUILayout.Height(25));
             }
             GUILayout.Space(6);
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(25))) { selectedSpoofMenuIndex++; if (selectedSpoofMenuIndex >= spoofMenuNames.Length) selectedSpoofMenuIndex = 0; customSpoofRpcInputFocused = selectedSpoofMenuIndex == spoofMenuNames.Length - 1 && customSpoofRpcInputFocused; menuPrefsChanged = true; }
@@ -293,9 +312,8 @@ private void DrawMenuTab()
             GUILayout.EndHorizontal();
             DrawCustomRpcValidationInfo();
             GUILayout.Space(6);
-            GUIStyle spoofDescStyle = new GUIStyle(menuDescStyle) { fontSize = 11, wordWrap = true, clipping = TextClipping.Clip };
             GUILayout.Label(L("Fake RPC sends the selected non-vanilla CallRpc as your local player. Custom RPC accepts only IDs outside the vanilla RPC list.",
-                "Fake RPC РѕС‚РїСЂР°РІР»СЏРµС‚ РІС‹Р±СЂР°РЅРЅС‹Р№ РЅРµ-РІР°РЅРёР»СЊРЅС‹Р№ CallRpc РѕС‚ РІР°С€РµРіРѕ РёРіСЂРѕРєР°. Custom RPC РїСЂРёРЅРёРјР°РµС‚ С‚РѕР»СЊРєРѕ ID РІРЅРµ СЃРїРёСЃРєР° РІР°РЅРёР»СЊРЅС‹С… RPC."), spoofDescStyle, GUILayout.Height(36f));
+                "Fake RPC РѕС‚РїСЂР°РІР»СЏРµС‚ РІС‹Р±СЂР°РЅРЅС‹Р№ РЅРµ-РІР°РЅРёР»СЊРЅС‹Р№ CallRpc РѕС‚ РІР°С€РµРіРѕ РёРіСЂРѕРєР°. Custom RPC РїСЂРёРЅРёРјР°РµС‚ С‚РѕР»СЊРєРѕ ID РІРЅРµ СЃРїРёСЃРєР° РІР°РЅРёР»СЊРЅС‹С… RPC."), clippedMenuDescStyle, GUILayout.Height(36f));
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(menuCardStyle);
@@ -329,6 +347,42 @@ private void DrawMenuTab()
             GUILayout.EndVertical();
 
 
+
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("PROFILES");
+            GUILayout.Label(L("Save or load menu settings from a local profile slot.", "Сохраняет или загружает настройки меню из локального слота профиля."), menuDescStyle);
+            GUILayout.Space(6);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(25)))
+            {
+                selectedMenuProfileIndex--;
+                if (selectedMenuProfileIndex < 0) selectedMenuProfileIndex = menuProfileCount - 1;
+                menuPrefsChanged = true;
+            }
+            GUILayout.Label($"Profile {selectedMenuProfileIndex + 1}", accentValueStyle, GUILayout.Width(110), GUILayout.Height(25));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(25)))
+            {
+                selectedMenuProfileIndex++;
+                if (selectedMenuProfileIndex >= menuProfileCount) selectedMenuProfileIndex = 0;
+                menuPrefsChanged = true;
+            }
+            GUILayout.Space(8);
+            if (GUILayout.Button(L("Save Profile", "СОХРАНИТЬ ПРОФИЛЬ"), activeTabStyle, GUILayout.Width(112), GUILayout.Height(25)))
+            {
+                SaveMenuProfile();
+                menuPrefsChanged = true;
+            }
+            GUILayout.Space(6);
+            if (GUILayout.Button(L("Load Profile", "ЗАГРУЗИТЬ ПРОФИЛЬ"), btnStyle, GUILayout.Width(112), GUILayout.Height(25)))
+            {
+                LoadMenuProfile();
+                menuPrefsChanged = true;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty(menuProfileStatus) && Time.unscaledTime < menuProfileStatusUntil)
+                GUILayout.Label(menuProfileStatus, menuProfileStatusStyle);
+            GUILayout.EndVertical();
 
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("RESET SETTINGS", "РЎР‘Р РћРЎ РќРђРЎРўР РћР•Рљ"));
@@ -397,11 +451,7 @@ private void ApplyFpsLimitInput()
 
 private bool DrawFpsLimitInput()
         {
-            GUIStyle style = new GUIStyle(isEditingFpsLimit ? activeTabStyle : inputBlockStyle);
-            style.alignment = TextAnchor.MiddleCenter;
-            style.clipping = TextClipping.Clip;
-            style.wordWrap = false;
-            style.padding = CreateRectOffset(4, 4, 0, 0);
+            GUIStyle style = isEditingFpsLimit ? activeSmallInputStyle : smallInputStyle;
 
             Rect rect = GUILayoutUtility.GetRect(52f, 22f, GUILayout.Width(52f), GUILayout.Height(22f));
             return GUI.Button(rect, string.IsNullOrEmpty(fpsLimitInput) ? (isEditingFpsLimit ? "|" : fpsLimit.ToString()) : fpsLimitInput, style);
@@ -410,7 +460,7 @@ private bool DrawFpsLimitInput()
 private void ResetSlidersToDefault()
         {
             selectedMapSpawnIdx = 0f;
-            chatHistoryLimit = 20;
+            chatHistoryLimit = 80;
             customChatSpamDelay = 2.1f;
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
@@ -425,6 +475,7 @@ private void ResetSlidersToDefault()
             bugRoomTimedAutoRunMinutes = 10;
             bugRoomTimedAutoRunInput = "10";
             isEditingBugRoomTimedAutoRun = false;
+            AutoHostAutoRunDelaySeconds = 1.75f;
             bugRoomLv35Rehost = false;
             bugRoomHostPassRejoin = false;
             limitFps = true;
@@ -509,6 +560,12 @@ private void ResetSlidersToDefault()
             skipKillAnimation = false;
             localRainbow = false;
             localRainbowFreeOnly = false;
+            localAlwaysRed = false;
+            localFortegreen = false;
+            localSnipeColor = false;
+            localSnipeColorId = 0;
+            ApplyLocalColorOverride();
+            ResetLocalColorSnipe();
             RevealVotesEnabled = false;
             noTaskMode = false;
             noMapCooldowns = false;
@@ -519,6 +576,7 @@ private void ResetSlidersToDefault()
             hostAutoKillTarget = false;
             hostAutoKillTargetId = byte.MaxValue;
             bugRoomAutoAngel = false;
+            bugRoomAutoAngelIntervalSeconds = 0.15f;
             bugRoomAutoKillShield = false;
             killWhileVanishedHostOnly = false;
             disableEndGameSafeMode = false;
@@ -541,6 +599,7 @@ private void ResetSlidersToDefault()
             AutoHostInstantStart = false;
             AutoHostAutoRunEnabled = false;
             BugroomScoutEnabled = false;
+            BugroomGlitchFinderEnabled = false;
             autoBanEnabled = true;
             allowDuplicateColors = false;
             blockSpoofRPC = true;
@@ -572,6 +631,7 @@ private void ResetSlidersToDefault()
             SpoofMenuEnabled = false;
             enableBackground = false;
             showWatermark = true;
+            showWatermarkInfo = true;
             hardMenu = false;
             rgbMenuText = false;
             boldMenuText = true;

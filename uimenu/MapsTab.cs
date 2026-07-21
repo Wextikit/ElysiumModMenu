@@ -22,7 +22,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -131,20 +130,7 @@ namespace ElysiumModMenu
                     if (voter != null && ElysiumModMenuGUI.IsProtectedFromAnticheat(voter)) return;
                     if (voter == null && ElysiumModMenuGUI.IsProtectedFromAnticheat(voterClientId)) return;
 
-                    string cleanName = voter != null && voter.Data != null && !string.IsNullOrWhiteSpace(voter.Data.PlayerName)
-                        ? voter.Data.PlayerName
-                        : CleanVoteName(voterName);
-                    string friendCode = voter != null && voter.Data != null
-                        ? GetDisplayedFriendCode(voter.Data, string.Empty)
-                        : string.Empty;
-                    string puid = voter != null ? GetPlayerPuid(voter) : "Unknown";
-
-                    AddToBanList(string.IsNullOrWhiteSpace(friendCode) ? $"Client:{voterClientId}" : friendCode,
-                        string.IsNullOrWhiteSpace(puid) ? "Unknown" : puid,
-                        string.IsNullOrWhiteSpace(cleanName) ? $"client {voterClientId}" : cleanName,
-                        $"Vote-kick attempt: {CleanVoteName(targetName)}");
-
-                    AmongUsClient.Instance.KickPlayer(voterClientId, true);
+                    ElysiumNetGuard.NetworkGuard.BanClient(voterClientId, "Vote-kick attempt", CleanVoteName(targetName));
                     ElysiumModMenuGUI.ShowNotification($"<color=#FF4444>[VOTE BAN]</color> {CleanVoteName(voterName)} banned for vote-kick.");
                 }
                 catch { }
@@ -157,7 +143,7 @@ namespace ElysiumModMenu
                     if (PlayerControl.AllPlayerControls == null) return null;
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
-                        if (pc == null || pc.Data == null) continue;
+                        if (pc == null || pc.Data == null || NetworkedClones.IsClone(pc)) continue;
                         if (pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId)
                             return pc;
                     }
@@ -175,7 +161,7 @@ namespace ElysiumModMenu
                     {
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
-                            if (pc == null || pc.Data == null) continue;
+                            if (pc == null || pc.Data == null || NetworkedClones.IsClone(pc)) continue;
                             if (pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId)
                             {
                                 string name = string.IsNullOrWhiteSpace(pc.Data.PlayerName) ? "Unknown" : pc.Data.PlayerName;
@@ -220,123 +206,247 @@ public static bool banVoteKickVoters = false;
 [HarmonyPatch(typeof(ShhhBehaviour), nameof(ShhhBehaviour.PlayAnimation))]
         public static class SkipShhh_Perfect_Patch
         {
-            public static bool Prefix(ShhhBehaviour __instance, ref Il2CppSystem.Collections.IEnumerator __result)
+            public static void Prefix()
             {
                 ElysiumModMenuGUI.MarkCurrentGameIntroShhhSeen();
                 ElysiumModMenuGUI.NotifyAutoChatEveryoneShhhSeen();
-
-                if (!ElysiumModMenuGUI.skipShhhAnim || __instance == null) return true;
-
-                __instance.gameObject.SetActive(false);
-
-                __result = FastSkip().WrapToIl2Cpp();
-                return false;
             }
 
-            private static System.Collections.IEnumerator FastSkip() { yield break; }
-        }
-
-[HarmonyPatch(typeof(IntroCutscene), "ShowRole")]
-        public static class IntroCutscene_ShowRole_Skip_Patch
-        {
-            public static bool Prefix(IntroCutscene __instance, ref Il2CppSystem.Collections.IEnumerator __result)
+            public static void Postfix(ShhhBehaviour __instance, ref Il2CppSystem.Collections.IEnumerator __result)
             {
-                if (!ElysiumModMenuGUI.skipRoleIntroAnim) return true;
+                if (!ElysiumModMenuGUI.skipShhhAnim || __instance == null || __result == null) return;
 
-                ElysiumModMenuGUI.TryHideIntroCutscene(__instance);
-                ElysiumModMenuGUI.TryUnlockLocalMovementAfterCutscene();
-                __result = ElysiumModMenuGUI.FastSkipCutsceneCoroutine().WrapToIl2Cpp();
-                return false;
-            }
-        }
-
-[HarmonyPatch]
-        public static class KillOverlay_ShowKillAnimation_Skip_Patch
-        {
-            public static IEnumerable<MethodBase> TargetMethods()
-            {
-                MethodInfo basic = AccessTools.Method(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new[] { typeof(NetworkedPlayerInfo), typeof(NetworkedPlayerInfo) });
-                if (basic != null) yield return basic;
-
-                MethodInfo withAnimation = AccessTools.Method(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new[] { typeof(OverlayKillAnimation), typeof(NetworkedPlayerInfo), typeof(NetworkedPlayerInfo) });
-                if (withAnimation != null) yield return withAnimation;
-
-                MethodInfo withInitData = AccessTools.Method(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new[] { typeof(OverlayKillAnimation), typeof(KillOverlayInitData) });
-                if (withInitData != null) yield return withInitData;
+                __result = FastSkip(__instance, __result).WrapToIl2Cpp();
             }
 
-            public static bool Prefix(KillOverlay __instance)
+            private static System.Collections.IEnumerator FastSkip(ShhhBehaviour shhh, Il2CppSystem.Collections.IEnumerator anim)
             {
-                if (!ElysiumModMenuGUI.skipKillAnimation) return true;
+                float duration = shhh.Duration;
+                float delay = shhh.Delay;
+                float textDuration = shhh.TextDuration;
+                float pulseDuration = shhh.PulseDuration;
+                float holdDuration = shhh.HoldDuration;
 
-                ElysiumModMenuGUI.TryHideKillOverlay(__instance);
-                ElysiumModMenuGUI.TryUnlockLocalMovementAfterCutscene();
-                return false;
-            }
-        }
+                shhh.Duration = 0.01f;
+                shhh.Delay = 0f;
+                shhh.TextDuration = 0.01f;
+                shhh.PulseDuration = 0.01f;
+                shhh.HoldDuration = 0f;
 
-[HarmonyPatch(typeof(KillOverlay), nameof(KillOverlay.ShowAll))]
-        public static class KillOverlay_ShowAll_Skip_Patch
-        {
-            public static bool Prefix(KillOverlay __instance, ref Il2CppSystem.Collections.IEnumerator __result)
-            {
-                if (!ElysiumModMenuGUI.skipKillAnimation) return true;
-
-                ElysiumModMenuGUI.TryHideKillOverlay(__instance);
-                ElysiumModMenuGUI.TryUnlockLocalMovementAfterCutscene();
-                __result = ElysiumModMenuGUI.FastSkipCutsceneCoroutine().WrapToIl2Cpp();
-                return false;
-            }
-        }
-
-private static System.Collections.IEnumerator FastSkipCutsceneCoroutine()
-        {
-            yield break;
-        }
-
-private static void TryHideIntroCutscene(IntroCutscene intro)
-        {
-            try
-            {
-                if (intro != null && intro.gameObject != null)
-                    intro.gameObject.SetActive(false);
-            }
-            catch { }
-        }
-
-private static void TryHideKillOverlay(KillOverlay overlay)
-        {
-            try
-            {
-                if (overlay == null) return;
-
-                overlay.StopAllCoroutines();
-
-                if (overlay.gameObject != null && overlay.gameObject.activeSelf)
+                try
                 {
-                    overlay.gameObject.SetActive(false);
-                    overlay.gameObject.SetActive(true);
+                    while (anim.MoveNext())
+                        yield return anim.Current;
+                }
+                finally
+                {
+                    try
+                    {
+                        if (shhh != null)
+                        {
+                            shhh.Duration = duration;
+                            shhh.Delay = delay;
+                            shhh.TextDuration = textDuration;
+                            shhh.PulseDuration = pulseDuration;
+                            shhh.HoldDuration = holdDuration;
+                        }
+                    }
+                    catch { }
                 }
             }
-            catch { }
         }
 
-private static void TryUnlockLocalMovementAfterCutscene()
+private static NamePlateViewData meetingNameplate;
+
+[HarmonyPatch(typeof(CosmeticsCache), nameof(CosmeticsCache.GetNameplate))]
+        public static class CosmeticsCache_GetNameplate_RoleSkip_Patch
         {
-            try
+            public static bool Prefix(ref NamePlateViewData __result)
             {
-                PlayerControl local = PlayerControl.LocalPlayer;
-                if (local == null) return;
+                if (!ElysiumModMenuGUI.skipRoleIntroAnim || MeetingHud.Instance == null)
+                    return true;
 
-                local.moveable = true;
+                try
+                {
+                    if (ElysiumModMenuGUI.meetingNameplate == null)
+                    {
+                        ElysiumModMenuGUI.meetingNameplate = ScriptableObject.CreateInstance<NamePlateViewData>();
+                        ElysiumModMenuGUI.meetingNameplate.Image = null;
+                    }
 
-                if (local.Collider != null)
-                    local.Collider.enabled = true;
-
-                if (local.MyPhysics != null && local.MyPhysics.gameObject != null)
-                    local.MyPhysics.gameObject.layer = LayerMask.NameToLayer("Players");
+                    __result = ElysiumModMenuGUI.meetingNameplate;
+                    return false;
+                }
+                catch
+                {
+                    return true;
+                }
             }
-            catch { }
+        }
+
+[HarmonyPatch(typeof(CosmeticsCache), nameof(CosmeticsCache.Destroy))]
+        public static class CosmeticsCache_Destroy_RoleSkip_Patch
+        {
+            public static void Postfix()
+            {
+                try
+                {
+                    if (ElysiumModMenuGUI.meetingNameplate != null)
+                        Object.Destroy(ElysiumModMenuGUI.meetingNameplate);
+                }
+                catch { }
+
+                ElysiumModMenuGUI.meetingNameplate = null;
+            }
+        }
+
+[HarmonyPatch(typeof(IntroCutscene), "CoBegin")]
+        public static class IntroCutscene_CoBegin_RoleSkip_Patch
+        {
+            private sealed class HnsIntroClips
+            {
+                public AnimationClip Empty;
+                public AnimationClip Spawn;
+                public AnimationClip HorseSpawn;
+                public AnimationClip HorseInGame;
+                public AnimationClip LongSpawn;
+                public AnimationClip LongInGame;
+            }
+
+            private static void Prefix(IntroCutscene __instance, out HnsIntroClips __state)
+            {
+                __state = null;
+                if (!ElysiumModMenuGUI.skipRoleIntroAnim || __instance == null || !ElysiumModMenuGUI.IsHideAndSeekMode())
+                    return;
+
+                HnsIntroClips clips = new HnsIntroClips
+                {
+                    Empty = new AnimationClip(),
+                    Spawn = __instance.HnSSeekerSpawnAnim,
+                    HorseSpawn = __instance.HnSSeekerSpawnHorseAnim,
+                    HorseInGame = __instance.HnSSeekerSpawnHorseInGameAnim,
+                    LongSpawn = __instance.HnSSeekerSpawnLongAnim,
+                    LongInGame = __instance.HnSSeekerSpawnLongInGameAnim
+                };
+
+                try
+                {
+                    __instance.HnSSeekerSpawnAnim = clips.Empty;
+                    __instance.HnSSeekerSpawnHorseAnim = clips.Empty;
+                    __instance.HnSSeekerSpawnHorseInGameAnim = clips.Empty;
+                    __instance.HnSSeekerSpawnLongAnim = clips.Empty;
+                    __instance.HnSSeekerSpawnLongInGameAnim = clips.Empty;
+                    __state = clips;
+                }
+                catch
+                {
+                    Restore(__instance, clips);
+                }
+            }
+
+            private static void Postfix(IntroCutscene __instance, ref Il2CppSystem.Collections.IEnumerator __result, HnsIntroClips __state)
+            {
+                if (!ElysiumModMenuGUI.skipRoleIntroAnim)
+                    return;
+
+                if (__result == null)
+                {
+                    Restore(__instance, __state);
+                    return;
+                }
+
+                try
+                {
+                    Plugin.Instance?.Log?.LogMessage((object)$"[ANIM] Role intro skip applied: {(ElysiumModMenuGUI.IsHideAndSeekMode() ? "HideAndSeek" : "Normal")}");
+                }
+                catch { }
+
+                __result = Run(__instance, __result, __state).WrapToIl2Cpp();
+            }
+
+            private static System.Collections.IEnumerator Run(IntroCutscene intro, Il2CppSystem.Collections.IEnumerator anim, HnsIntroClips clips)
+            {
+                try
+                {
+                    bool running = true;
+                    int steps = 0;
+                    while (running && steps < 1024)
+                    {
+                        running = anim.MoveNext();
+                        steps++;
+                    }
+
+                    if (running)
+                    {
+                        try
+                        {
+                            if (intro != null && intro.gameObject != null)
+                                intro.gameObject.SetActive(false);
+                        }
+                        catch { }
+
+                        while (anim.MoveNext())
+                            yield return anim.Current;
+                    }
+                }
+                finally
+                {
+                    Restore(intro, clips);
+                }
+            }
+
+            private static void Restore(IntroCutscene intro, HnsIntroClips clips)
+            {
+                if (clips == null)
+                    return;
+
+                try
+                {
+                    if (intro != null)
+                    {
+                        intro.HnSSeekerSpawnAnim = clips.Spawn;
+                        intro.HnSSeekerSpawnHorseAnim = clips.HorseSpawn;
+                        intro.HnSSeekerSpawnHorseInGameAnim = clips.HorseInGame;
+                        intro.HnSSeekerSpawnLongAnim = clips.LongSpawn;
+                        intro.HnSSeekerSpawnLongInGameAnim = clips.LongInGame;
+                    }
+                }
+                catch { }
+
+                try
+                {
+                    if (clips.Empty != null)
+                        Object.Destroy(clips.Empty);
+                }
+                catch { }
+            }
+        }
+
+[HarmonyPatch(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new Type[] { typeof(NetworkedPlayerInfo), typeof(NetworkedPlayerInfo) })]
+        public static class KillOverlay_ShowKillAnimation_Info_Skip_Patch
+        {
+            public static bool Prefix()
+            {
+                return !ElysiumModMenuGUI.skipKillAnimation;
+            }
+        }
+
+[HarmonyPatch(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new Type[] { typeof(OverlayKillAnimation), typeof(NetworkedPlayerInfo), typeof(NetworkedPlayerInfo) })]
+        public static class KillOverlay_ShowKillAnimation_AnimInfo_Skip_Patch
+        {
+            public static bool Prefix()
+            {
+                return !ElysiumModMenuGUI.skipKillAnimation;
+            }
+        }
+
+[HarmonyPatch(typeof(KillOverlay), nameof(KillOverlay.ShowKillAnimation), new Type[] { typeof(OverlayKillAnimation), typeof(KillOverlayInitData) })]
+        public static class KillOverlay_ShowKillAnimation_InitData_Skip_Patch
+        {
+            public static bool Prefix()
+            {
+                return !ElysiumModMenuGUI.skipKillAnimation;
+            }
         }
 
 private void SpawnMap(int mapId)
@@ -977,6 +1087,12 @@ private int currentTab = 0;
 private int targetTabIndex = 0;
 
 private float tabTransitionProgress = 1f;
+
+private int tabTransitionDir = 1;
+
+private Rect tabHighlightRect;
+
+private bool tabHighlightReady = false;
 
 private Vector2 scrollPosition = Vector2.zero;
 }

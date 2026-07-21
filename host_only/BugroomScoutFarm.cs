@@ -45,6 +45,13 @@ namespace ElysiumModMenu
 
         public static void Tick()
         {
+            if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled)
+            {
+                ResetRoomState();
+                state = "Paused by Glitch Finder";
+                return;
+            }
+
             if (!ElysiumModMenuGUI.BugroomScoutEnabled)
             {
                 ResetRoomState();
@@ -60,6 +67,14 @@ namespace ElysiumModMenu
             {
                 ResetRoomState();
                 state = "Add codes to Bugroom Scout.txt";
+                return;
+            }
+
+            if (TryCloseDisconnectPopup())
+            {
+                ResetRoomState();
+                nextAutoCreateClickAt = Time.unscaledTime + AutoCreateClickIntervalSeconds;
+                state = $"Create failed, retrying ({targetSuffixes.Count} targets)";
                 return;
             }
 
@@ -199,7 +214,20 @@ namespace ElysiumModMenu
             }
         }
 
-        private static bool TryClickUiButton(string[] includeTokens, string[] excludeTokens)
+        internal static bool TryCloseDisconnectPopup()
+        {
+            try
+            {
+                DisconnectPopup popup = UnityEngine.Object.FindObjectOfType<DisconnectPopup>();
+                if (popup == null || !popup.gameObject.activeInHierarchy) return false;
+
+                popup.Close();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        internal static bool TryClickUiButton(string[] includeTokens, string[] excludeTokens)
         {
             try
             {
@@ -237,7 +265,7 @@ namespace ElysiumModMenu
             return false;
         }
 
-        private static bool TryClickCreateConfirmButton()
+        internal static bool TryClickCreateConfirmButton()
         {
             if (TryInvokeCreateGameConfirm())
                 return true;
@@ -574,6 +602,13 @@ namespace ElysiumModMenu
 
         public static void Tick()
         {
+            if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled)
+            {
+                ResetMain();
+                ResetPass();
+                return;
+            }
+
             TickMain();
             TickPass();
         }

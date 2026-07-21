@@ -42,13 +42,20 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private Action<int> drawMenuWindow;
+
+private string menuTitleText;
+
+private int menuTitleFrame = -1;
+
 public void OnGUI()
         {
             if (isPanicked) return;
 
             Event e = Event.current;
 
-            HandleMessage.HandleTimer();
+            ChatHistory.HandleGuiEvent(e);
+
             if (!stylesInited || windowStyle == null || safeLineStyle == null || sliderStyle == null || sliderThumbStyle == null || knobStyle == null)
                 InitStyles();
 
@@ -110,7 +117,7 @@ public void OnGUI()
                     else if (isWaitBindReviveAll) { bindReviveAll = e.keyCode; }
 
                     ResetAllBindWaits();
-                    SaveConfig();
+                    SaveKeybinds();
                     e.Use();
                 }
                 else if (isCustomSpoofRpcEditing)
@@ -187,15 +194,18 @@ public void OnGUI()
                 }
             }
 
-            if (Event.current.type == EventType.Layout)
+            if (e != null && e.type == EventType.Layout)
             {
-                lockedPlayersList.Clear();
-                if (PlayerControl.AllPlayerControls != null)
+                if (showMenu)
                 {
-                    foreach (var p in PlayerControl.AllPlayerControls)
+                    lockedPlayersList.Clear();
+                    if (PlayerControl.AllPlayerControls != null)
                     {
-                        if (p != null && p.Data != null && !p.Data.Disconnected && p.PlayerId < 100)
-                            lockedPlayersList.Add(p);
+                        foreach (var p in PlayerControl.AllPlayerControls)
+                        {
+                            if (p != null && p.Data != null && !p.Data.Disconnected && p.PlayerId < 100 && !NetworkedClones.IsClone(p))
+                                lockedPlayersList.Add(p);
+                        }
                     }
                 }
 
@@ -223,18 +233,18 @@ public void OnGUI()
                     {
                         if (PlayerControl.AllPlayerControls != null)
                         {
-                        List<int> currentClientIds = new List<int>();
+                        currentPlayerClientIds.Clear();
                         foreach (var pc in PlayerControl.AllPlayerControls)
                         {
-                            if (pc != null && pc.Data != null && !pc.Data.Disconnected)
+                            if (pc != null && pc.Data != null && !pc.Data.Disconnected && !NetworkedClones.IsClone(pc))
                             {
-                                currentClientIds.Add(pc.Data.ClientId);
+                                currentPlayerClientIds.Add(pc.Data.ClientId);
                                 UpsertPlayerHistory(pc);
                             }
                         }
 
                         bool isInitialPresenceSnapshot = lastPlayerClientIds.Count == 0 && pendingJoinTimers.Count == 0;
-                        foreach (var id in currentClientIds)
+                        foreach (var id in currentPlayerClientIds)
                         {
                             if (!lastPlayerClientIds.Contains(id) && !pendingJoinTimers.ContainsKey(id))
                             {
@@ -246,14 +256,24 @@ public void OnGUI()
                             }
                         }
 
-                        var keysToProcess = pendingJoinTimers.Keys.ToList();
-                        foreach (var id in keysToProcess)
+                        pendingJoinKeys.Clear();
+                        foreach (var id in pendingJoinTimers.Keys)
+                            pendingJoinKeys.Add(id);
+                        foreach (var id in pendingJoinKeys)
                         {
                             pendingJoinTimers[id] -= historyDelta;
                             pendingJoinWaitTimes[id] = pendingJoinWaitTimes.TryGetValue(id, out float waited) ? waited + historyDelta : historyDelta;
                             if (pendingJoinTimers[id] <= 0f)
                             {
-                                var pc = PlayerControl.AllPlayerControls.ToArray().FirstOrDefault(p => p != null && p.Data != null && p.Data.ClientId == id);
+                                PlayerControl pc = null;
+                                foreach (var plr in PlayerControl.AllPlayerControls)
+                                {
+                                    if (plr != null && plr.Data != null && plr.Data.ClientId == id && !NetworkedClones.IsClone(plr))
+                                    {
+                                        pc = plr;
+                                        break;
+                                    }
+                                }
                                 if (pc == null || pc.Data == null || pc.Data.Disconnected)
                                 {
                                     if (pendingJoinWaitTimes[id] < JoinLevelMaxWaitSeconds)
@@ -304,7 +324,7 @@ public void OnGUI()
 
                         foreach (var id in lastPlayerClientIds)
                         {
-                            if (!currentClientIds.Contains(id))
+                            if (!currentPlayerClientIds.Contains(id))
                             {
                                 pendingJoinTimers.Remove(id);
                                 pendingJoinWaitTimes.Remove(id);
@@ -312,7 +332,8 @@ public void OnGUI()
                             }
                         }
 
-                        lastPlayerClientIds = new List<int>(currentClientIds);
+                        lastPlayerClientIds.Clear();
+                        lastPlayerClientIds.AddRange(currentPlayerClientIds);
                         }
                     }
                     else
@@ -326,29 +347,8 @@ public void OnGUI()
                 }
                 catch { }
             }
-            if (screenNotifications.Count > 0)
+            if (e != null && e.type == EventType.Repaint && screenNotifications.Count > 0)
             {
-                if (notificationTitleStyle == null)
-                {
-                    notificationTitleStyle = new GUIStyle(GUI.skin.label)
-                    {
-                        richText = true,
-                        fontSize = 12,
-                        clipping = TextClipping.Clip
-                    };
-                    notificationTimerStyle = new GUIStyle(notificationTitleStyle)
-                    {
-                        alignment = TextAnchor.UpperRight
-                    };
-                    notificationMessageStyle = new GUIStyle(GUI.skin.label)
-                    {
-                        richText = true,
-                        wordWrap = true,
-                        fontSize = 12,
-                        clipping = TextClipping.Clip
-                    };
-                }
-
                 Color notificationTextColor = whiteMenuTheme ? new Color(0.02f, 0.02f, 0.02f, 1f) : Color.white;
                 notificationTitleStyle.normal.textColor = notificationTextColor;
                 notificationTimerStyle.normal.textColor = notificationTextColor;
@@ -426,7 +426,8 @@ private void DrawMenuWindowIfVisible()
                 if (RgbMenuTextActive())
                     GUI.contentColor = GetMenuAccentColor();
 
-                windowRect = GUI.Window(0, windowRect, (Action<int>)DrawElysiumModMenu, "", windowStyle);
+                if (drawMenuWindow == null) drawMenuWindow = DrawElysiumModMenu;
+                windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
             }
             finally
             {
@@ -489,6 +490,54 @@ private static float GetMenuWorkWidth(float min = 120f, float max = 620f)
             return Mathf.Min(w, max);
         }
 
+private static float SmoothMenuTab(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * (3f - 2f * t);
+        }
+
+private void SetMenuTab(int tab)
+        {
+            tab = Mathf.Clamp(tab, 0, tabNames.Length - 1);
+            if (targetTabIndex == tab) return;
+
+            tabTransitionDir = tab > targetTabIndex ? 1 : -1;
+            targetTabIndex = tab;
+            tabTransitionProgress = 0f;
+            scrollPosition = Vector2.zero;
+        }
+
+private void DrawAnimatedSidebarHighlight()
+        {
+            if (!tabHighlightReady || activeTabStyle == null) return;
+
+            Color old = GUI.color;
+            Color accent = GetMenuAccentColor(false);
+            GUI.color = new Color(accent.r, accent.g, accent.b, old.a * 0.24f);
+            GUI.Box(tabHighlightRect, GUIContent.none, activeTabStyle);
+            GUI.color = old;
+        }
+
+private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
+        {
+            if (tab != targetTabIndex || Event.current == null || Event.current.type != EventType.Repaint) return;
+
+            Rect target = new Rect(rect.x + 4f, rect.y, Mathf.Max(12f, rect.width - 8f), rect.height);
+            if (!tabHighlightReady)
+            {
+                tabHighlightRect = target;
+                tabHighlightReady = true;
+                return;
+            }
+
+            float k = 1f - Mathf.Exp(-20f * Time.unscaledDeltaTime);
+            tabHighlightRect = new Rect(
+                Mathf.Lerp(tabHighlightRect.x, target.x, k),
+                Mathf.Lerp(tabHighlightRect.y, target.y, k),
+                Mathf.Lerp(tabHighlightRect.width, target.width, k),
+                Mathf.Lerp(tabHighlightRect.height, target.height, k));
+        }
+
         private void DrawElysiumModMenu(int windowID)
         {
             if (Event.current.type == EventType.Repaint && tabTransitionProgress < 1f)
@@ -500,8 +549,8 @@ private static float GetMenuWorkWidth(float min = 120f, float max = 620f)
             if (enableBackground && customMenuBg != null)
             {
                 GUI.color = new Color(0.6f, 0.6f, 0.6f, 0.8f);
-                GUIStyle bgStyle = new GUIStyle() { normal = { background = customMenuBg } };
-                GUI.Box(new Rect(0, 0, windowRect.width, windowRect.height), GUIContent.none, bgStyle);
+                menuBgStyle.normal.background = customMenuBg;
+                GUI.Box(new Rect(0, 0, windowRect.width, windowRect.height), GUIContent.none, menuBgStyle);
                 GUI.color = Color.white;
             }
 
@@ -509,10 +558,18 @@ private static float GetMenuWorkWidth(float min = 120f, float max = 620f)
             bool microMenu = visibleW < 150f;
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label(microMenu ? "Elysium" : ApplyMenuShimmer("ElysiumModMenu Meowchelo & Carrot"), titleStyle);
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("-", new GUIStyle(btnStyle) { fixedWidth = 20, fixedHeight = 18, margin = CreateRectOffset(0, 8, 6, 0) })) showMenu = false;
-            GUILayout.EndHorizontal();
+            try
+            {
+                if (!microMenu && menuTitleFrame != Time.frameCount)
+                {
+                    menuTitleText = ApplyMenuShimmer("ElysiumModMenu | By: Meowchelo");
+                    menuTitleFrame = Time.frameCount;
+                }
+                GUILayout.Label(microMenu ? "Elysium" : menuTitleText, titleStyle);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("-", menuCloseButtonStyle)) showMenu = false;
+            }
+            finally { GUILayout.EndHorizontal(); }
 
             GUI.color = new Color(1f, 1f, 1f, 0.1f);
             GUI.Box(new Rect(0, 30, windowRect.width, 1), "", safeLineStyle);
@@ -529,115 +586,158 @@ private static float GetMenuWorkWidth(float min = 120f, float max = 620f)
             float sideW = GetMenuSidebarWidth();
             float bodyX = GetMenuBodyX();
             float bodyW = GetMenuBodyWidth();
-            float bodyY = 36f + ((1f - tabTransitionProgress) * 10f);
+            float tabEase = SmoothMenuTab(tabTransitionProgress);
+            float bodyY = 36f + ((1f - tabEase) * 10f);
             float bodyH = windowRect.height - 46f;
+            float bodySlide = (1f - tabEase) * 34f * tabTransitionDir;
+            float bodyAlpha = Mathf.Clamp01(tabEase * 1.2f);
 
             GUIStyle sideBtn = sidebarBtnStyle;
             GUIStyle sideBtnOn = activeSidebarBtnStyle;
             if (sideW < 110f)
             {
-                sideBtn = new GUIStyle(sidebarBtnStyle) { fontSize = sideW < 70f ? 8 : 10, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(2, 2, 6, 6) };
-                sideBtnOn = new GUIStyle(activeSidebarBtnStyle) { fontSize = sideW < 70f ? 8 : 10, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(2, 2, 6, 6) };
+                sideBtn = sideW < 70f ? sidebarNarrowStyle : sidebarCompactStyle;
+                sideBtnOn = sideW < 70f ? activeSidebarNarrowStyle : activeSidebarCompactStyle;
             }
 
             if (sideW > 0f)
             {
                 GUILayout.BeginArea(new Rect(0f, 31f, sideW, windowRect.height - 31f));
-                GUILayout.BeginVertical(sidebarStyle, GUILayout.ExpandHeight(true));
-                GUILayout.Space(5);
-                for (int i = 0; i < tabNames.Length; i++)
-                    if (GUILayout.Button(tabNames[i], i == targetTabIndex ? sideBtnOn : sideBtn, GUILayout.Height(24)))
-                        if (targetTabIndex != i) { targetTabIndex = i; tabTransitionProgress = 0f; scrollPosition = Vector2.zero; }
-                GUILayout.EndVertical();
-                GUILayout.EndArea();
+                try
+                {
+                    GUILayout.BeginVertical(sidebarStyle, GUILayout.ExpandHeight(true));
+                    try
+                    {
+                        GUILayout.Space(5);
+                        for (int i = 0; i < tabNames.Length; i++)
+                        {
+                            if (i == 0) DrawAnimatedSidebarHighlight();
+                            if (GUILayout.Button(tabNames[i], i == targetTabIndex ? sideBtnOn : sideBtn, GUILayout.Height(24)))
+                                SetMenuTab(i);
+                            TrackAnimatedSidebarHighlight(i, GUILayoutUtility.GetLastRect());
+                        }
+                    }
+                    finally { GUILayout.EndVertical(); }
+                }
+                finally { GUILayout.EndArea(); }
 
                 GUI.color = new Color(1f, 1f, 1f, 0.1f);
                 GUI.Box(new Rect(sideW, 31, 1, windowRect.height), "", safeLineStyle);
             }
             else
             {
-                GUIStyle topBtn = new GUIStyle(sidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
-                GUIStyle topBtnOn = new GUIStyle(activeSidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
+                GUIStyle topBtn = topSidebarStyle;
+                GUIStyle topBtnOn = activeTopSidebarStyle;
                 float topW = GetMenuVisibleWidth() - 8f;
                 float btnW = Mathf.Max(18f, Mathf.Floor((topW - 6f) / 4f));
 
                 GUILayout.BeginArea(new Rect(4f, 32f, topW, 45f));
-                for (int row = 0; row < 2; row++)
+                try
                 {
-                    GUILayout.BeginHorizontal(GUILayout.Height(20f));
-                    for (int col = 0; col < 4; col++)
+                    for (int row = 0; row < 2; row++)
                     {
-                        int i = row * 4 + col;
-                        if (i >= tabNames.Length) break;
-                        string nm = tabNames[i];
-                        if (nm.Length > 4) nm = nm.Substring(0, 4);
-                        if (GUILayout.Button(nm, i == targetTabIndex ? topBtnOn : topBtn, GUILayout.Width(btnW), GUILayout.Height(19f)))
-                            if (targetTabIndex != i) { targetTabIndex = i; tabTransitionProgress = 0f; scrollPosition = Vector2.zero; }
-                        if (col < 3) GUILayout.Space(2f);
+                        GUILayout.BeginHorizontal(GUILayout.Height(20f));
+                        try
+                        {
+                            for (int col = 0; col < 4; col++)
+                            {
+                                int i = row * 4 + col;
+                                if (i >= tabNames.Length) break;
+                                string nm = tabNames[i];
+                                if (nm.Length > 4) nm = nm.Substring(0, 4);
+                                if (GUILayout.Button(nm, i == targetTabIndex ? topBtnOn : topBtn, GUILayout.Width(btnW), GUILayout.Height(19f)))
+                                    SetMenuTab(i);
+                                if (col < 3) GUILayout.Space(2f);
+                            }
+                        }
+                        finally { GUILayout.EndHorizontal(); }
                     }
-                    GUILayout.EndHorizontal();
                 }
-                GUILayout.EndArea();
+                finally { GUILayout.EndArea(); }
 
-                bodyY = 80f + ((1f - tabTransitionProgress) * 6f);
+                bodyY = 80f + ((1f - tabEase) * 6f);
                 bodyH = windowRect.height - 88f;
             }
-            GUI.color = new Color(1f, 1f, 1f, tabTransitionProgress);
 
-            GUILayout.BeginArea(new Rect(bodyX, bodyY, bodyW, bodyH));
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            DrawMenuCharacter(bodyX, bodyY, bodyW, bodyH, bodyAlpha);
+            GUI.color = new Color(1f, 1f, 1f, bodyAlpha);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical();
+            GUILayout.BeginArea(new Rect(bodyX + bodySlide, bodyY, bodyW, bodyH));
+            try
+            {
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+                try
+                {
+                    GUILayout.BeginHorizontal();
+                    try
+                    {
+                        GUILayout.BeginVertical();
+                        try
+                        {
+                            int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
 
-            int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
+                            if (tabToDraw == 0) DrawGeneralTab();
+                            else if (tabToDraw == 1) DrawSelfTab();
+                            else if (tabToDraw == 2) DrawVisualsTab();
+                            else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
+                            else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch { } }
+                            else if (tabToDraw == 5) DrawHostOnlyTab();
+                            else if (tabToDraw == 6) DrawVotekickTab();
+                            else if (tabToDraw == 7) DrawMenuTab();
+                        }
+                        finally { GUILayout.EndVertical(); }
 
-            if (tabToDraw == 0) DrawGeneralTab();
-            else if (tabToDraw == 1) DrawSelfTab();
-            else if (tabToDraw == 2) DrawVisualsTab();
-            else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
-            else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch { } }
-            else if (tabToDraw == 5) DrawHostOnlyTab();
-            else if (tabToDraw == 6) DrawVotekickTab();
-            else if (tabToDraw == 7) DrawMenuTab();
-
-            GUILayout.EndVertical();
-            GUILayout.Space(10); // РћС‚СЃС‚СѓРї СЃРїСЂР°РІР° РґР»СЏ РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ СЃРєСЂРѕР»Р»Р±Р°СЂР°
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
+                        GUILayout.Space(10);
+                    }
+                    finally { GUILayout.EndHorizontal(); }
+                }
+                finally { GUILayout.EndScrollView(); }
+            }
+            finally { GUILayout.EndArea(); }
 
             GUI.color = Color.white;
             GUI.DragWindow(new Rect(0, 0, 10000, 30));
         }
 
+private void DrawMenuCharacter(float bodyX, float bodyY, float bodyW, float bodyH, float alpha)
+        {
+            if (!enableMenuCharacter || menuCharacterTexture == null || menuCharacterTexture.width <= 0 || menuCharacterTexture.height <= 0) return;
+
+            float maxW = Mathf.Max(140f, bodyW * 0.52f);
+            float maxH = Mathf.Max(160f, bodyH - 12f);
+            float scale = Mathf.Min(maxW / menuCharacterTexture.width, maxH / menuCharacterTexture.height);
+            float w = menuCharacterTexture.width * scale;
+            float h = menuCharacterTexture.height * scale;
+            Rect rect = new Rect(bodyX + bodyW - w - 8f, bodyY + bodyH - h, w, h);
+
+            Color oldColor = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, 0.82f * alpha);
+            menuCharacterStyle.normal.background = menuCharacterTexture;
+            GUI.Box(rect, GUIContent.none, menuCharacterStyle);
+            GUI.color = oldColor;
+        }
+
 private void DrawMicroMenu(float visibleW)
         {
             float w = Mathf.Max(54f, visibleW - 8f);
-            GUIStyle st = new GUIStyle(sidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
-            GUIStyle on = new GUIStyle(activeSidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
+            GUIStyle st = topSidebarStyle;
+            GUIStyle on = activeTopSidebarStyle;
 
             GUILayout.BeginArea(new Rect(4f, 34f, w, Mathf.Max(60f, windowRect.height - 40f)));
-            for (int i = 0; i < tabNames.Length; i++)
+            try
             {
-                string nm = tabNames[i];
-                if (nm.Length > 5) nm = nm.Substring(0, 5);
-                if (GUILayout.Button(nm, i == targetTabIndex ? on : st, GUILayout.Width(w), GUILayout.Height(18f)))
+                for (int i = 0; i < tabNames.Length; i++)
                 {
-                    if (targetTabIndex != i)
-                    {
-                        targetTabIndex = i;
-                        tabTransitionProgress = 0f;
-                        scrollPosition = Vector2.zero;
-                    }
+                    string nm = tabNames[i];
+                    if (nm.Length > 5) nm = nm.Substring(0, 5);
+                    if (GUILayout.Button(nm, i == targetTabIndex ? on : st, GUILayout.Width(w), GUILayout.Height(18f)))
+                        SetMenuTab(i);
                 }
-            }
 
-            GUILayout.Space(4f);
-            GUIStyle hint = new GUIStyle(menuDescStyle) { fontSize = 8, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, wordWrap = false };
-            GUILayout.Label("WIDEN", hint, GUILayout.Width(w), GUILayout.Height(14f));
-            GUILayout.EndArea();
+                GUILayout.Space(4f);
+                GUILayout.Label("WIDEN", microMenuHintStyle, GUILayout.Width(w), GUILayout.Height(14f));
+            }
+            finally { GUILayout.EndArea(); }
         }
     }
 }

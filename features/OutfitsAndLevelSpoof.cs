@@ -63,8 +63,23 @@ private struct FavoriteOutfitSnapshot
             }
         }
 
+private static bool randomOutfitSaveToProfile = false;
+
+private static bool resetRandomOutfitOnNextLobby = false;
+
 private void DrawOutfitsTab()
         {
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("RANDOM OUTFIT", "СЛУЧАЙНЫЙ ОБРАЗ"));
+            randomOutfitSaveToProfile = DrawToggle(randomOutfitSaveToProfile, L("Save to profile", "Сохранить в профиль"), 260);
+            GUILayout.Space(8);
+            if (GUILayout.Button(L("Roll random outfit", "Случайный образ"), btnStyle, GUILayout.Height(32)))
+                RollRandomOutfit();
+            GUILayout.Space(6);
+            GUILayout.Label(L("Random color, hat, skin, visor and pet from the full catalog. Without profile saving, your saved look returns in the next lobby.", "Случайные цвет, шапка, костюм, визор и питомец из полного каталога. Без сохранения в профиль ваш сохранённый образ вернётся в следующем лобби."), menuDescStyle);
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8);
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("FAVORITE OUTFITS", "ИЗБРАННЫЕ ОБРАЗЫ"));
 
@@ -134,10 +149,91 @@ private void DrawOutfitsTab()
 
             bool prevFreeRainbow = localRainbowFreeOnly;
             localRainbowFreeOnly = DrawToggle(localRainbowFreeOnly, L("Rainbow (only free colors)", "Радуга (только свободные цвета)"), 260);
-            if (localRainbowFreeOnly && !prevFreeRainbow) localRainbow = false;
+            if (localRainbowFreeOnly && !prevFreeRainbow)
+            {
+                localRainbow = false;
+                localAlwaysRed = false;
+                localFortegreen = false;
+                localSnipeColor = false;
+                ApplyLocalColorOverride();
+                ResetLocalColorSnipe();
+            }
+
+            bool prevAlwaysRed = localAlwaysRed;
+            localAlwaysRed = DrawToggle(localAlwaysRed, L("Always Red", "Всегда красный"), 260);
+            if (localAlwaysRed && !prevAlwaysRed)
+            {
+                localFortegreen = false;
+                localSnipeColor = false;
+                localRainbow = false;
+                localRainbowFreeOnly = false;
+                ResetLocalColorSnipe();
+            }
+
+            bool prevFortegreen = localFortegreen;
+            localFortegreen = DrawToggle(localFortegreen, "Fortegreen", 260);
+            if (localFortegreen && !prevFortegreen)
+            {
+                localAlwaysRed = false;
+                localSnipeColor = false;
+                localRainbow = false;
+                localRainbowFreeOnly = false;
+                ResetLocalColorSnipe();
+            }
+
+            bool prevSnipeColor = localSnipeColor;
+            localSnipeColor = DrawToggle(localSnipeColor, "Snipe Color", 260);
+            if (localSnipeColor && !prevSnipeColor)
+            {
+                localAlwaysRed = false;
+                localFortegreen = false;
+                localRainbow = false;
+                localRainbowFreeOnly = false;
+                ResetLocalColorSnipe();
+            }
+
+            if (prevAlwaysRed != localAlwaysRed || prevFortegreen != localFortegreen || prevSnipeColor != localSnipeColor)
+                ApplyLocalColorOverride();
+            if (prevFortegreen != localFortegreen)
+                ResetFortegreenColor();
 
             GUILayout.Space(4);
             GUILayout.Label(L("Cycles your color only through colors that are free in the room, so the host anti-cheat will not ban you for taking an occupied color.", "Переливает ваш цвет только по свободным цветам в комнате, чтобы анти-чит хоста не забанил за занятый цвет."), menuDescStyle);
+
+            if (localSnipeColor)
+            {
+                GUILayout.Space(12);
+                GUILayout.Label(L("Snipe target:", "Цель для Snipe Color:"), new GUIStyle(toggleLabelStyle) { fontStyle = FontStyle.Bold });
+                GUILayout.Space(6);
+
+                localSnipeColorId = Mathf.Clamp(localSnipeColorId, 0, 17);
+                GUILayout.BeginHorizontal();
+
+                if (GUILayout.Button("<", btnStyle, GUILayout.Width(30), GUILayout.Height(28)))
+                {
+                    localSnipeColorId = (localSnipeColorId + 17) % 18;
+                    ResetLocalColorSnipe();
+                }
+
+                Color prevSnipeSwatchCol = GUI.color;
+                try { GUI.color = Palette.PlayerColors[localSnipeColorId]; } catch { }
+                GUILayout.Button(GUIContent.none, menuSwatchSquareStyle, GUILayout.Width(28), GUILayout.Height(28));
+                GUI.color = prevSnipeSwatchCol;
+
+                GUILayout.Space(8);
+                GUILayout.Label(SafeColorName(localSnipeColorId), new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.Height(28));
+                GUILayout.FlexibleSpace();
+
+                if (GUILayout.Button(">", btnStyle, GUILayout.Width(30), GUILayout.Height(28)))
+                {
+                    localSnipeColorId = (localSnipeColorId + 1) % 18;
+                    ResetLocalColorSnipe();
+                }
+
+                GUILayout.EndHorizontal();
+                GUILayout.Space(4);
+                GUILayout.Label(L("Waits while the selected color is occupied and requests it as soon as it becomes free.", "Ждёт, пока выбранный цвет занят, и запрашивает его сразу после освобождения."), menuDescStyle);
+            }
 
             GUILayout.Space(12);
 
@@ -182,6 +278,96 @@ private void DrawOutfitsTab()
             GUILayout.Label(L("Free colors right now: ", "Свободных цветов сейчас: ") + freeCount, menuDescStyle);
 
             GUILayout.EndVertical();
+        }
+
+private void RollRandomOutfit()
+        {
+            try
+            {
+                PlayerControl plr = PlayerControl.LocalPlayer;
+                if (plr == null || plr.Data == null || plr.Data.DefaultOutfit == null)
+                {
+                    ShowNotification("<color=#FFAA00>[OUTFIT]</color> Local player is not ready.");
+                    return;
+                }
+
+                HatManager hm = DestroyableSingleton<HatManager>.Instance;
+                if (hm == null)
+                {
+                    ShowNotification("<color=#FFAA00>[OUTFIT]</color> Cosmetic catalog is not ready.");
+                    return;
+                }
+
+                var hats = (Il2CppArrayBase<HatData>)(object)hm.allHats;
+                var skins = (Il2CppArrayBase<SkinData>)(object)hm.allSkins;
+                var visors = (Il2CppArrayBase<VisorData>)(object)hm.allVisors;
+                var pets = (Il2CppArrayBase<PetData>)(object)hm.allPets;
+                if (hats == null || skins == null || visors == null || pets == null ||
+                    hats.Count == 0 || skins.Count == 0 || visors.Count == 0 || pets.Count == 0)
+                {
+                    ShowNotification("<color=#FFAA00>[OUTFIT]</color> Cosmetic catalog is empty.");
+                    return;
+                }
+
+                FavoriteOutfitSnapshot outfit = new FavoriteOutfitSnapshot(
+                    UnityEngine.Random.Range(0, MaxOutfitColorId() + 1),
+                    ((CosmeticData)hats[UnityEngine.Random.Range(0, hats.Count)]).ProdId,
+                    ((CosmeticData)skins[UnityEngine.Random.Range(0, skins.Count)]).ProdId,
+                    ((CosmeticData)visors[UnityEngine.Random.Range(0, visors.Count)]).ProdId,
+                    plr.Data.DefaultOutfit.NamePlateId,
+                    ((CosmeticData)pets[UnityEngine.Random.Range(0, pets.Count)]).ProdId);
+
+                ApplyFavoriteOutfit(plr, outfit);
+                resetRandomOutfitOnNextLobby = true;
+
+                if (randomOutfitSaveToProfile)
+                {
+                    var profile = AmongUs.Data.DataManager.Player?.Customization;
+                    if (profile == null)
+                    {
+                        ShowNotification("<color=#FFAA00>[OUTFIT]</color> Applied, but profile is not ready.");
+                        return;
+                    }
+
+                    profile.Color = (byte)outfit.ColorId;
+                    profile.Hat = outfit.HatId;
+                    profile.Skin = outfit.SkinId;
+                    profile.Visor = outfit.VisorId;
+                    profile.Pet = outfit.PetId;
+                    AmongUs.Data.DataManager.Player.Save();
+                    resetRandomOutfitOnNextLobby = false;
+                }
+
+                ShowNotification(randomOutfitSaveToProfile
+                    ? "<color=#00FFAA>[OUTFIT]</color> Random outfit saved to profile."
+                    : "<color=#00FFAA>[OUTFIT]</color> Random outfit applied until the next lobby.");
+            }
+            catch
+            {
+                ShowNotification("<color=#FF4444>[OUTFIT]</color> Random outfit failed.");
+            }
+        }
+
+public static void ResetRandomOutfitForLobby()
+        {
+            if (!resetRandomOutfitOnNextLobby) return;
+            resetRandomOutfitOnNextLobby = false;
+
+            try
+            {
+                PlayerControl plr = PlayerControl.LocalPlayer;
+                var profile = AmongUs.Data.DataManager.Player?.Customization;
+                if (plr == null || profile == null) return;
+
+                ApplyFavoriteOutfit(plr, new FavoriteOutfitSnapshot(
+                    profile.Color,
+                    profile.Hat,
+                    profile.Skin,
+                    profile.Visor,
+                    profile.NamePlate,
+                    profile.Pet));
+            }
+            catch { }
         }
 
 private static PlayerControl SelectedOutfitSourcePlayer()

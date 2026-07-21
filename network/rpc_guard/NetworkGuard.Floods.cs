@@ -127,6 +127,12 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			return false;
 		}
 
+		if ((rpcByte == 11 || rpcByte == 14) && MeetingOrExileActive())
+		{
+			GuardPlugin.Logger?.LogWarning((object)$"Network protection blocked duplicate meeting/report RPC from {PlayerName(player)} (client {clientId}) while meeting UI is active.");
+			return true;
+		}
+
 		if (NameStringRpcIds.Contains(rpcByte))
 		{
 			try
@@ -160,19 +166,19 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			float now = Time.fixedTime;
 			if (LastTaskRpcAt.TryGetValue(player.PlayerId, out float lastTask) && now - lastTask < 0.7f)
 			{
-				BlockRpc(player, clientId, "Task spam", $"{now - lastTask:0.00}s between tasks.");
+				BlockRpc(player, clientId, "Task spam", $"{now - lastTask:0.00}s between tasks.", "Null");
 				return true;
 			}
 
 			if (MeetingOrExileActive())
 			{
-				BlockRpc(player, clientId, "Task during meeting", "CompleteTask was blocked.");
+				BlockRpc(player, clientId, "Task during meeting", "CompleteTask was blocked.", "Null");
 				return true;
 			}
 
-			if (IsImpostor(player))
+			if (IsImpostor(player) && !ElysiumModMenu.ElysiumModMenuGUI.allowTasksAsImpostor)
 			{
-				BlockRpc(player, clientId, "Impostor task RPC", "CompleteTask was blocked.");
+				BlockRpc(player, clientId, "Impostor task RPC", "CompleteTask was blocked.", "Null");
 				return true;
 			}
 
@@ -182,12 +188,6 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 
 		if (rpcByte == 11)
 		{
-			if (MeetingOrExileActive())
-			{
-				GuardPlugin.Logger?.LogWarning((object)$"Network protection ignored duplicate meeting/report RPC from {PlayerName(player)} (client {clientId}) while meeting UI is active.");
-				return false;
-			}
-
 			if (TryReadReportedPlayerId(reader, out byte reportedPlayerId))
 			{
 				if (reportedPlayerId == byte.MaxValue)
@@ -534,20 +534,12 @@ private static bool MeetingOrExileActive()
 	{
 		try
 		{
-			if (MeetingHud.Instance != null && (int)MeetingHud.Instance.state != 0)
-			{
-				return true;
-			}
+			return MeetingHud.Instance != null || ExileController.Instance != null;
 		}
 		catch
 		{
-			if (MeetingHud.Instance != null)
-			{
-				return true;
-			}
+			return MeetingHud.Instance != null || ExileController.Instance != null;
 		}
-
-		return ExileController.Instance != null;
 	}
 
 private static void NoteMeetingRpc()
@@ -1023,7 +1015,7 @@ private static void BlockNetIdOverflow(int clientId, string detail)
 			SecurityNotice.Show("Ban", ClientName(clientId), title, detail, clientId);
 		}
 
-		DisconnectIfHost(clientId, false, title, detail, true);
+		DisconnectIfHost(clientId, true, title, detail, true);
 	}
 
 private static bool ShouldShowProtectionNotice(int clientId, string title, string detail)
@@ -1133,6 +1125,27 @@ private static void ApplyProtectionAction(int clientId, string attackType, strin
 			default:
 				return;
 		}
+	}
+
+internal static void ApplyMenuProtection(int clientId, string attackType, string detail)
+	{
+		switch (ElysiumModMenu.ElysiumModMenuGUI.punishmentMode)
+		{
+			case 3:
+				DisconnectIfHost(clientId, true, attackType, detail);
+				return;
+			case 2:
+				DisconnectIfHost(clientId, false, attackType, detail);
+				return;
+			case 1:
+				SecurityNotice.Show("Warn", ClientName(clientId), attackType, detail, clientId);
+				return;
+		}
+	}
+
+internal static void BanClient(int clientId, string attackType, string detail)
+	{
+		DisconnectIfHost(clientId, true, attackType, detail);
 	}
 
 private static void DisconnectIfHost(int clientId, bool ban, string attackType, string detail)

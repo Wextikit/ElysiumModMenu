@@ -49,12 +49,27 @@ namespace ElysiumModMenu
             public static bool Prefix(RoleManager __instance)
             {
                 ElysiumModMenuGUI.EnsureAutoTwoImpostorsForRoleSelection();
-                if (!ElysiumModMenuGUI.enablePreGameRoleForce || !AmongUsClient.Instance.AmHost) return true;
+                if (!ElysiumModMenuGUI.enablePreGameRoleForce ||
+                    AmongUsClient.Instance == null ||
+                    !AmongUsClient.Instance.AmHost ||
+                    PlayerControl.AllPlayerControls == null ||
+                    GameOptionsManager.Instance?.CurrentGameOptions == null ||
+                    GameManager.Instance?.LogicRoleSelection == null)
+                    return true;
+
                 try
                 {
-                    var allPlayers = PlayerControl.AllPlayerControls.ToArray().Where(p => p != null && p.Data != null && !p.Data.Disconnected && !p.Data.IsDead).ToList();
+                    var allPlayers = PlayerControl.AllPlayerControls.ToArray()
+                        .Where(p => p != null && p.Data != null && !p.Data.Disconnected && !p.Data.IsDead && p.PlayerId < 100)
+                        .ToList();
+
+                    if (allPlayers.Count == 0) return true;
+
+                    ElysiumModMenuGUI.EnsureForcedRoleOptions(allPlayers);
+
                     int numImps = 1;
-                    try { numImps = GameOptionsManager.Instance.CurrentGameOptions.GetInt((Int32OptionNames)1); } catch { }
+                    IGameOptions opts = GameOptionsManager.Instance.CurrentGameOptions;
+                    try { numImps = opts.GetInt((Int32OptionNames)1); } catch { }
                     var impRoleTypes = new HashSet<int> { 1, 5, 9, 18 };
                     List<PlayerControl> impostors = new List<PlayerControl>();
                     foreach (var p in allPlayers)
@@ -85,17 +100,17 @@ namespace ElysiumModMenu
                     foreach (var i in impostors) impData.Add(i.Data);
                     var crewData = new Il2CppSystem.Collections.Generic.List<NetworkedPlayerInfo>();
                     foreach (var c in crewmates) crewData.Add(c.Data);
-                    IGameOptions opts = GameOptionsManager.Instance.CurrentGameOptions;
                     GameManager.Instance.LogicRoleSelection.AssignRolesForTeam(impData, opts, (RoleTeamTypes)1, int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>());
                     GameManager.Instance.LogicRoleSelection.AssignRolesForTeam(crewData, opts, (RoleTeamTypes)0, int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>((RoleTypes)0));
                     foreach (var pc in allPlayers)
                     {
                         if (ElysiumModMenuGUI.TryGetForcedRole(pc, out RoleTypes role) && role != RoleTypes.Crewmate && role != RoleTypes.Impostor)
                         {
-                            RoleManager.Instance.SetRole(pc, role);
+                            RoleManager.Instance?.SetRole(pc, role);
+                            pc.RpcSetRole(role, false);
                         }
                     }
-                    foreach (var pc in allPlayers) if (pc.Data.Role != null) pc.Data.Role.Initialize(pc);
+                    foreach (var pc in allPlayers) ElysiumModMenuGUI.RefreshRoleBehaviour(pc);
                     return false;
                 }
                 catch { return true; }
@@ -376,7 +391,7 @@ namespace ElysiumModMenu
                     if (hudModalActive) return;
 
                     __instance.ShadowQuad.gameObject.SetActive(
-                        !ElysiumModMenuGUI.fullBright && !ElysiumModMenuGUI.cameraZoom);
+                        !ElysiumModMenuGUI.fullBright && !ElysiumModMenuGUI.zoomOwnsCamera);
                 }
                 catch { }
             }
@@ -430,14 +445,14 @@ namespace ElysiumModMenu
                     if (aspectPosition != null)
                     {
                         float camSize = Camera.main != null ? Camera.main.orthographicSize : 3f;
-                        if ((!ElysiumModMenuGUI.hudZoomBaseCaptured || (!ElysiumModMenuGUI.cameraZoom && camSize <= 3.05f)) &&
+                        if ((!ElysiumModMenuGUI.hudZoomBaseCaptured || (!ElysiumModMenuGUI.zoomOwnsCamera && camSize <= 3.05f)) &&
                             ElysiumModMenuGUI.TryGetAspectDistance(aspectPosition, out Vector3 currentDistance))
                         {
                             ElysiumModMenuGUI.hudZoomBaseDistance = currentDistance;
                             ElysiumModMenuGUI.hudZoomBaseCaptured = true;
                         }
 
-                        if (!hudModalActive && ElysiumModMenuGUI.cameraZoom && ElysiumModMenuGUI.hudZoomBaseCaptured)
+                        if (!hudModalActive && ElysiumModMenuGUI.zoomOwnsCamera && ElysiumModMenuGUI.hudZoomBaseCaptured)
                         {
                             Vector3 distance = ElysiumModMenuGUI.hudZoomBaseDistance;
                             distance.y = ElysiumModMenuGUI.hudZoomBaseDistance.y + 3f * (camSize - 3f);
@@ -449,7 +464,7 @@ namespace ElysiumModMenu
                         }
                     }
 
-                    if (!hudModalActive && ElysiumModMenuGUI.cameraZoom && __instance.TaskPanel != null && __instance.TaskPanel.gameObject != null && ShipStatus.Instance != null && MeetingHud.Instance == null)
+                    if (!hudModalActive && ElysiumModMenuGUI.zoomOwnsCamera && __instance.TaskPanel != null && __instance.TaskPanel.gameObject != null && ShipStatus.Instance != null && MeetingHud.Instance == null)
                         __instance.TaskPanel.gameObject.SetActive(true);
                 }
                 catch { }

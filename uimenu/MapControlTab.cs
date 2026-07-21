@@ -63,7 +63,7 @@ private void DrawMapsTab()
             GUILayout.BeginHorizontal();
             GUILayout.Label(L("Select Map:", "Выбор карты:"), GUILayout.Width(100));
             selectedMapSpawnIdx = (int)GUILayout.HorizontalSlider((int)selectedMapSpawnIdx, 0, mapSpawnNames.Length - 1, sliderStyle, sliderThumbStyle, GUILayout.Width(200));
-            GUILayout.Label($"<color=#{GetMenuAccentHex()}>{mapSpawnNames[(int)selectedMapSpawnIdx]}</color>", new GUIStyle(GUI.skin.label) { richText = true });
+            GUILayout.Label($"<color=#{GetMenuAccentHex()}>{mapSpawnNames[(int)selectedMapSpawnIdx]}</color>", richLabelStyle12);
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
@@ -104,7 +104,7 @@ private void DrawMapsTab()
             }
             else
             {
-                GUILayout.Label($"<color=#777777>{L("Teleports are only available when you are on a map.", "Телепорты доступны только когда вы находитесь на карте.")}</color>", new GUIStyle(GUI.skin.label) { richText = true, alignment = TextAnchor.MiddleCenter });
+                GUILayout.Label($"<color=#777777>{L("Teleports are only available when you are on a map.", "Телепорты доступны только когда вы находитесь на карте.")}</color>", centeredRichLabelStyle);
             }
 
             GUILayout.EndVertical();

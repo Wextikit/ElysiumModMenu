@@ -49,18 +49,23 @@ private void DrawAutoHostMainTab()
             {
                 string subTabLabel = i < hostOnlySubTabs.Length ? hostOnlySubTabs[i] : autoHostSubTabs[i];
                 if (GUILayout.Button(subTabLabel, currentAutoHostSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                {
-                    currentAutoHostSubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                    SetMultiTab("autoHost", ref currentAutoHostSubTab, i, autoHostSubTabs.Length);
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
 
-            if (currentAutoHostSubTab == 0) DrawLobbyControls();
-            else if (currentAutoHostSubTab == 1) DrawPlayersRoles();
-            else if (currentAutoHostSubTab == 2) DrawAntiCheatTab();
-            else if (currentAutoHostSubTab == 3) DrawAutoHostTab();
+            BeginMultiTabContent("autoHost", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentAutoHostSubTab == 0) DrawLobbyControls();
+                else if (currentAutoHostSubTab == 1) DrawPlayersRoles();
+                else if (currentAutoHostSubTab == 2) DrawAntiCheatTab();
+                else if (currentAutoHostSubTab == 3) DrawAutoHostTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
     }
 }
 }

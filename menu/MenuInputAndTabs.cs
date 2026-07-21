@@ -119,117 +119,173 @@ public static string bindingAction = "";
 
 public static string L(string eng, string rus)
         {
-            try
-            {
-                string configuredLanguage = CurrentMenuLanguageCode();
-                if (configuredLanguage == "ru" || configuredLanguage == "uk")
-                    return TryTranslateMenuText(configuredLanguage, eng, configuredLanguage == "ru" ? rus : null);
-                if (configuredLanguage != "auto")
-                    return TryTranslateMenuText(configuredLanguage, eng, eng);
-
-                string autoLanguage = ResolveAutoMenuLanguageCode();
-                if (autoLanguage != "en")
-                    return TryTranslateMenuText(autoLanguage, eng, autoLanguage == "ru" ? rus : null);
-            }
-            catch { }
             return eng;
         }
 
-private static string ResolveAutoMenuLanguageCode()
+private static readonly Dictionary<string, string> menuRussianTexts = new Dictionary<string, string>
         {
-            try
-            {
-                if (DestroyableSingleton<TranslationController>.InstanceExists)
-                {
-                    string currentLang = DestroyableSingleton<TranslationController>.Instance.currentLanguage.ToString().ToLowerInvariant();
-                    if (currentLang.Contains("russian") || currentLang.Contains("рус") || currentLang == "ru") return "ru";
-                    if (currentLang.Contains("ukrainian") || currentLang.Contains("укр") || currentLang == "uk") return "uk";
-                    if (currentLang.Contains("german") || currentLang.Contains("deutsch") || currentLang == "de") return "de";
-                    if (currentLang.Contains("french") || currentLang.Contains("fran") || currentLang == "fr") return "fr";
-                    if (currentLang.Contains("spanish") || currentLang.Contains("espa") || currentLang == "es") return "es";
-                    if (currentLang.Contains("italian") || currentLang == "it") return "it";
-                    if (currentLang.Contains("portugu") || currentLang == "pt") return "pt";
-                    if (currentLang.Contains("polish") || currentLang == "pl") return "pl";
-                    if (currentLang.Contains("dutch") || currentLang.Contains("neder") || currentLang == "nl") return "nl";
-                    if (currentLang.Contains("turkish") || currentLang == "tr") return "tr";
-                    if (currentLang.Contains("czech") || currentLang == "cs") return "cs";
-                    if (currentLang.Contains("romanian") || currentLang == "ro") return "ro";
-                    if (currentLang.Contains("hungarian") || currentLang == "hu") return "hu";
-                    if (currentLang.Contains("swedish") || currentLang == "sv") return "sv";
-                    if (currentLang.Contains("danish") || currentLang == "da") return "da";
-                    if (currentLang.Contains("finnish") || currentLang == "fi") return "fi";
-                    if (currentLang.Contains("norwegian") || currentLang == "no") return "no";
-                    if (currentLang.Contains("greek") || currentLang == "el") return "el";
-                    if (currentLang.Contains("chinese") || currentLang == "zh") return "zh";
-                    if (currentLang.Contains("japanese") || currentLang == "ja") return "ja";
-                    if (currentLang.Contains("korean") || currentLang == "ko") return "ko";
-                }
-            }
-            catch { }
+            ["BAN / KICK PLAYER"] = "БАН / КИК ИГРОКА",
+            ["ESP"] = "ESP",
+            ["RADAR"] = "РАДАР",
+            ["REPLAY"] = "ПОВТОР",
+            ["LOBBY SETTINGS"] = "НАСТРОЙКИ ЛОББИ",
+            ["GAME"] = "ИГРА",
+            ["MEETING / TASKS"] = "МИТИНГ / ТАСКИ",
+            ["EXTRA"] = "ДОПОЛНИТЕЛЬНО",
+            ["H&S MAIN"] = "H&S — ОСНОВНОЕ",
+            ["H&S PORT"] = "H&S — PORT",
+            ["CLASSIC ROLES"] = "КЛАССИЧЕСКИЕ РОЛИ",
+            ["ROLE DETAILS"] = "ПАРАМЕТРЫ РОЛЕЙ",
+            ["CLONES"] = "КЛОНЫ",
+            ["TARGET SPAWN"] = "СПАВН ЦЕЛИ",
+            ["TARGET PATTERN"] = "ПОСТРОЕНИЕ ЦЕЛИ",
+            ["PLAYER HISTORY"] = "ИСТОРИЯ ИГРОКОВ",
+            ["TARGET ROLE CONTROL"] = "УПРАВЛЕНИЕ РОЛЬЮ ЦЕЛИ",
+            ["SET PLAYER COLOR"] = "ЦВЕТ ИГРОКА",
+            ["PLAYER INFO & REPORT"] = "ИНФОРМАЦИЯ И РЕПОРТ",
+            ["VENT TELEPORT"] = "ТЕЛЕПОРТ ПО ВЕНТАМ",
+            ["MOVEMENT & TELEPORT"] = "ДВИЖЕНИЕ И ТЕЛЕПОРТ",
+            ["ROLE TOOLS"] = "ИНСТРУМЕНТЫ РОЛЕЙ",
+            ["IMPOSTOR"] = "ИМПОСТЕР",
+            ["SHAPESHIFTER"] = "ШЕЙПШИФТЕР",
+            ["TRACKER"] = "ТРЕКЕР",
+            ["ENGINEER"] = "ИНЖЕНЕР",
+            ["SCIENTIST"] = "УЧЁНЫЙ",
+            ["DETECTIVE"] = "ДЕТЕКТИВ",
+            ["GLOBAL"] = "ОБЩЕЕ",
+            ["PRE-GAME ROLE MANAGER"] = "МЕНЕДЖЕР РОЛЕЙ ДО ИГРЫ",
+            ["LIVE ROLE DISTRIBUTOR (HOST)"] = "ВЫДАЧА РОЛЕЙ В ИГРЕ (ХОСТ)",
+            ["IMPOSTOR ROLES (Red Team)"] = "РОЛИ ИМПОСТЕРА (КРАСНАЯ КОМАНДА)",
+            ["CREWMATE ROLES (Blue Team)"] = "РОЛИ КРЮМЕЙТОВ (СИНЯЯ КОМАНДА)",
+            ["CRITICAL SABOTAGES"] = "КРИТИЧЕСКИЕ САБОТАЖИ",
+            ["SYSTEMS"] = "СИСТЕМЫ",
+            ["VENTS"] = "ВЕНТЫ",
+            ["DOOR LOCKDOWN"] = "БЛОКИРОВКА ДВЕРЕЙ",
+            ["DOOR TARGETS"] = "ЦЕЛИ ДВЕРЕЙ",
+            ["SEND"] = "ОТПРАВКА",
+            ["CHAT COLOR"] = "ЦВЕТ ЧАТА",
+            ["IDENTITY"] = "ЛИЧНОСТЬ",
+            ["PLATFORM"] = "ПЛАТФОРМА",
+            ["TASKS"] = "ТАСКИ",
+            ["CUSTOM KEYBINDS"] = "ПОЛЬЗОВАТЕЛЬСКИЕ БИНДЫ",
+            ["PANIC"] = "ПАНИКА",
+            ["PROFILES"] = "ПРОФИЛИ",
+            ["BUG ROOM"] = "БАГ-КОМНАТА",
+            ["BUGROOM SCOUT"] = "ПОИСК БАГ-КОМНАТ",
+            ["GLITCH ROOM FINDER"] = "ПОИСК ГЛИТЧ-КОМНАТ",
+            ["Overflow Protection"] = "Защита от переполнения",
+            ["ESP Boxes"] = "ESP-рамки",
+            ["ESP Shimmer"] = "Перелив ESP",
+            ["Vote Kicks ESP"] = "ESP vote-kick",
+            ["Show Radar"] = "Показывать радар",
+            ["Draw Icons"] = "Рисовать иконки",
+            ["Show Dead Bodies"] = "Показывать тела",
+            ["Show Ghosts"] = "Показывать призраков",
+            ["Right Click TP"] = "ТП по ПКМ",
+            ["Hide In Meeting"] = "Скрывать на митинге",
+            ["Lock Position"] = "Зафиксировать позицию",
+            ["Show Replay"] = "Показывать повтор",
+            ["Only Last Seconds"] = "Только последние секунды",
+            ["Disable Map Safe Mode"] = "Отключить safe mode карты",
+            ["TP To Cursor"] = "ТП к курсору",
+            ["Drag To Cursor"] = "Тащить к курсору",
+            ["True NoClip"] = "Настоящий NoClip",
+            ["Kill Reach"] = "Дальность килла",
+            ["Kill Anyone"] = "Килл любого",
+            ["Kill Aura"] = "Аура килла",
+            ["Allow Tasks (Imp)"] = "Таски за импостера",
+            ["Spam Report Bodies"] = "Спамить репорт тел",
+            ["No Ss Animation"] = "Без анимации шейпшифта",
+            ["Endless Ss Duration"] = "Бесконечный шейпшифт",
+            ["Endless Tracking"] = "Бесконечное отслеживание",
+            ["No Track Cooldown"] = "Без кд трекера",
+            ["Endless Vent Time"] = "Бесконечное время в венте",
+            ["No Vent Cooldown"] = "Без кд вента",
+            ["Unlock Vents"] = "Открыть венты",
+            ["Walk In Vents"] = "Ходить в венте",
+            ["No Map Cooldowns"] = "Без кд карты",
+            ["Endless Battery"] = "Бесконечная батарея",
+            ["No Vitals Cooldown"] = "Без кд виталок",
+            ["Interrogate Reach"] = "Дальность допроса",
+            ["Immortality"] = "Бессмертие",
+            ["Kill Cooldown 0"] = "КД килла 0",
+            ["Kill While Vanished"] = "Килл в невидимости",
+            ["Always Show Chat"] = "Всегда показывать чат",
+            ["Read Ghost Chat"] = "Читать чат призраков",
+            ["Extended Chat"] = "Расширенный чат",
+            ["Fast Chat"] = "Быстрый чат",
+            ["Chat History"] = "История чата",
+            ["Chat Input Hotkeys"] = "Горячие клавиши чата",
+            ["Copy Message"] = "Копировать сообщение",
+            ["Copy Nickname"] = "Копировать ник",
+            ["Save Chat Log"] = "Сохранять лог чата",
+            ["Bypass URL Block"] = "Обход блокировки URL",
+            ["Spell Check"] = "Проверка орфографии",
+            ["Dark Chat Theme"] = "Тёмная тема чата",
+            ["Enable /color"] = "Включить /color",
+            ["Block Fortegreen"] = "Блокировать Fortegreen",
+            ["Block Rainbow"] = "Блокировать Rainbow",
+            ["RGB Menu Mode"] = "RGB-режим меню",
+            ["RGB Task Bar"] = "RGB-полоска тасков",
+            ["RGB Text"] = "RGB-текст",
+            ["Bold Menu Text"] = "Жирный текст меню",
+            ["White Theme"] = "Светлая тема",
+            ["Enable Image Background"] = "Фоновая картинка",
+            ["Custom Main Menu BG"] = "Фон главного меню",
+            ["Show Info"] = "Показывать информацию",
+            ["Copy Code On Disconnect"] = "Копировать код при выходе",
+            ["Block Innersloth Telemetry"] = "Блокировать телеметрию Innersloth",
+            ["No Disconnect Penalty"] = "Без штрафа за выход",
+            ["Spoof April Date"] = "Подменить дату 1 апреля",
+            ["Unlock All (except Cosmicubes)"] = "Открыть всё (кроме Cosmicubes)",
+            ["Unlock Cosmicubes"] = "Открыть Cosmicubes",
+            ["Activate 100% Cosmicubes"] = "Активировать Cosmicubes на 100%",
+            ["Enable Fake RPC"] = "Включить фейковые RPC",
+            ["Enable Custom UI Notifications"] = "Включить уведомления меню",
+            ["Sniff All RPCs (On-Screen)"] = "Показывать все RPC",
+            ["Kill Random Target"] = "Килл случайной цели",
+            ["Auto Kill Target"] = "Авто-килл цели",
+            ["Auto Kill Angel Shield 0.13"] = "Авто-снять щит ангела 0.13",
+            ["Auto Create + Find TXT"] = "Авто создать + найти TXT",
+            ["Create + Test Level Reset"] = "Создать + проверить сброс уровня",
+            ["Timed Auto Run"] = "Автозапуск по таймеру",
+            ["Press any key..."] = "Нажмите клавишу...",
+            ["Clear"] = "Очистить"
+        };
 
-            try
-            {
-                string gray = Palette.GetColorName(15);
-                if (!string.IsNullOrEmpty(gray) && gray.Any(c => c >= '\u0400' && c <= '\u04FF')) return "ru";
-            }
-            catch { }
-
-            return "en";
+public static string MenuText(string text)
+        {
+            return text;
         }
 
-private static string TryTranslateMenuText(string languageCode, string englishText, string fallback)
+private static string FixMenuRussianText(string text)
         {
+            if (string.IsNullOrEmpty(text) || (text.IndexOf('Р') < 0 && text.IndexOf('С') < 0 && text.IndexOf('Ѓ') < 0 && text.IndexOf('Џ') < 0))
+                return text;
+
             try
             {
-                if (string.IsNullOrWhiteSpace(languageCode) || string.IsNullOrEmpty(englishText))
-                    return fallback ?? englishText;
-
-                if (languageCode == "en")
-                    return englishText;
-
-                if (menuExtraTranslations.TryGetValue(languageCode, out Dictionary<string, string> extraTranslations) &&
-                    extraTranslations.TryGetValue(englishText, out string extraTranslated) &&
-                    !string.IsNullOrWhiteSpace(extraTranslated))
-                    return extraTranslated;
-
-                if (menuTranslationFixes.TryGetValue(languageCode, out string[] fixedTranslations))
-                {
-                    int fixedIndex = Array.IndexOf(menuTranslationFixKeys, englishText);
-                    if (fixedIndex >= 0 && fixedIndex < fixedTranslations.Length && !string.IsNullOrWhiteSpace(fixedTranslations[fixedIndex]))
-                        return fixedTranslations[fixedIndex];
-                }
-
-                if (menuTranslations.TryGetValue(languageCode, out Dictionary<string, string> translations) &&
-                    translations.TryGetValue(englishText, out string translated) &&
-                    !string.IsNullOrWhiteSpace(translated))
-                    return translated;
+                byte[] bytes = Encoding.GetEncoding(1251).GetBytes(text);
+                return new UTF8Encoding(false, true).GetString(bytes);
             }
             catch { }
-
-            return fallback ?? englishText;
+            return text;
         }
 
 public static string CurrentMenuLanguageCode()
         {
-            try
-            {
-                int index = Mathf.Clamp(currentMenuLanguageIndex, 0, menuLanguageCodes.Length - 1);
-                return menuLanguageCodes[index];
-            }
-            catch { }
-
-            return "auto";
+            return "en";
         }
 
 private int currentGeneralSubTab = 0;
 
 private int currentGeneralInfoSubTab = 0;
 
-private string[] generalSubTabs => new string[] { L("INFORMATION", "ИНФОРМАЦИЯ"), L("KEYBINDS", "БИНДЫ") }
+private static readonly string[] generalSubTabs = { L("INFORMATION", "ИНФОРМАЦИЯ"), L("KEYBINDS", "БИНДЫ") }
 
 ;
 
-private string[] generalInfoSubTabs => new string[] { L("WELCOME", "WELCOME"), L("CREDITS", "АВТОРЫ") }
+private static readonly string[] generalInfoSubTabs = { L("WELCOME", "ДОБРО ПОЖАЛОВАТЬ"), L("CREDITS", "АВТОРЫ") }
 
 ;
 
@@ -372,6 +428,10 @@ public static bool DetailedJoinInfo = true;
 
 private static List<int> lastPlayerClientIds = new List<int>();
 
+private static readonly List<int> currentPlayerClientIds = new List<int>();
+
+private static readonly List<int> pendingJoinKeys = new List<int>();
+
 private static Dictionary<int, float> pendingJoinTimers = new Dictionary<int, float>();
 
 private static Dictionary<int, float> pendingJoinWaitTimes = new Dictionary<int, float>();
@@ -447,7 +507,21 @@ private Vector2 playersHistoryScroll = Vector2.zero;
 
 private int currentPlayersSubTab = 0;
 
-private string[] playersSubTabs = { "ACTIONS", "HISTORY" };
+private int lastPlayersSubTabForScroll = -1;
+
+private string[] playersSubTabs = { "ACTIONS", "PLAYER HISTORY", "CLONES" };
+
+private Vector2 playersClonesScroll = Vector2.zero;
+
+private Vector2 cloneTargetScroll = Vector2.zero;
+
+private byte selectedCloneTargetId = 255;
+
+private int cloneFormationIdx = 0;
+
+private int cloneFormationCount = 8;
+
+private float cloneFormationWidth = 1f;
 
 private int currentRoleBuffSubTab = 0;
 
@@ -521,6 +595,8 @@ private static byte hostAutoKillTargetId = byte.MaxValue;
 
 public static bool bugRoomAutoAngel = false;
 
+public static float bugRoomAutoAngelIntervalSeconds = 0.15f;
+
 public static bool bugRoomAutoKillShield = false;
 
 public static bool noKillCooldownHostOnly = false;
@@ -553,7 +629,15 @@ public static Color hostChatColorValue = new Color32(0, 128, 128, 255);
 
 public static bool showMenu = false;
 
-public static Rect windowRect = new Rect(100, 100, 750, 480);
+private const float defaultMenuWidth = 750f;
+
+private const float defaultMenuHeight = 480f;
+
+public static Rect windowRect = new Rect(100, 100, defaultMenuWidth, defaultMenuHeight);
+
+public static float menuScale = 1f;
+
+public static bool enableMenuScaleInput = true;
 
 public static bool freecam = false;
 
@@ -583,9 +667,13 @@ private float rgbMenuHue = 0f;
 
 public static bool enableBackground = false;
 
+public static bool enableMenuCharacter = false;
+
 public static bool hardMenu = false;
 
 public static Texture2D customMenuBg = null;
+
+public static Texture2D menuCharacterTexture = null;
 
 private bool wasShowMenu = false;
 
@@ -601,12 +689,21 @@ private string[] menuColorNames = {
             "Med Slate Blue", "Slate Blue", "Navy", "Slate Grey",
             "Arctic Cyan", "Neon Lime", "Royal Violet", "Crimson Glow", "Ocean Teal",
             "Sunset Orange", "Rose Quartz", "Electric Blue", "Gold Ember", "Emerald Pulse",
-            "Midnight Steel", "Soft Lavender"
+            "Midnight Steel", "Soft Lavender",
+            "Azure Glow", "Aqua", "Jade", "Apple", "Lemon", "Peach",
+            "Coral", "Raspberry", "Magenta", "Amethyst", "Periwinkle", "Silver",
+            "Aurora Duo", "Sakura Duo", "Sunset Duo", "Ocean Duo", "Fire Ice",
+            "Neon Duo", "Gold Ruby", "Mint Rose", "Cosmic Duo", "Arctic Violet",
+            "Cherry Lime", "Cyber Candy", "Deep Space", "Toxic Aqua", "Royal Gold", "Cotton Sky",
+            "Plasma Rose", "Emerald Ice", "Void Flame", "Lime Punch", "Blueberry Pop", "Solar Mint",
+            "Ruby Neon", "Galaxy Peach",
+            "Emerald Blush", "Orchid Night", "Crimson Tide", "Honey Plum", "Arctic Rose",
+            "Forest Gold", "Cobalt Peach", "Velvet Mint", "Solar Ink", "Cherry Cream", "Moss Aurora"
         };
 
 private Color[] menuColors = {
             new Color32(51, 51, 255, 255), new Color(0.192f, 0.290f, 0.196f, 1f), new Color(0f, 0.502f, 0f, 1f), new Color(0.235f, 0.702f, 0.443f, 1f), new Color(0.243f, 0.706f, 0.537f, 1f), new Color(0.498f, 1f, 0f, 1f),
-            new Color(0.996f, 0.718f, 0.082f, 1f), new Color(0.812f, 0.651f, 0.004f, 1f),
+            new Color(0.996f, 0.718f, 0.082f, 1f), new Color(0.812f, 0.651f, 0.004f, 1f), new Color(0.720f, 0.520f, 0.090f, 1f),
             new Color(0.996f, 0.612f, 0.063f, 1f), new Color(0.957f, 0.455f, 0.004f, 1f), new Color(1f, 0.549f, 0f, 1f),
             new Color(0.871f, 0.071f, 0.149f, 1f),
             new Color(0.992f, 0.529f, 0.859f, 1f), new Color(0.882f, 0.678f, 0.800f, 1f), new Color(0.784f, 0.635f, 0.784f, 1f),
@@ -614,7 +711,32 @@ private Color[] menuColors = {
             new Color(0.482f, 0.408f, 0.933f, 1f), new Color(0.416f, 0.353f, 0.804f, 1f), new Color(0f, 0f, 0.502f, 1f), new Color(0.439f, 0.502f, 0.565f, 1f),
             new Color32(72, 219, 251, 255), new Color32(163, 230, 53, 255), new Color32(124, 58, 237, 255), new Color32(239, 68, 68, 255),
             new Color32(20, 184, 166, 255), new Color32(249, 115, 22, 255), new Color32(244, 114, 182, 255), new Color32(59, 130, 246, 255),
-            new Color32(245, 158, 11, 255), new Color32(16, 185, 129, 255), new Color32(51, 65, 85, 255), new Color32(196, 181, 253, 255)
+            new Color32(245, 158, 11, 255), new Color32(16, 185, 129, 255), new Color32(51, 65, 85, 255), new Color32(196, 181, 253, 255),
+            new Color32(14, 165, 233, 255), new Color32(34, 211, 238, 255), new Color32(34, 197, 94, 255), new Color32(132, 204, 22, 255),
+            new Color32(250, 204, 21, 255), new Color32(251, 146, 60, 255), new Color32(251, 113, 133, 255), new Color32(225, 29, 72, 255),
+            new Color32(217, 70, 239, 255), new Color32(168, 85, 247, 255), new Color32(129, 140, 248, 255), new Color32(148, 163, 184, 255),
+            new Color32(34, 211, 238, 255), new Color32(244, 114, 182, 255), new Color32(249, 115, 22, 255), new Color32(59, 130, 246, 255),
+            new Color32(239, 68, 68, 255), new Color32(163, 230, 53, 255), new Color32(245, 158, 11, 255), new Color32(52, 211, 153, 255),
+            new Color32(139, 92, 246, 255), new Color32(56, 189, 248, 255),
+            new Color32(244, 63, 94, 255), new Color32(6, 182, 212, 255), new Color32(30, 41, 59, 255), new Color32(132, 204, 22, 255),
+            new Color32(124, 58, 237, 255), new Color32(125, 211, 252, 255),
+            new Color32(236, 72, 153, 255), new Color32(16, 185, 129, 255), new Color32(17, 24, 39, 255), new Color32(190, 242, 100, 255),
+            new Color32(96, 165, 250, 255), new Color32(251, 191, 36, 255), new Color32(220, 38, 38, 255), new Color32(99, 102, 241, 255),
+            new Color32(20, 83, 67, 255), new Color32(49, 35, 83, 255), new Color32(135, 25, 50, 255), new Color32(190, 132, 54, 255), new Color32(75, 169, 190, 255),
+            new Color32(40, 103, 68, 255), new Color32(45, 92, 190, 255), new Color32(124, 47, 111, 255), new Color32(242, 181, 48, 255), new Color32(196, 49, 76, 255), new Color32(83, 135, 87, 255)
+        };
+
+private Color[] menuPairColors = {
+            new Color32(139, 92, 246, 255), new Color32(196, 181, 253, 255), new Color32(236, 72, 153, 255), new Color32(20, 184, 166, 255),
+            new Color32(34, 211, 238, 255), new Color32(168, 85, 247, 255), new Color32(225, 29, 72, 255), new Color32(251, 113, 133, 255),
+            new Color32(59, 130, 246, 255), new Color32(168, 85, 247, 255),
+            new Color32(163, 230, 53, 255), new Color32(236, 72, 153, 255), new Color32(99, 102, 241, 255), new Color32(34, 211, 238, 255),
+            new Color32(250, 204, 21, 255), new Color32(244, 114, 182, 255),
+            new Color32(168, 85, 247, 255), new Color32(103, 232, 249, 255), new Color32(249, 115, 22, 255), new Color32(244, 63, 94, 255),
+            new Color32(217, 70, 239, 255), new Color32(45, 212, 191, 255), new Color32(34, 211, 238, 255), new Color32(251, 146, 60, 255),
+            new Color32(216, 112, 145, 255), new Color32(191, 100, 185, 255), new Color32(52, 136, 160, 255), new Color32(100, 56, 116, 255),
+            new Color32(246, 154, 183, 255), new Color32(228, 181, 68, 255), new Color32(247, 164, 115, 255), new Color32(116, 206, 171, 255),
+            new Color32(42, 52, 83, 255), new Color32(249, 213, 187, 255), new Color32(151, 215, 185, 255)
         };
 
 public static float autoChatEveryoneDelay = 2.5f;
@@ -631,13 +753,13 @@ private float customChatSpamTimer = 0f;
 
 public static float autoMeetingTimer = 0f;
 
-private string[] tabNames => new string[] { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ") }
+private static readonly string[] tabNames = { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ") }
 
 ;
 
 private int currentSabotageSubTab = 0;
 
-private string[] sabotageSubTabs => new string[] { L("SABOTAGES", "САБОТАЖИ"), L("ANIMATIONS", "АНИМАЦИИ") }
+private static readonly string[] sabotageSubTabs = { L("SABOTAGES", "САБОТАЖИ"), L("ANIMATIONS", "АНИМАЦИИ") }
 
 ;
 
@@ -649,7 +771,7 @@ public static float globalRoomColorId = 0f;
 
 private int currentHostOnlySubTab = 0;
 
-private string[] hostOnlySubTabs => new string[] { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), "BUG ROOM", L("MAPS", "КАРТЫ") }
+private static readonly string[] hostOnlySubTabs = { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), L("BUG ROOM", "БАГ-КОМНАТА"), L("MAPS", "КАРТЫ") }
 
 ;
 

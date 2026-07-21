@@ -100,10 +100,15 @@ namespace ElysiumModMenu
 
         private static bool IsKnownVerboseNoise(LogEventArgs eventArgs)
         {
-            if ((eventArgs.Level & LogLevel.Warning) == 0) return false;
-
             string message = eventArgs.Data as string ?? eventArgs.Data?.ToString();
             if (message == null) return false;
+
+            if ((eventArgs.Level & LogLevel.Warning) == 0 &&
+                (message.StartsWith("Registered mono type ElysiumModMenu.", System.StringComparison.Ordinal) ||
+                 message.StartsWith("Registered mono type ElysiumNetGuard.", System.StringComparison.Ordinal)))
+                return true;
+
+            if ((eventArgs.Level & LogLevel.Warning) == 0) return false;
 
             return message.StartsWith("Delay spawn for unowned ", System.StringComparison.Ordinal) ||
                 message.StartsWith("Stored data for ", System.StringComparison.Ordinal) ||

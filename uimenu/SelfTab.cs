@@ -44,35 +44,39 @@ namespace ElysiumModMenu
     {
 private void DrawSelfTab()
         {
-            float selfContentWidth = GetMenuWorkWidth(220f, 610f);
+            float selfContentWidth = Mathf.Max(180f, GetMenuWorkWidth(220f, 610f) - 18f);
             currentSelfSubTab = Mathf.Clamp(currentSelfSubTab, 0, selfSubTabs.Length - 1);
-            GUIStyle compactSubTab = new GUIStyle(subTabStyle) { fontSize = 10, padding = CreateRectOffset(5, 5, 1, 1) };
-            GUIStyle compactActiveSubTab = new GUIStyle(activeSubTabStyle) { fontSize = 10, padding = CreateRectOffset(5, 5, 1, 1) };
 
             GUILayout.BeginVertical(GUILayout.Width(selfContentWidth));
             GUILayout.BeginHorizontal(GUILayout.Width(selfContentWidth));
             for (int i = 0; i < selfSubTabs.Length; i++)
             {
-                if (GUILayout.Button(selfSubTabs[i], currentSelfSubTab == i ? compactActiveSubTab : compactSubTab, GUILayout.Height(18)))
-                {
-                    currentSelfSubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                if (GUILayout.Button(selfSubTabs[i], currentSelfSubTab == i ? compactActiveSubTabStyle : compactSubTabStyle, GUILayout.Height(18)))
+                    SetMultiTab("self", ref currentSelfSubTab, i, selfSubTabs.Length);
             }
+            GUILayout.Space(6);
             GUILayout.EndHorizontal();
             GUILayout.Space(3);
 
-            if (currentSelfSubTab == 0)
+            BeginMultiTabContent("self", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
             {
-                DrawSelfSpoof();
+                if (currentSelfSubTab == 0)
+                {
+                    DrawSelfSpoof();
+                }
+                else
+                {
+                    GUILayout.BeginVertical(CreateCompactMenuCardStyle(), GUILayout.Width(selfContentWidth), GUILayout.ExpandHeight(false));
+                    if (currentSelfSubTab == 1) DrawRolesCompact(selfContentWidth);
+                    else if (currentSelfSubTab == 2) DrawPlayerMovementCompact(selfContentWidth);
+                    else if (currentSelfSubTab == 3) DrawChatSettingsCompact(selfContentWidth);
+                    GUILayout.EndVertical();
+                }
             }
-            else
+            finally
             {
-                GUILayout.BeginVertical(CreateCompactMenuCardStyle(), GUILayout.Width(selfContentWidth), GUILayout.ExpandHeight(false));
-                if (currentSelfSubTab == 1) DrawRolesCompact(selfContentWidth);
-                else if (currentSelfSubTab == 2) DrawPlayerMovementCompact(selfContentWidth);
-                else if (currentSelfSubTab == 3) DrawChatSettingsCompact(selfContentWidth);
-                GUILayout.EndVertical();
+                EndMultiTabContent(oldMatrix, oldColor);
             }
 
             GUILayout.EndVertical();

@@ -81,8 +81,9 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
         public void Start()
         {
             activeGui = this;
-            if (enableBackground) LoadBackgroundImage();
             LoadConfig();
+            if (enableBackground) LoadBackgroundImage();
+            if (enableMenuCharacter) LoadMenuCharacter();
             LoadBanList();
             LoadBotBanList();
             ClearSpamErrorLogOnStartup();
@@ -120,6 +121,21 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
             SaveConfig();
         }
 
+        public void OnDestroy()
+        {
+            DestroyMenuStyleTextures();
+            if (customMenuBg != null)
+            {
+                UnityEngine.Object.Destroy(customMenuBg);
+                customMenuBg = null;
+            }
+            if (menuCharacterTexture != null)
+            {
+                UnityEngine.Object.Destroy(menuCharacterTexture);
+                menuCharacterTexture = null;
+            }
+        }
+
         private static void ClearSpamErrorLogOnStartup()
         {
             try
@@ -136,11 +152,9 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
                     catch { }
                 }
 
-                System.Console.WriteLine("[ElysiumModMenu] Cleared previous SpamErrorLog files and reset log monitor state.");
             }
-            catch (Exception ex)
+            catch
             {
-                System.Console.WriteLine($"[ElysiumModMenu] Failed to clear SpamErrorLog files: {ex.GetType().Name}: {ex.Message}");
             }
         }
 

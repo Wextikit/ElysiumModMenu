@@ -402,8 +402,10 @@ internal static void TrackInboundSender(InnerNetClient client, DataReceivedEvent
 			}
 
 			bool voteKickSenderTracking = ElysiumModMenu.ElysiumModMenuGUI.banVoteKickVoters && client != null && client.AmHost;
+			bool ventKickSenderTracking = ElysiumModMenu.ElysiumModMenuGUI.blockVentKickExploit && client != null && client.AmHost;
+			bool customRpcSenderTracking = ElysiumModMenu.ElysiumModMenuGUI.blockSpoofRPC && client != null && client.AmHost;
 			bool overflowSenderTracking = NetIdOverflowProtectionEnabled() && client != null && client.AmHost;
-			if ((!Enabled() && !voteKickSenderTracking && !overflowSenderTracking) || client == null || !client.AmHost || eventArgs == null)
+			if ((!Enabled() && !voteKickSenderTracking && !ventKickSenderTracking && !customRpcSenderTracking && !overflowSenderTracking) || client == null || !client.AmHost || eventArgs == null)
 			{
 				if (EnabledNonHostFloodDrop() && client != null && !client.AmHost)
 				{

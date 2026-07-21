@@ -621,6 +621,7 @@ namespace ElysiumModMenu
             isPanicked = true;
             showMenu = false;
             showWatermark = false;
+            showWatermarkInfo = false;
             rgbTaskBar = false;
             RestoreRgbTaskBar();
             ResetAllBindWaitsStatic();
@@ -640,6 +641,7 @@ namespace ElysiumModMenu
             isPanicked = true;
             showMenu = false;
             showWatermark = false;
+            showWatermarkInfo = false;
 
             try
             {

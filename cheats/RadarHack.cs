@@ -24,6 +24,7 @@ namespace ElysiumModMenu
         private const int RadarWindowId = 843207;
         private static GUIStyle radarWinStyle;
         private static GUIStyle radarDotLabelStyle;
+        private static readonly Action<int> drawRadarWindow = DrawRadarWindow;
         private static float radarNextTpAt;
 
         private sealed class RadarMap
@@ -62,7 +63,7 @@ namespace ElysiumModMenu
             try
             {
                 GUI.color = Color.white;
-                radarRect = GUI.Window(RadarWindowId, radarRect, (Action<int>)DrawRadarWindow, "", radarWinStyle);
+                radarRect = GUI.Window(RadarWindowId, radarRect, drawRadarWindow, "", radarWinStyle);
             }
             catch { }
             finally

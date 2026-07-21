@@ -43,40 +43,56 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), "LOBBY SETTINGS", "H&S", L("ANIMATIONS", "АНИМАЦИИ") };
+
+private readonly List<SystemTypes> doorRooms = new List<SystemTypes>();
+
+private void UpdateDoorRooms()
+        {
+            doorRooms.Clear();
+            if (ShipStatus.Instance == null || ShipStatus.Instance.AllDoors == null) return;
+
+            foreach (var door in ShipStatus.Instance.AllDoors)
+            {
+                if (door != null && !doorRooms.Contains(door.Room))
+                    doorRooms.Add(door.Room);
+            }
+
+            doorRooms.Sort((a, b) => string.Compare(a.ToString(), b.ToString(), StringComparison.CurrentCulture));
+        }
+
 private void DrawSabotageAnimationTab()
         {
             float tabWidth = GetMenuWorkWidth(180f, 760f);
-            string[] tabs = new string[]
-            {
-                sabotageSubTabs.Length > 0 ? sabotageSubTabs[0] : "SABOTAGES",
-                "LOBBY SETTINGS",
-                "H&S",
-                sabotageSubTabs.Length > 1 ? sabotageSubTabs[1] : "ANIMATIONS"
-            };
+            string[] tabs = sabotageMenuTabs;
             currentSabotageSubTab = Mathf.Clamp(currentSabotageSubTab, 0, tabs.Length - 1);
+
             GUILayout.BeginHorizontal(GUILayout.Width(tabWidth), GUILayout.Height(24));
             for (int i = 0; i < tabs.Length; i++)
             {
                 if (GUILayout.Button(tabs[i], currentSabotageSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(22)))
-                {
-                    currentSabotageSubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                    SetMultiTab("sabotage", ref currentSabotageSubTab, i, tabs.Length);
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(8);
 
-            if (currentSabotageSubTab == 0) DrawSabotagesTab();
-            else if (currentSabotageSubTab == 1) DrawLobbySettingsTab();
-            else if (currentSabotageSubTab == 2) DrawHnsSettingsTab();
-            else DrawAnimationsTab();
+            BeginMultiTabContent("sabotage", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentSabotageSubTab == 0) DrawSabotagesTab();
+                else if (currentSabotageSubTab == 1) DrawLobbySettingsTab();
+                else if (currentSabotageSubTab == 2) DrawHnsSettingsTab();
+                else DrawAnimationsTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 
 private void DrawSabotagesTab()
         {
-            GUIStyle miniLabelStyle = new GUIStyle(toggleLabelStyle) { fontSize = 11, richText = true, wordWrap = true };
-            miniLabelStyle.normal.textColor = whiteMenuTheme ? new Color(0.25f, 0.25f, 0.25f, 1f) : new Color(0.72f, 0.72f, 0.72f, 1f);
             float outerContentWidth = Mathf.Floor(Mathf.Max(130f, GetMenuWorkWidth(150f, 760f) - 44f));
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
                 ? menuCardStyle.padding.left + menuCardStyle.padding.right
@@ -99,6 +115,8 @@ private void DrawSabotagesTab()
             float systemsH = 142f;
             float doorActionsH = 102f;
             bool hasDoors = ShipStatus.Instance != null && ShipStatus.Instance.AllDoors != null;
+            if (Event.current != null && Event.current.type == EventType.Layout)
+                UpdateDoorRooms();
             float doorListHeight = hasDoors
                 ? Mathf.Clamp(windowRect.height - 330f, 72f, 150f)
                 : 86f;
@@ -201,30 +219,33 @@ private void DrawSabotagesTab()
 
             if (hasDoors)
             {
-                var rooms = ShipStatus.Instance.AllDoors
-                    .Where(d => d != null)
-                    .Select(d => d.Room)
-                    .Distinct()
-                    .OrderBy(r => r.ToString())
-                    .ToList();
-
                 doorsScrollPos = GUILayout.BeginScrollView(doorsScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none, GUILayout.Width(doorScrollWidth), GUILayout.Height(doorListHeight));
-                GUILayout.BeginHorizontal(GUILayout.Width(doorScrollWidth - 8f));
-                GUILayout.BeginVertical(GUILayout.Width(doorListWidth));
-                foreach (var room in rooms)
+                try
                 {
-                    DrawDoorTargetRow(room, doorListWidth);
-                    GUILayout.Space(3);
+                    GUILayout.BeginHorizontal(GUILayout.Width(doorScrollWidth - 8f));
+                    try
+                    {
+                        GUILayout.BeginVertical(GUILayout.Width(doorListWidth));
+                        try
+                        {
+                            foreach (var room in doorRooms)
+                            {
+                                DrawDoorTargetRow(room, doorListWidth);
+                                GUILayout.Space(3);
+                            }
+                        }
+                        finally { GUILayout.EndVertical(); }
+
+                        GUILayout.Space(24f);
+                    }
+                    finally { GUILayout.EndHorizontal(); }
                 }
-                GUILayout.EndVertical();
-                GUILayout.Space(24f);
-                GUILayout.EndHorizontal();
-                GUILayout.EndScrollView();
+                finally { GUILayout.EndScrollView(); }
             }
             else
             {
                 GUILayout.FlexibleSpace();
-                GUILayout.Label("<color=#777777>Р’С‹ РЅРµ РІ РёРіСЂРµ РёР»Рё РЅР° РєР°СЂС‚Рµ РЅРµС‚ РґРІРµСЂРµР№.</color>", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, richText = true });
+                GUILayout.Label("<color=#777777>You are not in a game or this map has no doors.</color>", centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
             GUILayout.EndVertical();
@@ -241,6 +262,7 @@ private static float nextLobbySettingsReadAt;
 private static bool lobbySettingsSyncQueued;
 private static float lobbySettingsSyncAt;
 private static bool lobbySettingsSyncRun;
+private static bool lobbySettingsSyncHns;
 private static int lobbySetMap;
 private static int lobbySetPlayers = 10;
 private static int lobbySetImps = 2;

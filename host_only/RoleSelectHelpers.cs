@@ -70,6 +70,94 @@ private static bool IsImpostorTeamRole(RoleTypes role)
             return role == RoleTypes.Impostor || role == RoleTypes.Shapeshifter || roleId == 9 || roleId == 18;
         }
 
+private static void EnsureForcedRoleOptionsForCurrentLobby()
+        {
+            try
+            {
+                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+                if (PlayerControl.AllPlayerControls == null || GameOptionsManager.Instance?.CurrentGameOptions == null) return;
+                EnsureForcedRoleOptions(PlayerControl.AllPlayerControls.ToArray()
+                    .Where(p => p != null && p.Data != null && !p.Data.Disconnected && p.PlayerId < 100)
+                    .ToList());
+            }
+            catch { }
+        }
+
+private static void EnsureForcedRoleOptions(List<PlayerControl> players)
+        {
+            try
+            {
+                if (players == null || players.Count == 0) return;
+
+                Dictionary<RoleTypes, int> forced = new Dictionary<RoleTypes, int>();
+                foreach (PlayerControl pc in players)
+                {
+                    if (pc == null || !TryGetForcedRole(pc, out RoleTypes role)) continue;
+                    if (!TryGetRoleOptionNames(role, out _)) continue;
+                    if (!forced.ContainsKey(role)) forced[role] = 0;
+                    forced[role]++;
+                }
+
+                bool changed = false;
+                foreach (var pair in forced)
+                {
+                    if (!TryGetRoleOptionNames(pair.Key, out string[] names)) continue;
+
+                    TryGetClassicRoleOpt(pair.Key, out int count, out int chance, names);
+                    int nextCount = Mathf.Max(count, pair.Value);
+                    int nextChance = Mathf.Max(chance, 100);
+                    if (nextCount == count && nextChance == chance) continue;
+
+                    TrySetClassicRoleOpt(pair.Key, nextCount, nextChance, names);
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    TouchGameOptions();
+                    SyncLobbySettingsNow();
+                }
+            }
+            catch { }
+        }
+
+private static bool TryGetRoleOptionNames(RoleTypes role, out string[] names)
+        {
+            switch ((int)role)
+            {
+                case 2:
+                    names = new[] { "Engineer" };
+                    return true;
+                case 3:
+                    names = new[] { "Scientist" };
+                    return true;
+                case 4:
+                    names = new[] { "GuardianAngel", "Guardian" };
+                    return true;
+                case 5:
+                    names = new[] { "Shapeshifter", "Shifter" };
+                    return true;
+                case 8:
+                    names = new[] { "Noisemaker" };
+                    return true;
+                case 9:
+                    names = new[] { "Phantom" };
+                    return true;
+                case 10:
+                    names = new[] { "Tracker" };
+                    return true;
+                case 12:
+                    names = new[] { "Detective" };
+                    return true;
+                case 18:
+                    names = new[] { "Viper" };
+                    return true;
+                default:
+                    names = null;
+                    return false;
+            }
+        }
+
 private static byte runtimeHideAndSeekSeekerId = byte.MaxValue;
 
 private static bool IsHideAndSeekMode()

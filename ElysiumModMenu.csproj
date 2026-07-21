@@ -7,11 +7,11 @@
 		<LangVersion>latest</LangVersion>
 		<AssemblyName>ElysiumModMenu</AssemblyName>
 		<RootNamespace>ElysiumModMenu</RootNamespace>
-		<Version>1.4.3</Version>
-		<InformationalVersion>1.4.3</InformationalVersion>
+		<Version>1.4.4</Version>
+		<InformationalVersion>1.4.4</InformationalVersion>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-		<AssemblyVersion>1.4.3.0</AssemblyVersion>
-		<FileVersion>1.4.3.0</FileVersion>
+		<AssemblyVersion>1.4.4.0</AssemblyVersion>
+		<FileVersion>1.4.4.0</FileVersion>
 		<AmongUsDir Condition="'$(AmongUsDir)' == '' and Exists('E:\AmongUs\BepInEx\interop\Assembly-CSharp.dll')">E:\AmongUs</AmongUsDir>
 		<AmongUsDir Condition="'$(AmongUsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsDir>
 	</PropertyGroup>
@@ -398,5 +398,8 @@
 		<EmbeddedResource Include="resources\radar_player_visor.png" LogicalName="ElysiumModMenu.radar_player_visor.png" />
 		<EmbeddedResource Include="resources\radar_cross.png" LogicalName="ElysiumModMenu.radar_cross.png" />
 		<EmbeddedResource Include="resources\radar_dead_body.png" LogicalName="ElysiumModMenu.radar_dead_body.png" />
+		<EmbeddedResource Include="resources\dark_chat_quick.png" LogicalName="ElysiumModMenu.dark_chat_quick.png" />
+		<EmbeddedResource Include="resources\dark_chat_report.png" LogicalName="ElysiumModMenu.dark_chat_report.png" />
+		<EmbeddedResource Include="resources\dark_chat_keyboard.png" LogicalName="ElysiumModMenu.dark_chat_keyboard.png" />
 	</ItemGroup>
 </Project>

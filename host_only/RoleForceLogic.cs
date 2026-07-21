@@ -138,6 +138,8 @@ private static void SetForcedRole(PlayerControl pc, RoleTypes role)
                 forcedImpostors.Remove(pc.PlayerId);
                 forcedPreGameRoles[pc.PlayerId] = role;
             }
+
+            EnsureForcedRoleOptionsForCurrentLobby();
         }
 
 private static void ClearForcedRole(PlayerControl pc)

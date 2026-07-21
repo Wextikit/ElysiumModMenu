@@ -12,6 +12,8 @@ namespace ElysiumModMenu
     public static class HushWhisper
     {
         private static readonly Regex RichTextTag = new Regex("<.*?>");
+        private static byte keepTargetId = byte.MaxValue;
+        private static string keepTargetName = "";
 
         /// <summary>
         /// Sends a private message when the chat input contains a whisper command.
@@ -27,17 +29,68 @@ namespace ElysiumModMenu
                 return false;
 
             string lowerText = text.ToLowerInvariant();
+            if (lowerText == "/unkeepw" || lowerText.StartsWith("/unkeepw "))
+            {
+                ClearKeepTarget();
+                ShowLocalMessage("<color=#FFAC1C>[WHISPER]</color> Keep whisper disabled.");
+                ClearInput(chat);
+                return true;
+            }
+
+            if (lowerText.StartsWith("/keepw "))
+            {
+                string keepInput = text.Substring(7).ToLowerInvariant().Trim();
+                if (string.IsNullOrWhiteSpace(keepInput))
+                {
+                    ShowLocalMessage("<color=#FF0000>[ERROR]</color> Usage: /keepw [ID, color, or name]");
+                    ClearInput(chat);
+                    return true;
+                }
+
+                PlayerControl keepTarget = FindTarget(keepInput);
+                if (!IsValidTarget(keepTarget))
+                {
+                    ShowLocalMessage("<color=#FF0000>[ERROR]</color> Player not found. Enter an ID, color, or name.");
+                    ClearInput(chat);
+                    return true;
+                }
+
+                keepTargetId = keepTarget.PlayerId;
+                keepTargetName = StripRichText(keepTarget.Data.PlayerName);
+                ShowLocalMessage($"<color=#FFAC1C>[WHISPER]</color> Keep target: <b>{keepTargetName}</b>. Use /unkeepw to stop.");
+                ClearInput(chat);
+                return true;
+            }
+
             if (!lowerText.StartsWith("/w ") &&
                 !lowerText.StartsWith("/pm ") &&
                 !lowerText.StartsWith("/msg "))
             {
+                if (HasKeepTarget() && !lowerText.StartsWith("/"))
+                {
+                    if (!TrySendToKeepTarget(StripRichText(text)))
+                        ClearKeepTarget();
+
+                    ClearInput(chat);
+                    return true;
+                }
+
                 return false;
             }
 
             string[] parts = text.Split(new[] { ' ' }, 3);
             if (parts.Length < 3 || string.IsNullOrWhiteSpace(parts[2]))
             {
-                ShowLocalMessage("<color=#FF0000>[ERROR]</color> Usage: /w [ID, color, or name] [message]");
+                if (HasKeepTarget() && parts.Length >= 2 && !string.IsNullOrWhiteSpace(parts[1]))
+                {
+                    if (!TrySendToKeepTarget(StripRichText(parts[1])))
+                        ClearKeepTarget();
+
+                    ClearInput(chat);
+                    return true;
+                }
+
+                ShowLocalMessage("<color=#FF0000>[ERROR]</color> Usage: /w [ID, color, or name] [message] or /keepw [target]");
                 ClearInput(chat);
                 return true;
             }
@@ -46,30 +99,63 @@ namespace ElysiumModMenu
             string safeMessage = StripRichText(parts[2]);
             PlayerControl target = FindTarget(targetInput);
 
-            if (target == null || target == PlayerControl.LocalPlayer)
+            if (!IsValidTarget(target))
             {
                 ShowLocalMessage("<color=#FF0000>[ERROR]</color> Player not found. Enter an ID, color, or name.");
                 ClearInput(chat);
                 return true;
             }
 
-            if (AmongUsClient.Instance != null && PlayerControl.LocalPlayer != null)
-            {
-                MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(
-                    PlayerControl.LocalPlayer.NetId,
-                    13,
-                    SendOption.Reliable,
-                    target.OwnerId);
-
-                writer.Write($"Whispers in your ear:\n{safeMessage}");
-                AmongUsClient.Instance.FinishRpcImmediately(writer);
-
-                string targetName = StripRichText(target.Data.PlayerName);
-                ShowLocalMessage($"<color=#FFAC1C>You whisper to {targetName}:\n{safeMessage}</color>");
-            }
+            SendWhisper(target, safeMessage);
 
             ClearInput(chat);
             return true;
+        }
+
+        private static bool HasKeepTarget()
+        {
+            return keepTargetId != byte.MaxValue;
+        }
+
+        private static void ClearKeepTarget()
+        {
+            keepTargetId = byte.MaxValue;
+            keepTargetName = "";
+        }
+
+        private static bool TrySendToKeepTarget(string safeMessage)
+        {
+            if (string.IsNullOrWhiteSpace(safeMessage))
+                return true;
+
+            PlayerControl target = FindTargetById(keepTargetId);
+            if (!IsValidTarget(target))
+            {
+                string name = string.IsNullOrWhiteSpace(keepTargetName) ? "target" : keepTargetName;
+                ShowLocalMessage($"<color=#FF0000>[ERROR]</color> Keep whisper target left or is unavailable: {name}.");
+                return false;
+            }
+
+            SendWhisper(target, safeMessage);
+            return true;
+        }
+
+        private static void SendWhisper(PlayerControl target, string safeMessage)
+        {
+            if (AmongUsClient.Instance == null || PlayerControl.LocalPlayer == null || string.IsNullOrWhiteSpace(safeMessage))
+                return;
+
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(
+                PlayerControl.LocalPlayer.NetId,
+                13,
+                SendOption.Reliable,
+                target.OwnerId);
+
+            writer.Write($"Whispers in your ear:\n{safeMessage}");
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+
+            string targetName = StripRichText(target.Data.PlayerName);
+            ShowLocalMessage($"<color=#FFAC1C>You whisper to {targetName}:\n{safeMessage}</color>");
         }
 
         private static PlayerControl FindTarget(string targetInput)
@@ -113,6 +199,28 @@ namespace ElysiumModMenu
             }
 
             return partialMatch;
+        }
+
+        private static PlayerControl FindTargetById(byte playerId)
+        {
+            if (PlayerControl.AllPlayerControls == null)
+                return null;
+
+            foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+            {
+                if (player != null && player.PlayerId == playerId)
+                    return player;
+            }
+
+            return null;
+        }
+
+        private static bool IsValidTarget(PlayerControl target)
+        {
+            return target != null &&
+                target != PlayerControl.LocalPlayer &&
+                target.Data != null &&
+                !target.Data.Disconnected;
         }
 
         private static string StripRichText(string value)

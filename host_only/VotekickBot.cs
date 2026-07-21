@@ -73,6 +73,12 @@ private static float votekickRapidAt = 0f;
 
 private static int votekickPassesLeft = 0;
 
+private static readonly HashSet<byte> votekickTargets = new HashSet<byte>();
+
+public static bool votekickTargetAuto = false;
+
+private static float votekickTargetAutoAt = 0f;
+
 private const float VotekickSettleDelay = 0.4f;
 
 private const float VotekickLeaveMinDelay = 1.1f;
@@ -92,6 +98,8 @@ private const float VotekickFinalDelay = 1.5f;
 private const float VotekickRapidStep = 0.12f;
 
 private const float VotekickPulseStep = 0.3f;
+
+private const float VotekickTargetAutoInterval = 3f;
 
 private const int VotekickSweepPasses = 3;
 
@@ -125,6 +133,7 @@ private static void StopVotekickEveryoneRun(bool clearVotes = true)
 
 private void TickVotekickEveryoneRun()
         {
+            TickVotekickTargetAuto();
             TickVotekickRapid();
             if (!votekickEveryone || votekickPhase == VoteKickPhase.Off) return;
 
@@ -277,7 +286,7 @@ private static void FillVotekickQueue()
             try
             {
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                    if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected)
+                    if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected && IsSelectedVotekickTarget(pc))
                         votekickRapidQueue.Add(pc.PlayerId);
             }
             catch { }
@@ -299,7 +308,7 @@ private static int ExecuteVotekickEveryone(bool once)
             {
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc == null || pc.AmOwner || pc.Data == null || pc.Data.Disconnected) continue;
+                    if (pc == null || pc.AmOwner || pc.Data == null || pc.Data.Disconnected || !IsSelectedVotekickTarget(pc)) continue;
                     int reps = once ? 1 : 3;
                     for (int i = 0; i < reps; i++)
                     {
@@ -317,11 +326,128 @@ private static int CountVotekickTargets()
             try
             {
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                    if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected)
+                    if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected && IsSelectedVotekickTarget(pc))
                         n++;
             }
             catch { }
             return n;
+        }
+
+public static int VotekickTargetCount()
+        {
+            return votekickTargets.Count;
+        }
+
+public static bool IsVotekickTarget(byte id)
+        {
+            return votekickTargets.Contains(id);
+        }
+
+public static void ToggleVotekickTarget(byte id)
+        {
+            if (!votekickTargets.Remove(id))
+                votekickTargets.Add(id);
+
+            if (votekickTargets.Count == 0)
+                votekickTargetAuto = false;
+        }
+
+public static void ClearVotekickTargets()
+        {
+            votekickTargets.Clear();
+            votekickTargetAuto = false;
+            ShowNotification("<color=#ca08ff>[VOTEKICK]</color> Target list cleared.");
+        }
+
+public static void ToggleVotekickTargetAuto()
+        {
+            if (votekickTargetAuto)
+            {
+                votekickTargetAuto = false;
+                ShowNotification("<color=#ca08ff>[VOTEKICK]</color> Auto targets stopped.");
+                return;
+            }
+
+            if (votekickTargets.Count == 0)
+            {
+                ShowNotification("<color=#FF4444>[VOTEKICK]</color> Mark targets first.");
+                return;
+            }
+
+            votekickTargetAuto = true;
+            votekickTargetAutoAt = Time.unscaledTime;
+            ShowNotification($"<color=#ca08ff>[VOTEKICK]</color> Auto targets: <b>{votekickTargets.Count}</b>.");
+        }
+
+public static bool VotekickHostIsTarget()
+        {
+            PlayerControl host = FindVotekickHost();
+            return host != null && votekickTargets.Contains(host.PlayerId);
+        }
+
+public static void ToggleVotekickHostTarget()
+        {
+            PlayerControl host = FindVotekickHost();
+            if (host == null)
+            {
+                ShowNotification("<color=#FF4444>[VOTEKICK]</color> Host not found.");
+                return;
+            }
+
+            if (host == PlayerControl.LocalPlayer)
+            {
+                ShowNotification("<color=#FFAA00>[VOTEKICK]</color> You are the host.");
+                return;
+            }
+
+            ToggleVotekickTarget(host.PlayerId);
+            string nm = host.Data != null && !string.IsNullOrEmpty(host.Data.PlayerName) ? host.Data.PlayerName : "?";
+            ShowNotification(IsVotekickTarget(host.PlayerId)
+                ? $"<color=#ca08ff>[VOTEKICK]</color> Host marked: <b>{nm}</b>."
+                : $"<color=#ca08ff>[VOTEKICK]</color> Host unmarked: <b>{nm}</b>.");
+        }
+
+private static void TickVotekickTargetAuto()
+        {
+            if (!votekickTargetAuto) return;
+
+            if (votekickTargets.Count == 0)
+            {
+                votekickTargetAuto = false;
+                return;
+            }
+
+            if (Time.unscaledTime < votekickTargetAutoAt) return;
+            votekickTargetAutoAt = Time.unscaledTime + VotekickTargetAutoInterval;
+            ExecuteVotekickTargets(true);
+        }
+
+private static int ExecuteVotekickTargets(bool once)
+        {
+            if (VoteBanSystem.Instance == null || votekickTargets.Count == 0) return 0;
+
+            int n = 0;
+            try
+            {
+                foreach (byte id in votekickTargets)
+                {
+                    PlayerControl pc = FindVotekickPlayer(id);
+                    if (pc == null || pc.AmOwner || pc.Data == null || pc.Data.Disconnected) continue;
+
+                    int reps = once ? 1 : 3;
+                    for (int i = 0; i < reps; i++)
+                    {
+                        if (TryVotekickVote(pc.Data.ClientId)) n++;
+                    }
+                }
+            }
+            catch { }
+            return n;
+        }
+
+private static bool IsSelectedVotekickTarget(PlayerControl pc)
+        {
+            return pc != null && (votekickTargets.Count == 0 || votekickTargets.Contains(pc.PlayerId));
         }
 
 private void SendVotekickEveryoneStay()
@@ -398,6 +524,17 @@ private static PlayerControl FindVotekickPlayer(byte id)
             {
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                     if (pc != null && pc.PlayerId == id) return pc;
+            }
+            catch { }
+            return null;
+        }
+
+private static PlayerControl FindVotekickHost()
+        {
+            try
+            {
+                ClientData host = AmongUsClient.Instance != null ? AmongUsClient.Instance.GetHost() : null;
+                return host != null ? host.Character : null;
             }
             catch { }
             return null;

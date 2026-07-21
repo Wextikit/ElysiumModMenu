@@ -66,9 +66,9 @@ public static string customSpoofRpcInput = "89";
 
 public static bool customSpoofRpcInputFocused = false;
 
-public static readonly string[] menuLanguageNames = { "Auto", "English", "Русский", "Deutsch", "Français", "Español", "Italiano", "Português", "Polski", "Nederlands", "Türkçe", "Čeština", "Română", "Magyar", "Svenska", "Dansk", "Suomi", "Norsk", "Українська", "Ελληνικά", "中文", "日本語", "한국어" };
+public static readonly string[] menuLanguageNames = { "English" };
 
-public static readonly string[] menuLanguageCodes = { "auto", "en", "ru", "de", "fr", "es", "it", "pt", "pl", "nl", "tr", "cs", "ro", "hu", "sv", "da", "fi", "no", "uk", "el", "zh", "ja", "ko" };
+public static readonly string[] menuLanguageCodes = { "en" };
 
 public static int currentMenuLanguageIndex = 0;
 }

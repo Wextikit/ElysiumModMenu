@@ -72,6 +72,6 @@ public static float chatRpcWindow = 1f;
 
 public static int meetingRpcLimit = 2;
 
-public static float meetingRpcWindow = 9999f;
+public static float meetingRpcWindow = 2f;
     }
 }

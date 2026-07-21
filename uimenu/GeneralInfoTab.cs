@@ -48,41 +48,29 @@ private void DrawGeneralInfoTab()
             GUILayout.Label("ELYSIUM OVERVIEW", headerStyle);
             GUILayout.Space(6);
 
+            if (!generalInfoSubTabWidthsReady)
+            {
+                for (int i = 0; i < generalInfoSubTabs.Length; i++)
+                {
+                    tabSizeContent.text = generalInfoSubTabs[i];
+                    generalInfoSubTabWidths[i] = Mathf.Max(116f, Mathf.Ceil(subTabStyle.CalcSize(tabSizeContent).x) + 28f);
+                }
+                generalInfoSubTabWidthsReady = true;
+            }
+
             GUILayout.BeginHorizontal();
             for (int i = 0; i < generalInfoSubTabs.Length; i++)
             {
                 GUIStyle tabStyle = currentGeneralInfoSubTab == i ? activeSubTabStyle : subTabStyle;
-                float tabWidth = Mathf.Max(116f, Mathf.Ceil(tabStyle.CalcSize(new GUIContent(generalInfoSubTabs[i])).x) + 28f);
-                if (GUILayout.Button(generalInfoSubTabs[i], tabStyle, GUILayout.Width(tabWidth), GUILayout.Height(24)))
-                {
-                    currentGeneralInfoSubTab = i;
-                }
+                if (GUILayout.Button(generalInfoSubTabs[i], tabStyle, GUILayout.Width(generalInfoSubTabWidths[i]), GUILayout.Height(24)))
+                    SetMultiTab("generalInfo", ref currentGeneralInfoSubTab, i, generalInfoSubTabs.Length, false);
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(L("Menu language:", "РЇР·С‹Рє РјРµРЅСЋ:"), toggleLabelStyle, GUILayout.MinWidth(128), GUILayout.ExpandWidth(false), GUILayout.Height(24));
-            if (GUILayout.Button("<", btnStyle, GUILayout.Width(26), GUILayout.Height(24)))
+            BeginMultiTabContent("generalInfo", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
             {
-                currentMenuLanguageIndex--;
-                if (currentMenuLanguageIndex < 0) currentMenuLanguageIndex = menuLanguageNames.Length - 1;
-                SaveConfig();
-            }
-            GUIStyle languageValueStyle = new GUIStyle(btnStyle) { normal = { background = null, textColor = GetMenuAccentColor() }, fontStyle = FontStyle.Bold, clipping = TextClipping.Overflow, wordWrap = false };
-            string languageValue = menuLanguageNames[Mathf.Clamp(currentMenuLanguageIndex, 0, menuLanguageNames.Length - 1)];
-            float languageValueWidth = Mathf.Max(132f, Mathf.Ceil(languageValueStyle.CalcSize(new GUIContent(languageValue)).x) + 24f);
-            GUILayout.Label(languageValue, languageValueStyle, GUILayout.Width(languageValueWidth), GUILayout.Height(24));
-            if (GUILayout.Button(">", btnStyle, GUILayout.Width(26), GUILayout.Height(24)))
-            {
-                currentMenuLanguageIndex++;
-                if (currentMenuLanguageIndex >= menuLanguageNames.Length) currentMenuLanguageIndex = 0;
-                SaveConfig();
-            }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(8);
-
             string accentHex = GetMenuAccentHex();
             bool rgbText = RgbMenuTextActive();
             string githubHex = rgbText ? accentHex : ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(26, 188, 156, 255)) : new Color32(26, 188, 156, 255));
@@ -94,7 +82,7 @@ private void DrawGeneralInfoTab()
             string safeHex = rgbText ? accentHex : ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(57, 255, 20, 255)) : new Color32(57, 255, 20, 255));
             string versionText = Plugin.PluginVersion;
 
-            GUIStyle textStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
+            GUIStyle textStyle = richWrapLabelStyle12;
             textStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : new Color(0.85f, 0.85f, 0.85f, 1f);
 
             if (currentGeneralInfoSubTab == 0)
@@ -115,7 +103,7 @@ private void DrawGeneralInfoTab()
 
                 GUILayout.BeginHorizontal();
                 if (DrawColoredActionButton("GitHub", new Color32(26, 188, 156, 255), 110f))
-                    OpenExternalLink("https://github.com/Meowchelo", "GitHub");
+                    OpenExternalLink("https://github.com/Wextikit/ElysiumModMenu", "GitHub");
                 GUILayout.Space(6);
                 DrawUpdateActionButton();
                 GUILayout.Space(6);
@@ -125,8 +113,8 @@ private void DrawGeneralInfoTab()
 
                 GUILayout.Space(8);
                 GUILayout.Label(BuildUpdateStatusText(), textStyle);
-                GUILayout.Label($"{L("Project", "РџСЂРѕРµРєС‚")}: <b><color=#{githubHex}>Meowchelo</color></b>", textStyle);
-                GUILayout.Label($"{L("Main page", "Р“Р»Р°РІРЅР°СЏ СЃСЃС‹Р»РєР°")}: <color=#{githubHex}>https://github.com/Meowchelo</color>", textStyle);
+                GUILayout.Label($"{L("Project", "РџСЂРѕРµРєС‚")}: <b><color=#{githubHex}>Wextikit/ElysiumModMenu</color></b>", textStyle);
+                GUILayout.Label($"{L("Main page", "Р“Р»Р°РІРЅР°СЏ СЃСЃС‹Р»РєР°")}: <color=#{githubHex}>https://github.com/Wextikit/ElysiumModMenu</color>", textStyle);
                 GUILayout.Space(8);
                 GUILayout.Label($"{L("ElysiumModMenu is free and open-source software.", "ElysiumModMenu СЌС‚Рѕ Р±РµСЃРїР»Р°С‚РЅС‹Р№ open-source РїСЂРѕРµРєС‚.")}", textStyle);
                 GUILayout.Label($"<b><color=#{dangerHex}>{L("If you paid for this menu, demand a refund immediately.", "Р•СЃР»Рё РІС‹ Р·Р°РїР»Р°С‚РёР»Рё Р·Р° СЌС‚Рѕ РјРµРЅСЋ, С‚СЂРµР±СѓР№С‚Рµ РІРѕР·РІСЂР°С‚ РґРµРЅРµРі СЃСЂР°Р·Сѓ.")}</color></b>", textStyle);
@@ -161,12 +149,15 @@ private void DrawGeneralInfoTab()
                 GUILayout.Space(6);
                 if (DrawColoredActionButton("Wextikit", new Color32(109, 138, 255, 255), 150f))
                     OpenExternalLink("https://github.com/Wextikit", "Wextikit");
+                GUILayout.Space(6);
+                if (DrawColoredActionButton("Darmioniks", new Color32(38, 194, 129, 255), 150f))
+                    OpenExternalLink("https://github.com/Darmioniks", "Darmioniks");
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(10);
                 GUILayout.Label($"<b><color=#{contributorHex}>TESTERS</color></b>", textStyle);
                 GUILayout.Space(4);
-                DrawColoredActionButton("Р–РµРЅР°", new Color32(109, 138, 255, 255), 150f);
+                DrawColoredActionButton("Жена", new Color32(109, 138, 255, 255), 150f);
 
                 GUILayout.Space(10);
                 GUILayout.Label($"<b><color=#{accentHex}>{L("Repository", "Р РµРїРѕР·РёС‚РѕСЂРёР№")}</color></b>", textStyle);
@@ -174,8 +165,8 @@ private void DrawGeneralInfoTab()
                     "The public source, releases and project updates are published on GitHub.",
                     "РџСѓР±Р»РёС‡РЅС‹Р№ РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ, СЂРµР»РёР·С‹ Рё РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕРµРєС‚Р° РїСѓР±Р»РёРєСѓСЋС‚СЃСЏ РЅР° GitHub."), textStyle);
                 GUILayout.Space(4);
-                if (DrawColoredActionButton("Open Meowchelo GitHub", new Color32(26, 188, 156, 255), 220f))
-                    OpenExternalLink("https://github.com/Meowchelo", "Meowchelo GitHub");
+                if (DrawColoredActionButton("Open Elysium GitHub", new Color32(26, 188, 156, 255), 220f))
+                    OpenExternalLink("https://github.com/Wextikit/ElysiumModMenu", "ElysiumModMenu GitHub");
 
                 GUILayout.Space(10);
                 GUILayout.Label($"<b><color=#{accentHex}>Found a bug or have a question?</color></b>", textStyle);
@@ -193,6 +184,11 @@ private void DrawGeneralInfoTab()
 
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]

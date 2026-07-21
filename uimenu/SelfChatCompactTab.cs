@@ -42,32 +42,18 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private static readonly string[] selfChatSubTabs = { "SETTINGS", "PORTABLE" };
+
 private void DrawChatSettingsCompact(float columnWidth)
         {
-            float contentWidth = Mathf.Clamp(columnWidth - 8f, 380f, 600f);
-            string[] selfChatSubTabs = { "SETTINGS", "PORTABLE" };
+            float contentWidth = Mathf.Min(Mathf.Max(120f, columnWidth - 8f), 600f);
             currentSelfChatSubTab = Mathf.Clamp(currentSelfChatSubTab, 0, selfChatSubTabs.Length - 1);
-
-            GUIStyle compactSubTab = new GUIStyle(subTabStyle)
-            {
-                fontSize = 10,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                padding = CreateRectOffset(5, 5, 1, 1)
-            };
-            GUIStyle compactActiveSubTab = new GUIStyle(activeSubTabStyle)
-            {
-                fontSize = 10,
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                padding = CreateRectOffset(5, 5, 1, 1)
-            };
 
             GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
             for (int i = 0; i < selfChatSubTabs.Length; i++)
             {
-                if (GUILayout.Button(selfChatSubTabs[i], currentSelfChatSubTab == i ? compactActiveSubTab : compactSubTab, GUILayout.Height(18)))
-                    currentSelfChatSubTab = i;
+                if (GUILayout.Button(selfChatSubTabs[i], currentSelfChatSubTab == i ? compactActiveSubTabStyle : compactSubTabStyle, GUILayout.Height(18)))
+                    SetMultiTab("selfChat", ref currentSelfChatSubTab, i, selfChatSubTabs.Length, false);
                 if (i < selfChatSubTabs.Length - 1) GUILayout.Space(4);
             }
             GUILayout.EndHorizontal();
@@ -75,25 +61,52 @@ private void DrawChatSettingsCompact(float columnWidth)
 
             if (currentSelfChatSubTab == 1)
             {
-                DrawPortableChatTab();
+                BeginMultiTabContent("selfChat", out Matrix4x4 portableMatrix, out Color portableColor);
+                try
+                {
+                    DrawPortableChatTab(contentWidth);
+                }
+                finally
+                {
+                    EndMultiTabContent(portableMatrix, portableColor);
+                }
                 return;
             }
 
+            BeginMultiTabContent("selfChat", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
             float gap = 6f;
             int columns = contentWidth >= 560f ? 3 : 2;
             float blockWidth = Mathf.Floor((contentWidth - (gap * (columns - 1))) / columns);
             int toggleWidth = Mathf.RoundToInt(Mathf.Clamp(blockWidth - 16f, 150f, 210f));
             GUIStyle compactCard = CreateCompactMenuCardStyle();
-            GUIStyle smallLabel = new GUIStyle(toggleLabelStyle) { fontSize = 10, clipping = TextClipping.Clip };
-            const float blockHeight = 148f;
+            GUIStyle smallLabel = compactLabelStyle10;
+            const float blockHeight = 172f;
 
-            void DrawChatBlock(string title, System.Action drawContent)
+            void DrawChatBlock(string title, System.Action content)
             {
                 GUILayout.BeginVertical(compactCard, GUILayout.Width(blockWidth), GUILayout.Height(blockHeight));
                 DrawMenuSectionHeader(title);
-                drawContent?.Invoke();
+                content();
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();
+            }
+
+            void DrawHistorySizeRow()
+            {
+                GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(20));
+                GUILayout.Label("History Size", smallLabel, GUILayout.Width(76), GUILayout.Height(20));
+                GUILayout.Label($"{chatHistoryLimit}", smallLabel, GUILayout.Width(22), GUILayout.Height(20));
+                GUILayout.Space(5);
+                int prevLimit = chatHistoryLimit;
+                chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 300f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true)), 5, 300);
+                if (prevLimit != chatHistoryLimit)
+                {
+                    TrimChatHistoryToLimit();
+                    settingsDirty = true;
+                }
+                GUILayout.EndHorizontal();
             }
 
             void DrawSendBlock()
@@ -102,31 +115,15 @@ private void DrawChatSettingsCompact(float columnWidth)
                 DrawMenuSectionHeader("SEND");
                 GUILayout.Space(2);
 
-                GUIStyle fieldStyle = new GUIStyle(GUI.skin.textField)
-                {
-                    fontSize = 12,
-                    alignment = TextAnchor.MiddleLeft,
-                    clipping = TextClipping.Clip
-                };
-                fieldStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
-
                 Rect chatInputRect = GUILayoutUtility.GetRect(10f, 24f, GUILayout.ExpandWidth(true), GUILayout.Height(24));
-                GUI.Box(chatInputRect, string.Empty, fieldStyle);
+                GUI.Box(chatInputRect, string.Empty, compactChatFieldStyle);
 
                 string drawText = string.IsNullOrEmpty(customChatMessage)
                     ? L("Type a message...", "Р’РІРµРґРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ...")
                     : customChatMessage;
                 if (customChatInputFocused && (Time.unscaledTime % 1f) < 0.5f) drawText += "|";
 
-                GUIStyle chatInputTextStyle = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleLeft,
-                    clipping = TextClipping.Clip,
-                    richText = false,
-                    fontSize = 11
-                };
-                chatInputTextStyle.normal.textColor = whiteMenuTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
-                GUI.Label(new Rect(chatInputRect.x + 9f, chatInputRect.y + 3f, chatInputRect.width - 18f, chatInputRect.height - 6f), drawText, chatInputTextStyle);
+                GUI.Label(new Rect(chatInputRect.x + 9f, chatInputRect.y + 3f, chatInputRect.width - 18f, chatInputRect.height - 6f), drawText, compactChatInputStyle);
 
                 Event e = Event.current;
                 if (e != null)
@@ -178,43 +175,67 @@ private void DrawChatSettingsCompact(float columnWidth)
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{L("Delay:", "Р—Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(82), GUILayout.Height(17));
+                GUILayout.Label($"{L("Delay:", "Р—Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(82), GUILayout.Height(17));
                 customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
+
+                GUILayout.FlexibleSpace();
+
+                if (GUILayout.Button("sendQUICK CHAT1", quickChatTileStyle, GUILayout.Width(toggleWidth), GUILayout.Height(24)))
+                    SendQuickChatPhrase();
 
                 GUILayout.EndVertical();
             }
 
-            void SendQuickChatPhrase(string text)
+            void SendQuickChatPhrase()
             {
                 if (PlayerControl.LocalPlayer == null || AmongUsClient.Instance == null) return;
                 try
                 {
-                    string safe = (text ?? "").Replace("[", "").Replace("]", "");
                     MessageWriter wr = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendQuickChat, SendOption.Reliable, -1);
-                    wr.Write((byte)3); wr.Write((ushort)78); wr.Write((byte)2); wr.Write((byte)2); wr.Write((byte)15); wr.Write(safe);
+                    wr.Write((byte)3); wr.Write((ushort)78); wr.Write((byte)1); wr.Write((byte)2); wr.Write((ushort)1716);
                     AmongUsClient.Instance.FinishRpcImmediately(wr);
+
+                    MessageWriter local = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.SendQuickChat, SendOption.Reliable, PlayerControl.LocalPlayer.OwnerId);
+                    local.Write((byte)3); local.Write((ushort)78); local.Write((byte)1); local.Write((byte)2); local.Write((ushort)1716);
+                    AmongUsClient.Instance.FinishRpcImmediately(local);
                 }
                 catch { }
             }
 
-            void DrawQuickChatBlock()
+            void DrawChatColorBlock()
             {
                 GUILayout.BeginVertical(compactCard, GUILayout.Width(blockWidth), GUILayout.Height(blockHeight));
-                DrawMenuSectionHeader("QUICK CHAT");
+                DrawMenuSectionHeader("CHAT COLOR");
                 GUILayout.Space(4);
 
-                const string qcSend = "<color=#FF0000>Р±РµСЂРµРіРёС‚РµСЃСЊ РїСЂРѕС‚РёРІРѕРїСЂР°РІРЅС‹С… СЃРµСЃСѓР°Р»СЊРЅС‹С… РґРµР№СЃС‚РІРёР№ РїСЂРµРґР°С‚РµР»СЊР№ СЃСЂРµРґРё РЅР°СЃ</color>";
-                GUIStyle tile = new GUIStyle(btnStyle)
+                GUILayout.Label("Ghost Chat", smallLabel, GUILayout.Width(toggleWidth), GUILayout.Height(16));
+                GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(24));
+                try
                 {
-                    wordWrap = false,
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 11,
-                    clipping = TextClipping.Clip
-                };
+                    if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
+                    {
+                        isEditingGhostChatColor = !isEditingGhostChatColor;
+                        if (isEditingGhostChatColor) ghostChatColorHex = FilterGhostChatColorInput(ghostChatColorHex);
+                        isEditingName = false;
+                        isEditingLevel = false;
+                        isEditingFriendCode = false;
+                        isEditingLocalFriendCode = false;
+                        isEditingBan = false;
+                        ResetAllBindWaits();
+                    }
+                    GUILayout.Space(5);
+                    if (GUILayout.Button("OK", btnStyle, GUILayout.Width(38), GUILayout.Height(24)))
+                    {
+                        isEditingGhostChatColor = false;
+                        ghostChatColorHex = SanitizeGhostChatColorSetting(ghostChatColorHex);
+                        SaveConfig();
+                    }
+                }
+                finally { GUILayout.EndHorizontal(); }
 
-                if (GUILayout.Button("sendQUICK CHAT1", tile, GUILayout.Width(toggleWidth), GUILayout.Height(28)))
-                    SendQuickChatPhrase(qcSend);
+                GUILayout.Space(5);
+                GUILayout.Label(RenderGhostChatMessageText("Preview ghost chat"), compactPreviewStyle, GUILayout.Width(toggleWidth), GUILayout.Height(18));
 
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();
@@ -228,46 +249,18 @@ private void DrawChatSettingsCompact(float columnWidth)
                 GUILayout.Space(1);
                 readGhostChat = DrawCompactToggle(readGhostChat, "Read Ghost Chat", toggleWidth);
                 GUILayout.Space(1);
-                GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(20));
-                GUILayout.Label("Ghost Chat Color", smallLabel, GUILayout.Width(94), GUILayout.Height(20));
-                GUILayout.Space(3);
-                if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 20f, 16))
-                {
-                    isEditingGhostChatColor = !isEditingGhostChatColor;
-                    if (isEditingGhostChatColor) ghostChatColorHex = FilterGhostChatColorInput(ghostChatColorHex);
-                    isEditingName = false;
-                    isEditingLevel = false;
-                    isEditingFriendCode = false;
-                    isEditingLocalFriendCode = false;
-                    isEditingBan = false;
-                    ResetAllBindWaits();
-                }
-                if (GUILayout.Button("OK", btnStyle, GUILayout.Width(30), GUILayout.Height(20)))
-                {
-                    isEditingGhostChatColor = false;
-                    ghostChatColorHex = SanitizeGhostChatColorSetting(ghostChatColorHex);
-                    SaveConfig();
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.Space(1);
                 enableExtendedChat = DrawCompactToggle(enableExtendedChat, "Extended Chat", toggleWidth);
                 GUILayout.Space(1);
                 enableFastChat = DrawCompactToggle(enableFastChat, "Fast Chat", toggleWidth);
+                GUILayout.Space(7);
+                enableChatHistory = DrawCompactToggle(enableChatHistory, "Chat History", toggleWidth);
+                GUILayout.Space(6);
+                DrawHistorySizeRow();
             });
 
             GUILayout.Space(gap);
             DrawChatBlock("COPY", () =>
             {
-                enableChatHistory = DrawCompactToggle(enableChatHistory, "Chat History", toggleWidth);
-                GUILayout.Space(1);
-                GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(20));
-                GUILayout.Label("History Size", smallLabel, GUILayout.Width(76), GUILayout.Height(20));
-                GUILayout.Label($"{chatHistoryLimit}", smallLabel, GUILayout.Width(22), GUILayout.Height(20));
-                GUILayout.Space(3);
-                chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 80f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true)), 5, 80);
-                TrimChatHistoryToLimit();
-                GUILayout.EndHorizontal();
-                GUILayout.Space(1);
                 enableClipboard = DrawCompactToggle(enableClipboard, "Chat Input Hotkeys", toggleWidth);
                 GUILayout.Space(1);
                 enableChatBubbleCopy = DrawCompactToggle(enableChatBubbleCopy, "Copy Message", toggleWidth);
@@ -315,7 +308,7 @@ private void DrawChatSettingsCompact(float columnWidth)
                 GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
                 DrawSendBlock();
                 GUILayout.Space(gap);
-                DrawQuickChatBlock();
+                DrawChatColorBlock();
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
             }
@@ -323,17 +316,22 @@ private void DrawChatSettingsCompact(float columnWidth)
             {
                 GUILayout.Space(5);
                 GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
-                DrawQuickChatBlock();
+                DrawChatColorBlock();
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 
 private void DrawGhostChatColorControl(float width)
         {
             GUILayout.BeginHorizontal(GUILayout.Width(width));
-            GUILayout.Label(L("Ghost Chat:", "Ghost Chat:"), new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(74), GUILayout.Height(24));
+            GUILayout.Label(L("Ghost Chat:", "Чат призраков:"), toggleLabelStyle11, GUILayout.Width(74), GUILayout.Height(24));
             if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
             {
                 isEditingGhostChatColor = !isEditingGhostChatColor;
@@ -348,7 +346,7 @@ private void DrawGhostChatColorControl(float width)
                 isEditingBan = false;
                 ResetAllBindWaits();
             }
-            if (GUILayout.Button(L("Apply", "OK"), btnStyle, GUILayout.Width(48), GUILayout.Height(24)))
+            if (GUILayout.Button(L("Apply", "Применить"), btnStyle, GUILayout.Width(48), GUILayout.Height(24)))
             {
                 isEditingGhostChatColor = false;
                 ghostChatColorHex = SanitizeGhostChatColorSetting(ghostChatColorHex);
@@ -356,7 +354,7 @@ private void DrawGhostChatColorControl(float width)
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "РџСЂРёРјРµСЂ С†РІРµС‚Р° С‡Р°С‚Р° РїСЂРёР·СЂР°РєРѕРІ")), new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = false, clipping = TextClipping.Clip }, GUILayout.Width(width), GUILayout.Height(16f));
+            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "РџСЂРёРјРµСЂ С†РІРµС‚Р° С‡Р°С‚Р° РїСЂРёР·СЂР°РєРѕРІ")), richClipLabelStyle11, GUILayout.Width(width), GUILayout.Height(16f));
         }
     }
 }

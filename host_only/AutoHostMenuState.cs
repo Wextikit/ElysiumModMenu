@@ -65,6 +65,10 @@ public static bool AutoHostAutoRunEnabled = false;
 
 public static bool BugroomScoutEnabled = false;
 
+public static bool BugroomGlitchFinderEnabled = false;
+
+public static float AutoHostAutoRunDelaySeconds = 1.75f;
+
 public static int AutoHostMinPlayers = 4;
 
 public static int AutoHostForceMinPlayers = 2;

@@ -50,7 +50,10 @@ public void Update()
             TickNotificationQueue();
             TickFakeStartCounter();
             TickAutoTwoImpostors();
+            TickLocalColorOverride();
+            TickLocalColorSnipe();
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
+            NetworkedClones.Tick(showMenu);
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
@@ -160,6 +163,7 @@ public void Update()
             ElysiumAutoLobbyReturn.UpdateLogic();
             ElysiumBugroomFarmService.Tick();
             ElysiumBugroomScoutService.Tick();
+            ElysiumBugroomGlitchFinder.Tick();
             ApplyFpsLimit();
             TryAutoGhostAfterStartTick();
             TryAutoBanCustomPlatformsTick();
@@ -416,8 +420,7 @@ public void Update()
                             if (pc == null || pc.Data == null || pc.Data.Disconnected || pc == PlayerControl.LocalPlayer) continue;
                             if (IsProtectedFromAnticheat(pc)) continue;
 
-                            string fc = GetDisplayedFriendCode(pc.Data, string.Empty);
-                            if (IsFriendCodeBanned(fc))
+                            if (IsPlayerBanned(pc))
                             {
                                 string name = string.IsNullOrWhiteSpace(pc.Data.PlayerName) ? $"Player {pc.PlayerId}" : pc.Data.PlayerName;
                                 RegisterAntiCheatDisconnectNotice(pc.OwnerId, name, "Ban list match", true);
@@ -1210,8 +1213,6 @@ public static string SafeColorName(int id)
             try
             {
                 string lang = CurrentMenuLanguageCode();
-                if (lang == "auto")
-                    lang = ResolveAutoMenuLanguageCode();
                 string[] names;
                 if (!colorNamesByLang.TryGetValue(lang, out names))
                     colorNamesByLang.TryGetValue("en", out names);

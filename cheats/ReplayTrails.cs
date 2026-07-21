@@ -18,6 +18,7 @@ namespace ElysiumModMenu
         private static Texture2D replayCrossTex;
         private static GUIStyle replayPxStyle;
         private static GUIStyle replayWinStyle;
+        private static readonly Action<int> drawReplayWindow = DrawReplayWindow;
         private static float replayNextSampleAt;
 
         private sealed class ReplayPoint
@@ -116,7 +117,7 @@ namespace ElysiumModMenu
             try
             {
                 GUI.color = Color.white;
-                replayRect = GUI.Window(ReplayWindowId, replayRect, (Action<int>)DrawReplayWindow, "", replayWinStyle);
+                replayRect = GUI.Window(ReplayWindowId, replayRect, drawReplayWindow, "", replayWinStyle);
             }
             finally
             {

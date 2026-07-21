@@ -59,7 +59,7 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
         {
             return rgbMenuMode
                 ? GetThemeAccentColor(currentAccentColor)
-                : GetThemeAccentColor(GetStableMenuAccentSource());
+                : GetThemeAccentColor(GetStableMenuControlAccentSource());
         }
 
         public static string GetMenuControlAccentHex()
@@ -69,7 +69,7 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
 
         private Color GetStableControlAccentColor(Color fallback)
         {
-            Color source = fallback;
+            Color source = rgbMenuMode ? fallback : GetStableMenuControlAccentSource();
             try
             {
                 if (rgbMenuMode)
@@ -83,70 +83,19 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
         private void UpdateAccentColor(Color color)
         {
             currentAccentColor = color;
+            menuTitleFrame = -1;
             Color effectiveColor = GetThemeAccentColor(color);
             Color controlColor = rgbMenuMode ? effectiveColor : GetStableControlAccentColor(color);
             if (texAccent != null)
-            {
-                int size = texAccent.width;
-                Color[] pix = new Color[size * size];
-                float center = size / 2f;
-                float radius = 6f;
-                for (int y = 0; y < size; y++)
-                {
-                    for (int x = 0; x < size; x++)
-                    {
-                        float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
-                        float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
-                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                        float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = controlColor; c.a = alpha;
-                        pix[y * size + x] = c;
-                    }
-                }
-                texAccent.SetPixels(pix); texAccent.Apply();
-            }
+                UpdateMenuGradientTex(texAccent, effectiveColor, controlColor, 6f, ref accentPixels, ref accentAlpha);
             if (texSliderThumb != null)
-            {
-                int size = texSliderThumb.width;
-                Color[] pix = new Color[size * size];
-                float center = size / 2f;
-                float radius = 10f;
-                for (int y = 0; y < size; y++)
-                {
-                    for (int x = 0; x < size; x++)
-                    {
-                        float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
-                        float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
-                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                        float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = controlColor; c.a = alpha;
-                        pix[y * size + x] = c;
-                    }
-                }
-                texSliderThumb.SetPixels(pix); texSliderThumb.Apply();
-            }
+                UpdateMenuGradientTex(texSliderThumb, effectiveColor, controlColor, 10f, ref sliderThumbPixels, ref sliderThumbAlpha);
             if (texScrollThumb != null)
-            {
-                int size = texScrollThumb.width;
-                Color[] pix = new Color[size * size];
-                float center = size / 2f;
-                float radius = 4f;
-                for (int y = 0; y < size; y++)
-                {
-                    for (int x = 0; x < size; x++)
-                    {
-                        float dx = Mathf.Max(0, Mathf.Abs(x - center + 0.5f) - (center - radius));
-                        float dy = Mathf.Max(0, Mathf.Abs(y - center + 0.5f) - (center - radius));
-                        float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                        float alpha = Mathf.Clamp01(radius - dist + 0.5f);
-                        Color c = controlColor; c.a = alpha;
-                        pix[y * size + x] = c;
-                    }
-                }
-                texScrollThumb.SetPixels(pix); texScrollThumb.Apply();
-            }
-            if (texToggleOn != null) UpdateSwitchTex(texToggleOn, true, controlColor);
-            if (texTrackOn != null) UpdateTrackTex(texTrackOn, true, controlColor);
+                UpdateMenuGradientTex(texScrollThumb, effectiveColor, controlColor, 4f, ref scrollThumbPixels, ref scrollThumbAlpha);
+            if (texColorWheel != null)
+                UpdateColorWheelTex(texColorWheel, effectiveColor, controlColor);
+            if (texToggleOn != null) UpdateMenuSwitchTex(texToggleOn, controlColor);
+            if (texTrackOn != null) UpdateMenuTrackTex(texTrackOn, controlColor);
             bool rgbText = RgbMenuTextActive();
             Color menuHeadingText = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color);
             if (windowStyle != null) windowStyle.normal.textColor = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : color);
@@ -154,17 +103,205 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             if (menuSectionTitleStyle != null) menuSectionTitleStyle.normal.textColor = menuHeadingText;
             if (menuBadgeStyle != null) menuBadgeStyle.normal.textColor = menuHeadingText;
             if (activeSidebarBtnStyle != null) { activeSidebarBtnStyle.normal.textColor = effectiveColor; activeSidebarBtnStyle.hover.textColor = effectiveColor; }
+            UpdateCachedSidebarAccent(activeSidebarCompactStyle, effectiveColor);
+            UpdateCachedSidebarAccent(activeSidebarNarrowStyle, effectiveColor);
+            UpdateCachedSidebarAccent(activeTopSidebarStyle, effectiveColor);
+            Color valueColor = GetMenuAccentColor();
+            if (accentValueStyle != null) accentValueStyle.normal.textColor = valueColor;
+            if (morphValueStyle != null) morphValueStyle.normal.textColor = valueColor;
+            if (menuProfileStatusStyle != null) menuProfileStatusStyle.normal.textColor = controlColor;
             if (activeTabStyle != null) activeTabStyle.normal.background = texAccent;
             if (activeSubTabStyle != null) activeSubTabStyle.normal.background = texAccent;
             if (btnStyle != null) btnStyle.active.background = texAccent;
             if (inputBlockStyle != null) inputBlockStyle.normal.textColor = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color);
         }
 
+private static void UpdateCachedSidebarAccent(GUIStyle style, Color color)
+        {
+            if (style == null) return;
+            style.normal.textColor = color;
+            style.hover.textColor = color;
+        }
+
+        private void UpdateMenuGradientTex(Texture2D tex, Color left, Color right, float radius, ref Color[] pixels, ref float[] alpha)
+        {
+            int width = tex.width;
+            int height = tex.height;
+            int count = width * height;
+            if (pixels == null || pixels.Length != count)
+                pixels = new Color[count];
+            if (alpha == null || alpha.Length != count)
+            {
+                alpha = new float[count];
+                float cx = width / 2f;
+                float cy = height / 2f;
+                float innerX = Mathf.Max(0f, cx - radius);
+                float innerY = Mathf.Max(0f, cy - radius);
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        float dx = Mathf.Max(0f, Mathf.Abs(x - cx + 0.5f) - innerX);
+                        float dy = Mathf.Max(0f, Mathf.Abs(y - cy + 0.5f) - innerY);
+                        alpha[y * width + x] = Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                    }
+                }
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                Color col = Color.Lerp(left, right, width > 1 ? (float)x / (width - 1) : 0f);
+                for (int y = 0; y < height; y++)
+                {
+                    int index = y * width + x;
+                    Color pixel = col;
+                    pixel.a *= alpha[index];
+                    pixels[index] = pixel;
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+        }
+
+private void UpdateColorWheelTex(Texture2D tex, Color left, Color right)
+        {
+            int width = tex.width;
+            int height = tex.height;
+            int count = width * height;
+            if (colorWheelPixels == null || colorWheelPixels.Length != count)
+                colorWheelPixels = new Color[count];
+
+            float cx = (width - 1) * 0.5f;
+            float cy = (height - 1) * 0.5f;
+            float centerRadius = Mathf.Min(width, height) * 0.5f - 0.5f;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float dx = x - cx;
+                    float dy = y - cy;
+                    float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                    int index = y * width + x;
+
+                    if (distance > centerRadius)
+                    {
+                        colorWheelPixels[index] = Color.clear;
+                        continue;
+                    }
+
+                    float alpha = Mathf.Clamp01(centerRadius - distance + 0.5f);
+                    float blend = Mathf.InverseLerp(-centerRadius, centerRadius, dx);
+                    Color center = Color.Lerp(left, right, blend);
+                    center.a = alpha;
+                    colorWheelPixels[index] = center;
+                }
+            }
+
+            tex.SetPixels(colorWheelPixels);
+            tex.Apply();
+        }
+
+private void UpdateMenuSwitchTex(Texture2D tex, Color color)
+        {
+            int width = tex.width;
+            int height = tex.height;
+            int count = width * height;
+            if (toggleOnPixels == null || toggleOnPixels.Length != count)
+                toggleOnPixels = new Color[count];
+            if (toggleOnBgAlpha == null || toggleOnBgAlpha.Length != count || toggleOnKnobAlpha == null || toggleOnKnobAlpha.Length != count)
+            {
+                toggleOnBgAlpha = new float[count];
+                toggleOnKnobAlpha = new float[count];
+                float r = height / 2f;
+                float cx1 = r;
+                float cx2 = width - r;
+                float cy = r;
+                float knobRadius = r - 2f;
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        float px = x + 0.5f;
+                        float py = y + 0.5f;
+                        float dx1 = px - cx1;
+                        float dx2 = px - cx2;
+                        float dy = py - cy;
+                        float dLeft = Mathf.Sqrt(dx1 * dx1 + dy * dy);
+                        float dRight = Mathf.Sqrt(dx2 * dx2 + dy * dy);
+                        float dRect = px >= cx1 && px <= cx2 ? Mathf.Abs(dy) : 9999f;
+                        int index = y * width + x;
+                        toggleOnBgAlpha[index] = Mathf.Clamp01(r - Mathf.Min(dLeft, Mathf.Min(dRight, dRect)) + 0.5f);
+                        toggleOnKnobAlpha[index] = Mathf.Clamp01(knobRadius - dRight + 0.5f);
+                    }
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                Color pixel = Color.Lerp(color, Color.white, toggleOnKnobAlpha[i]);
+                pixel.a = toggleOnBgAlpha[i];
+                toggleOnPixels[i] = pixel;
+            }
+            tex.SetPixels(toggleOnPixels);
+            tex.Apply();
+        }
+
+private void UpdateMenuTrackTex(Texture2D tex, Color color)
+        {
+            int width = tex.width;
+            int height = tex.height;
+            int count = width * height;
+            if (trackOnPixels == null || trackOnPixels.Length != count)
+                trackOnPixels = new Color[count];
+            if (trackOnBgAlpha == null || trackOnBgAlpha.Length != count)
+            {
+                trackOnBgAlpha = new float[count];
+                float r = height / 2f;
+                float cx1 = r;
+                float cx2 = width - r;
+                float cy = r;
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        float px = x + 0.5f;
+                        float py = y + 0.5f;
+                        float dx1 = px - cx1;
+                        float dx2 = px - cx2;
+                        float dy = py - cy;
+                        float dLeft = Mathf.Sqrt(dx1 * dx1 + dy * dy);
+                        float dRight = Mathf.Sqrt(dx2 * dx2 + dy * dy);
+                        float dRect = px >= cx1 && px <= cx2 ? Mathf.Abs(dy) : 9999f;
+                        trackOnBgAlpha[y * width + x] = Mathf.Clamp01(r - Mathf.Min(dLeft, Mathf.Min(dRight, dRect)) + 0.5f);
+                    }
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                Color pixel = color;
+                pixel.a = trackOnBgAlpha[i];
+                trackOnPixels[i] = pixel;
+            }
+            tex.SetPixels(trackOnPixels);
+            tex.Apply();
+        }
+
         private void InitStyles()
         {
+            DestroyMenuStyleTextures();
+            compactToggleTextStyle = null;
+            menuToggleTextStyle = null;
+            hostToggleTextStyle = null;
+            keybindLabelStyle = null;
+            hostSubTabLayoutWidth = -1f;
+            generalInfoSubTabWidthsReady = false;
             bool isLightTheme = whiteMenuTheme;
             FontStyle menuTextStyle = boldMenuText ? FontStyle.Bold : FontStyle.Normal;
             Color accent = GetMenuAccentColor();
+            Color controlAccent = GetMenuControlAccentColor();
             Color darkBg = isLightTheme ? new Color(0.97f, 0.97f, 0.97f, 0.78f) : new Color(0.12f, 0.12f, 0.12f, 0.90f);
             Color sidebarBg = new Color(0.0f, 0.0f, 0.0f, 0.0f);
             Color boxBg = new Color(0f, 0f, 0f, 0f);
@@ -185,8 +322,13 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             texSliderThumb = MakeRoundedTex(20, accent, 10f);
             texInputBg = MakeRoundedTex(64, inputBgCol, 6f);
             texColorBtn = MakeRoundedTex(64, Color.white, 12f);
+            texColorWheel = new Texture2D(28, 28, TextureFormat.RGBA32, false);
+            texColorWheel.hideFlags = HideFlags.HideAndDontSave;
+            UpdateColorWheelTex(texColorWheel, accent, controlAccent);
+            UpdateRoundedGradientTex(texAccent, accent, controlAccent, 6f);
+            UpdateRoundedGradientTex(texSliderThumb, accent, controlAccent, 10f);
 
-            texMenuCard = MakeRoundedTex(64, isLightTheme ? new Color(1f, 1f, 1f, 0.55f) : new Color(1f, 1f, 1f, 0.045f), 12f);
+            texMenuCard = MakeRoundedTex(64, isLightTheme ? new Color(1f, 1f, 1f, 0.32f) : new Color(1f, 1f, 1f, 0.045f), 12f);
 
             menuCardStyle = new GUIStyle();
             menuCardStyle.normal.background = texMenuCard;
@@ -225,6 +367,9 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             menuSwatchStyle.normal.background = texColorBtn;
             menuSwatchStyle.border = CreateRectOffset(8, 8, 8, 8);
 
+            colorWheelStyle = new GUIStyle();
+            colorWheelStyle.normal.background = texColorWheel;
+
             texSwatchSquare = MakeRoundedTex(32, Color.white, 6f);
             menuSwatchSquareStyle = new GUIStyle();
             menuSwatchSquareStyle.normal.background = texSwatchSquare;
@@ -244,8 +389,9 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             UpdateTrackTex(texTrackOn, true, accent);
             texKnobWhite = MakeRoundedTex(16, Color.white, 8f);
 
+            texSafeLine = MakeRoundedTex(2, isLightTheme ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.white, 0f);
             safeLineStyle = new GUIStyle();
-            safeLineStyle.normal.background = MakeRoundedTex(2, isLightTheme ? new Color(0.75f, 0.75f, 0.75f, 1f) : Color.white, 0f);
+            safeLineStyle.normal.background = texSafeLine;
 
             windowStyle = new GUIStyle();
             windowStyle.normal.background = texWindowBg;
@@ -305,6 +451,7 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             headerStyle.fontSize = 13;
             headerStyle.clipping = TextClipping.Overflow;
             headerStyle.wordWrap = false;
+            headerStyle.richText = true;
 
             sidebarStyle = new GUIStyle();
             sidebarStyle.normal.background = texSidebarBg;
@@ -351,6 +498,13 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
 
             sliderThumbStyle = new GUIStyle();
             sliderThumbStyle.normal.background = texSliderThumb;
+            sliderThumbStyle.hover.background = texSliderThumb;
+            sliderThumbStyle.active.background = texSliderThumb;
+            sliderThumbStyle.focused.background = texSliderThumb;
+            sliderThumbStyle.onNormal.background = texSliderThumb;
+            sliderThumbStyle.onHover.background = texSliderThumb;
+            sliderThumbStyle.onActive.background = texSliderThumb;
+            sliderThumbStyle.onFocused.background = texSliderThumb;
             sliderThumbStyle.fixedWidth = 18f;
             sliderThumbStyle.fixedHeight = 18f;
             sliderThumbStyle.margin = CreateRectOffset(0, 0, -4, 0);
@@ -362,8 +516,9 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             titleStyle.richText = true;
             titleStyle.padding = CreateRectOffset(10, 0, 8, 0);
 
-            Texture2D texScrollBg = MakeRoundedTex(8, new Color(0.1f, 0.1f, 0.1f, 0.2f), 4f);
+            texScrollBg = MakeRoundedTex(8, new Color(0.1f, 0.1f, 0.1f, 0.2f), 4f);
             texScrollThumb = MakeRoundedTex(8, accent, 4f);
+            UpdateRoundedGradientTex(texScrollThumb, accent, controlAccent, 4f);
 
             GUIStyle scrollBarStyle = new GUIStyle(GUI.skin.verticalScrollbar);
             scrollBarStyle.normal.background = texScrollBg;
@@ -385,7 +540,137 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             GUI.skin.label.normal.textColor = textMain;
             GUI.skin.box.normal.textColor = textMain;
 
+            InitCachedMenuStyles(isLightTheme);
             stylesInited = true;
+        }
+
+private void InitCachedMenuStyles(bool isLightTheme)
+        {
+            menuBgStyle = new GUIStyle();
+            menuCharacterStyle = new GUIStyle();
+            menuCloseButtonStyle = new GUIStyle(btnStyle) { fixedWidth = 20, fixedHeight = 18, margin = CreateRectOffset(0, 8, 6, 0) };
+
+            sidebarCompactStyle = new GUIStyle(sidebarBtnStyle) { fontSize = 10, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(2, 2, 6, 6) };
+            activeSidebarCompactStyle = new GUIStyle(activeSidebarBtnStyle) { fontSize = 10, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(2, 2, 6, 6) };
+            sidebarNarrowStyle = new GUIStyle(sidebarCompactStyle) { fontSize = 8 };
+            activeSidebarNarrowStyle = new GUIStyle(activeSidebarCompactStyle) { fontSize = 8 };
+            topSidebarStyle = new GUIStyle(sidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
+            activeTopSidebarStyle = new GUIStyle(activeSidebarBtnStyle) { fontSize = 7, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, padding = CreateRectOffset(1, 1, 2, 2) };
+            microMenuHintStyle = new GUIStyle(menuDescStyle) { fontSize = 8, alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, wordWrap = false };
+
+            compactSubTabStyle = new GUIStyle(subTabStyle) { fontSize = 10, padding = CreateRectOffset(5, 5, 1, 1) };
+            compactActiveSubTabStyle = new GUIStyle(activeSubTabStyle) { fontSize = 10, padding = CreateRectOffset(5, 5, 1, 1) };
+            hostSubTabStyle10 = new GUIStyle(subTabStyle) { fontSize = 10, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(2, 2, 2, 2) };
+            activeHostSubTabStyle10 = new GUIStyle(activeSubTabStyle) { fontSize = 10, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(2, 2, 2, 2) };
+            hostSubTabStyle11 = new GUIStyle(hostSubTabStyle10) { fontSize = 11 };
+            activeHostSubTabStyle11 = new GUIStyle(activeHostSubTabStyle10) { fontSize = 11 };
+
+            coloredActionButtonStyle = new GUIStyle(btnStyle);
+            clippedButtonStyle = new GUIStyle(btnStyle) { clipping = TextClipping.Clip, wordWrap = false };
+            clippedActiveButtonStyle = new GUIStyle(activeTabStyle) { clipping = TextClipping.Clip, wordWrap = false };
+            compactMenuCardStyle = new GUIStyle(menuCardStyle) { padding = CreateRectOffset(8, 8, 6, 6), margin = CreateRectOffset(0, 0, 0, 6) };
+
+            centeredRichLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, richText = true };
+            voteInfoStyle = new GUIStyle(toggleLabelStyle) { richText = true, wordWrap = false, clipping = TextClipping.Clip };
+            historyInfoStyle = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Overflow, wordWrap = false };
+            historyHeaderStyle = new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13, clipping = TextClipping.Clip };
+            historyLineStyle = new GUIStyle(GUI.skin.label) { fontSize = 11, clipping = TextClipping.Clip };
+            historyWrapStyle = new GUIStyle(GUI.skin.label) { fontSize = 11, wordWrap = false, clipping = TextClipping.Clip };
+            toggleLabelStyle11 = new GUIStyle(toggleLabelStyle) { fontSize = 11 };
+            labelStyle11 = new GUIStyle(GUI.skin.label) { fontSize = 11 };
+            labelStyle12 = new GUIStyle(GUI.skin.label) { fontSize = 12 };
+            richLabelStyle11 = new GUIStyle(labelStyle11) { richText = true };
+            richLabelStyle12 = new GUIStyle(labelStyle12) { richText = true };
+            richLabelStyle14 = new GUIStyle(GUI.skin.label) { richText = true, fontSize = 14 };
+            richWrapLabelStyle11 = new GUIStyle(richLabelStyle11) { wordWrap = true };
+            richWrapLabelStyle12 = new GUIStyle(richLabelStyle12) { wordWrap = true };
+            radarSliderLabelStyle = new GUIStyle(toggleLabelStyle) { richText = true };
+            centeredToggleLabelStyle = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleCenter };
+            centeredActiveTabStyle = new GUIStyle(activeTabStyle) { alignment = TextAnchor.MiddleCenter };
+            compactLabelStyle10 = new GUIStyle(toggleLabelStyle) { fontSize = 10, clipping = TextClipping.Clip };
+            compactStatusStyle = new GUIStyle(toggleLabelStyle) { fontSize = 10, alignment = TextAnchor.MiddleCenter, richText = true, clipping = TextClipping.Clip };
+            richClipLabelStyle11 = new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = false, clipping = TextClipping.Clip };
+
+            Color chatTextColor = isLightTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.9f, 0.9f, 0.9f, 1f);
+            chatSenderFieldStyle = new GUIStyle(GUI.skin.textField) { fontSize = 12, alignment = TextAnchor.MiddleLeft, padding = CreateRectOffset(12, 12, 8, 8), margin = CreateRectOffset(4, 4, 4, 4) };
+            chatSenderFieldStyle.normal.textColor = chatTextColor;
+            chatFieldStyle = new GUIStyle(GUI.skin.textField) { fontSize = 12, alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, padding = CreateRectOffset(12, 12, 8, 8) };
+            chatFieldStyle.normal.textColor = chatTextColor;
+            chatInputTextStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, richText = false, fontSize = 12 };
+            chatInputTextStyle.normal.textColor = chatTextColor;
+            portableLogBoxStyle = new GUIStyle(boxStyle) { padding = CreateRectOffset(8, 8, 6, 6), margin = CreateRectOffset(0, 0, 0, 0) };
+            portableEmptyStyle = new GUIStyle(menuDescStyle) { alignment = TextAnchor.MiddleCenter, fontSize = 12, wordWrap = true };
+            portableRowStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12 };
+            portableRowStyle.normal.textColor = chatTextColor;
+            compactChatFieldStyle = new GUIStyle(GUI.skin.textField) { fontSize = 12, alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
+            compactChatFieldStyle.normal.textColor = chatTextColor;
+            compactChatInputStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, richText = false, fontSize = 11 };
+            compactChatInputStyle.normal.textColor = chatTextColor;
+            quickChatTileStyle = new GUIStyle(btnStyle) { wordWrap = false, alignment = TextAnchor.MiddleCenter, fontSize = 11, clipping = TextClipping.Clip };
+            compactPreviewStyle = new GUIStyle(compactLabelStyle10) { richText = true, alignment = TextAnchor.MiddleLeft };
+            identityLabelStyle = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip, wordWrap = false, richText = true, stretchWidth = false, alignment = TextAnchor.MiddleLeft };
+            compactToggleTextStyle = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip, wordWrap = false, richText = true, stretchWidth = false, alignment = TextAnchor.MiddleLeft };
+            pseudoInputStyle = new GUIStyle(inputBlockStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(10, 10, 0, 0) };
+            activePseudoInputStyle = new GUIStyle(activeTabStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(10, 10, 0, 0) };
+            clippedHintStyle = new GUIStyle(toggleLabelStyle) { fontSize = 10, clipping = TextClipping.Clip, wordWrap = false, alignment = TextAnchor.MiddleLeft };
+            lobbyNumFieldStyle = new GUIStyle(inputBlockStyle) { alignment = TextAnchor.MiddleCenter, fontSize = 11, fontStyle = FontStyle.Bold, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(3, 3, 1, 1) };
+            lobbyNumEditStyle = new GUIStyle(lobbyNumFieldStyle);
+            lobbyLabelStyle11 = new GUIStyle(toggleLabelStyle) { fontSize = 11, clipping = TextClipping.Clip };
+            lobbyRichLabelStyle11 = new GUIStyle(lobbyLabelStyle11) { richText = true };
+            accentValueStyle = new GUIStyle(btnStyle) { fontStyle = FontStyle.Bold, clipping = TextClipping.Overflow, wordWrap = false, alignment = TextAnchor.MiddleCenter, richText = true };
+            accentValueStyle.normal.background = null;
+            accentValueStyle.normal.textColor = GetMenuAccentColor();
+            morphValueStyle = new GUIStyle(accentValueStyle);
+            morphValueStyle.hover.background = null;
+            redCrossStyle = new GUIStyle(btnStyle);
+            redCrossStyle.normal.textColor = new Color(1f, 0.3f, 0.3f);
+            banButtonStyle = new GUIStyle(btnStyle);
+            banButtonStyle.normal.textColor = new Color(1f, 0.35f, 0.35f);
+            roundedColorButtonStyle = new GUIStyle();
+            roundedColorButtonStyle.normal.background = texColorBtn;
+            roundedColorButtonStyle.margin = CreateRectOffset(2, 2, 2, 2);
+            clippedMenuDescStyle = new GUIStyle(menuDescStyle) { clipping = TextClipping.Clip };
+            menuProfileStatusStyle = new GUIStyle(menuDescStyle);
+            menuProfileStatusStyle.normal.textColor = GetMenuControlAccentColor();
+            smallInputStyle = new GUIStyle(inputBlockStyle) { alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(4, 4, 0, 0) };
+            activeSmallInputStyle = new GUIStyle(activeTabStyle) { alignment = TextAnchor.MiddleCenter, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(4, 4, 0, 0) };
+            richClipLabelStyle12 = new GUIStyle(richLabelStyle12) { clipping = TextClipping.Clip };
+            notificationTitleStyle = new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12, clipping = TextClipping.Clip };
+            notificationTimerStyle = new GUIStyle(notificationTitleStyle) { alignment = TextAnchor.UpperRight };
+            notificationMessageStyle = new GUIStyle(GUI.skin.label) { richText = true, wordWrap = true, fontSize = 12, clipping = TextClipping.Clip };
+        }
+
+private void DestroyMenuStyleTextures()
+        {
+            DestroyMenuTexture(ref texWindowBg);
+            DestroyMenuTexture(ref texBoxBg);
+            DestroyMenuTexture(ref texBtnBg);
+            DestroyMenuTexture(ref texAccent);
+            DestroyMenuTexture(ref texSidebarBg);
+            DestroyMenuTexture(ref texToggleOff);
+            DestroyMenuTexture(ref texToggleOn);
+            DestroyMenuTexture(ref texSliderBg);
+            DestroyMenuTexture(ref texSliderThumb);
+            DestroyMenuTexture(ref texInputBg);
+            DestroyMenuTexture(ref texColorBtn);
+            DestroyMenuTexture(ref texColorWheel);
+            DestroyMenuTexture(ref texScrollThumb);
+            DestroyMenuTexture(ref texTrackOff);
+            DestroyMenuTexture(ref texTrackOn);
+            DestroyMenuTexture(ref texKnobWhite);
+            DestroyMenuTexture(ref texSwatchSquare);
+            DestroyMenuTexture(ref texMenuCard);
+            DestroyMenuTexture(ref texSafeLine);
+            DestroyMenuTexture(ref texScrollBg);
+            accentPixels = sliderThumbPixels = scrollThumbPixels = toggleOnPixels = trackOnPixels = colorWheelPixels = null;
+            accentAlpha = sliderThumbAlpha = scrollThumbAlpha = toggleOnBgAlpha = toggleOnKnobAlpha = trackOnBgAlpha = null;
+        }
+
+private static void DestroyMenuTexture(ref Texture2D tex)
+        {
+            if (tex == null) return;
+            UnityEngine.Object.Destroy(tex);
+            tex = null;
         }
         public static bool autoCopyCodeAndLeave = false;
 
@@ -449,19 +734,87 @@ private void LoadBackgroundImage()
             catch { enableBackground = false; }
         }
 
+private void LoadMenuCharacter()
+        {
+            try
+            {
+                string path = System.IO.Path.Combine(Plugin.ElysiumFolder, "Char.png");
+                if (!System.IO.File.Exists(path)) path = System.IO.Path.Combine(Plugin.ElysiumFolder, "Char.jpg");
+                if (!System.IO.File.Exists(path)) path = System.IO.Path.Combine(Plugin.ElysiumFolder, "MenuCharacter.png");
+                if (!System.IO.File.Exists(path)) path = System.IO.Path.Combine(Plugin.ElysiumFolder, "MenuCharacter.jpg");
+                if (!System.IO.File.Exists(path))
+                {
+                    enableMenuCharacter = false;
+                    return;
+                }
+
+                byte[] fileData = System.IO.File.ReadAllBytes(path);
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!ImageConversion.LoadImage(tex, fileData))
+                {
+                    UnityEngine.Object.Destroy(tex);
+                    enableMenuCharacter = false;
+                    return;
+                }
+
+                tex.hideFlags = HideFlags.HideAndDontSave;
+                tex.filterMode = FilterMode.Bilinear;
+                if (menuCharacterTexture != null) UnityEngine.Object.Destroy(menuCharacterTexture);
+                menuCharacterTexture = tex;
+            }
+            catch { enableMenuCharacter = false; }
+        }
+
 public static string ApplyMenuShimmer(string text)
         {
-            string result = "";
+            if (!RgbMenuTextActive() && MenuAccentPairActive())
+                return ApplyMenuAccentGradient(text);
+
+            StringBuilder result = new StringBuilder(text.Length * 32);
             Color baseColor = GetMenuControlAccentColor();
             Color glowColor = whiteMenuTheme ? Color.Lerp(baseColor, Color.white, 0.45f) : Color.white;
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == ' ') { result += " "; continue; }
+                if (text[i] == ' ') { result.Append(' '); continue; }
                 float wave = Mathf.Sin(Time.unscaledTime * 6f - (i * 0.4f)) * 0.5f + 0.5f;
                 Color c = Color.Lerp(baseColor, glowColor, wave);
-                result += $"<color=#{ColorUtility.ToHtmlStringRGB(c)}>{text[i]}</color>";
+                result.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(c)).Append('>').Append(text[i]).Append("</color>");
             }
-            return result;
+            return result.ToString();
+        }
+
+public static string ApplyMenuAccentGradient(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            Color left = GetMenuAccentColor(false);
+            Color right = GetMenuControlAccentColor();
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] != ' ') count++;
+            }
+
+            if (count <= 1)
+                return $"<color=#{ColorUtility.ToHtmlStringRGB(left)}>{text}</color>";
+
+            StringBuilder result = new StringBuilder(text.Length * 32);
+            int pos = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char ch = text[i];
+                if (ch == ' ')
+                {
+                    result.Append(' ');
+                    continue;
+                }
+
+                float t = (float)pos / (count - 1);
+                Color c = Color.Lerp(left, right, t);
+                result.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(c)).Append('>').Append(ch).Append("</color>");
+                pos++;
+            }
+            return result.ToString();
         }
 
 private static readonly Dictionary<string, float> toggleAnimStates = new Dictionary<string, float>();
@@ -489,6 +842,7 @@ private void DrawAnimatedSwitch(Rect boxRect, bool value, string animKey)
 
 private bool DrawToggle(bool value, string text, int width = 0, string animKey = null)
         {
+            text = MenuText(text);
             int reqW = width > 0 ? width : 200;
             int finalW = Mathf.RoundToInt(Mathf.Clamp(reqW, 82f, Mathf.Max(82f, GetMenuBodyWidth() - 18f)));
             GUILayout.BeginHorizontal(GUILayout.Width(finalW), GUILayout.Height(20));
@@ -499,19 +853,22 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
 
             GUILayout.Space(6);
 
-            GUIStyle toggleTextStyle = new GUIStyle(toggleLabelStyle)
+            if (menuToggleTextStyle == null)
             {
-                clipping = TextClipping.Clip,
-                wordWrap = false,
-                richText = true,
-                stretchWidth = false,
-                alignment = TextAnchor.MiddleLeft
-            };
+                menuToggleTextStyle = new GUIStyle(toggleLabelStyle)
+                {
+                    clipping = TextClipping.Clip,
+                    wordWrap = false,
+                    richText = true,
+                    stretchWidth = false,
+                    alignment = TextAnchor.MiddleLeft
+                };
+            }
 
-            GUIContent toggleContent = new GUIContent(text);
-            float toggleTextWidth = Mathf.Min(Mathf.Ceil(toggleTextStyle.CalcSize(toggleContent).x) + 8f, Mathf.Max(40f, finalW - 42f));
+            GUIContent toggleContent = GUIContent.Temp(text);
+            float toggleTextWidth = Mathf.Min(Mathf.Ceil(menuToggleTextStyle.CalcSize(toggleContent).x) + 8f, Mathf.Max(40f, finalW - 42f));
             Rect textRect = GUILayoutUtility.GetRect(toggleTextWidth, 18f, GUILayout.Width(toggleTextWidth), GUILayout.Height(18f));
-            GUI.Label(textRect, toggleContent, toggleTextStyle);
+            GUI.Label(textRect, toggleContent, menuToggleTextStyle);
 
             bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
             if (clickedText) Event.current.Use();
@@ -526,10 +883,11 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
 
         private bool DrawBindableButton(string label, string bindKey, float width)
         {
+            label = MenuText(label);
             bool clicked = false;
             GUILayout.BeginVertical(GUILayout.Width(width));
             if (GUILayout.Button(label, btnStyle, GUILayout.Height(25), GUILayout.Width(width))) clicked = true;
-            string bindTxt = bindingAction == bindKey ? "Press Key..." : (keyBinds.ContainsKey(bindKey) ? $"[{keyBinds[bindKey]}]" : "[Bind Key]");
+            string bindTxt = bindingAction == bindKey ? MenuText("Press any key...") : (keyBinds.ContainsKey(bindKey) ? $"[{keyBinds[bindKey]}]" : "[Bind Key]");
             GUIStyle bindStyle = new GUIStyle(btnStyle) { fontSize = 10, normal = { textColor = new Color(0.6f, 0.6f, 0.6f) } };
             if (bindingAction == bindKey) bindStyle.normal.textColor = GetMenuAccentColor();
             if (GUILayout.Button(bindTxt, bindStyle, GUILayout.Height(15), GUILayout.Width(width))) bindingAction = bindKey;
@@ -539,22 +897,26 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
 
         private bool DrawHostToggle(bool value, string text, float totalWidth = 250f)
         {
+            text = MenuText(text);
             GUILayout.BeginHorizontal(GUILayout.MinWidth(totalWidth), GUILayout.Height(20));
             Rect animSwitchRect = GUILayoutUtility.GetRect(30f, 16f, GUILayout.Width(30f), GUILayout.Height(16f));
             bool clickedBox = GUI.Button(animSwitchRect, "", value ? trackOnStyle : trackOffStyle);
             DrawAnimatedSwitch(animSwitchRect, value, text);
             GUILayout.Space(6);
 
-            GUIStyle hostToggleTextStyle = new GUIStyle(toggleLabelStyle)
+            if (hostToggleTextStyle == null)
             {
-                clipping = TextClipping.Overflow,
-                wordWrap = false,
-                richText = true,
-                stretchWidth = false,
-                alignment = TextAnchor.MiddleLeft
-            };
+                hostToggleTextStyle = new GUIStyle(toggleLabelStyle)
+                {
+                    clipping = TextClipping.Overflow,
+                    wordWrap = false,
+                    richText = true,
+                    stretchWidth = false,
+                    alignment = TextAnchor.MiddleLeft
+                };
+            }
 
-            GUIContent hostToggleContent = new GUIContent(text);
+            GUIContent hostToggleContent = GUIContent.Temp(text);
             float hostToggleTextWidth = Mathf.Ceil(hostToggleTextStyle.CalcSize(hostToggleContent).x) + 8f;
             Rect textRect = GUILayoutUtility.GetRect(hostToggleTextWidth, 16f, GUILayout.Width(hostToggleTextWidth), GUILayout.Height(16f));
             GUI.Label(textRect, hostToggleContent, hostToggleTextStyle);
@@ -610,21 +972,22 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
         {
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
-            GUIStyle alignedLabel = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, margin = CreateRectOffset(0, 0, 4, 0) };
-            GUILayout.Label(label, alignedLabel, GUILayout.Width(220), GUILayout.Height(25));
+            if (keybindLabelStyle == null)
+                keybindLabelStyle = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, margin = CreateRectOffset(0, 0, 4, 0) };
+            GUILayout.Label(label, keybindLabelStyle, GUILayout.Width(220), GUILayout.Height(25));
 
-            string bindText = isWaiting ? "Press any key..." : (currentKey == KeyCode.None ? "NONE" : currentKey.ToString());
+            string bindText = isWaiting ? MenuText("Press any key...") : (currentKey == KeyCode.None ? "NONE" : currentKey.ToString());
             if (GUILayout.Button(bindText, isWaiting ? activeTabStyle : btnStyle, GUILayout.Width(120), GUILayout.Height(25)))
             {
                 ResetAllBindWaits();
                 isWaiting = true;
             }
 
-            if (GUILayout.Button("Clear", btnStyle, GUILayout.Width(50), GUILayout.Height(25)))
+            if (GUILayout.Button(MenuText("Clear"), btnStyle, GUILayout.Width(50), GUILayout.Height(25)))
             {
                 currentKey = KeyCode.None;
                 isWaiting = false;
-                SaveConfig();
+                SaveKeybinds();
             }
 
             GUILayout.FlexibleSpace();
@@ -679,18 +1042,23 @@ private void DrawGeneralTab()
             for (int i = 0; i < generalSubTabs.Length; i++)
             {
                 if (GUILayout.Button(generalSubTabs[i], currentGeneralSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(22)))
-                {
-                    currentGeneralSubTab = i;
-                    scrollPosition = Vector2.zero;
-                }
+                    SetMultiTab("general", ref currentGeneralSubTab, i, generalSubTabs.Length);
             }
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.Space(8);
 
-            if (currentGeneralSubTab == 0) DrawGeneralInfoTab();
-            else if (currentGeneralSubTab == 1) DrawBindsTab();
+            BeginMultiTabContent("general", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentGeneralSubTab == 0) DrawGeneralInfoTab();
+                else if (currentGeneralSubTab == 1) DrawBindsTab();
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
         }
 }
 }

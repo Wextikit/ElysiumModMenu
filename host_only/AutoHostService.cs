@@ -117,6 +117,7 @@ public static class ElysiumAutoLobbyReturn
 
             private static bool ShouldAutoReturn()
             {
+                if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled) return false;
                 return ElysiumModMenuGUI.AutoReturnLobbyAfterMatch || ElysiumAutoHostService.ShouldReturnAfterMatch;
             }
 
@@ -304,7 +305,6 @@ public static class ElysiumAutoHostService
             private const float NotificationCooldownSeconds = 0.75f;
             private const float ShieldBreakDelaySeconds = 0.15f;
             private const float ShieldBreakTargetGraceSeconds = 1.0f;
-            private const float AutoRunStartDelaySeconds = 1.75f;
             private const float AutoRunEndRetrySeconds = 0.35f;
 
             private static AutoHostState state = AutoHostState.Disabled;
@@ -484,7 +484,7 @@ public static class ElysiumAutoHostService
                     return;
                 }
 
-                bool waitingForLoad = (ElysiumModMenuGUI.AutoHostWaitLoadedPlayers || autoRun) && connectedPlayers > readyPlayers;
+                bool waitingForLoad = !autoRun && ElysiumModMenuGUI.AutoHostWaitLoadedPlayers && connectedPlayers > readyPlayers;
                 if (waitingForLoad)
                 {
                     if (loadWaitStartedAt < 0f) loadWaitStartedAt = now;
@@ -516,7 +516,9 @@ public static class ElysiumAutoHostService
                 }
 
                 int requiredPlayers = RequiredPlayers;
-                bool enoughPlayers = ElysiumModMenuGUI.AutoHostWaitLoadedPlayers ? readyPlayers >= requiredPlayers : connectedPlayers >= requiredPlayers;
+                bool enoughPlayers = autoRun
+                    ? connectedPlayers >= 1
+                    : ElysiumModMenuGUI.AutoHostWaitLoadedPlayers ? readyPlayers >= requiredPlayers : connectedPlayers >= requiredPlayers;
                 bool continueBelowMin = !ElysiumModMenuGUI.AutoHostCancelBelowMin && countdownStartedAt >= 0f && connectedPlayers >= 2;
 
                 if (!forceStart && !enoughPlayers && !continueBelowMin)
@@ -1054,6 +1056,7 @@ public static class ElysiumAutoHostService
             private static int RequiredPlayers => Mathf.Clamp(ElysiumModMenuGUI.AutoHostMinPlayers, 1, 15);
             private static int ForceMinPlayers => Mathf.Clamp(ElysiumModMenuGUI.AutoHostForceMinPlayers, 1, 15);
             private static float StartDelaySeconds => Mathf.Clamp(ElysiumModMenuGUI.AutoHostStartDelaySeconds, 0f, 180f);
+            private static float AutoRunStartDelaySeconds => Mathf.Clamp(ElysiumModMenuGUI.AutoHostAutoRunDelaySeconds, 0.25f, 10f);
             private static float BackoffSeconds => Mathf.Clamp(ElysiumModMenuGUI.AutoHostBackoffSeconds, 2f, 60f);
             private static float CountdownRemaining => countdownStartedAt < 0f ? 0f : Mathf.Clamp((activeCountdownDelay >= 0f ? activeCountdownDelay : StartDelaySeconds) - (Time.unscaledTime - countdownStartedAt), 0f, StartDelaySeconds);
             private static float BackoffRemaining => backoffUntil < 0f ? 0f : Mathf.Clamp(backoffUntil - Time.unscaledTime, 0f, BackoffSeconds);

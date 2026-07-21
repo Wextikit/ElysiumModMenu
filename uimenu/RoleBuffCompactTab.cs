@@ -49,14 +49,14 @@ private void DrawPlayerMovementCompact(float columnWidth)
             int controlWidth = Mathf.RoundToInt(Mathf.Clamp(columnWidth - 26f, 170f, 280f));
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Engine: {Mathf.Round(engineSpeed)}x", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(72), GUILayout.Height(18));
+            GUILayout.Label($"Engine: {Mathf.Round(engineSpeed)}x", toggleLabelStyle11, GUILayout.Width(72), GUILayout.Height(18));
             engineSpeed = GUILayout.HorizontalSlider(engineSpeed, 1f, 555f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
             if (GUILayout.Button("R", btnStyle, GUILayout.Width(24), GUILayout.Height(18))) engineSpeed = 1f;
             GUILayout.EndHorizontal();
 
             GUILayout.Space(2);
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Walk: {Mathf.Round(walkSpeed)}x", new GUIStyle(toggleLabelStyle) { fontSize = 11 }, GUILayout.Width(72), GUILayout.Height(18));
+            GUILayout.Label($"Walk: {Mathf.Round(walkSpeed)}x", toggleLabelStyle11, GUILayout.Width(72), GUILayout.Height(18));
             walkSpeed = GUILayout.HorizontalSlider(walkSpeed, 1f, 30f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
             if (GUILayout.Button("R", btnStyle, GUILayout.Width(24), GUILayout.Height(18))) walkSpeed = 1f;
             GUILayout.EndHorizontal();
@@ -79,20 +79,13 @@ private void DrawRolesCompact(float columnWidth)
             DrawMenuSectionHeader("ROLE TOOLS");
             int roleToggleWidth = Mathf.RoundToInt(Mathf.Clamp(columnWidth - 26f, 170f, 280f));
 
-            GUIStyle roleMidStyle = new GUIStyle(btnStyle)
-            {
-                fontStyle = FontStyle.Bold,
-                normal = { background = null, textColor = GetMenuAccentColor() },
-                alignment = TextAnchor.MiddleCenter
-            };
-
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(24), GUILayout.Height(20)))
             {
                 fakeRoleIdx--;
                 if (fakeRoleIdx < 0) fakeRoleIdx = forceRoleOptions.Length - 1;
             }
-            GUILayout.Label(GetLocalRoleDisplayName(forceRoleOptions[fakeRoleIdx]), roleMidStyle, GUILayout.ExpandWidth(true), GUILayout.Height(20));
+            GUILayout.Label(GetLocalRoleDisplayName(forceRoleOptions[fakeRoleIdx]), accentValueStyle, GUILayout.ExpandWidth(true), GUILayout.Height(20));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(24), GUILayout.Height(20)))
             {
                 fakeRoleIdx++;
@@ -106,8 +99,16 @@ private void DrawRolesCompact(float columnWidth)
             DrawRoleBuffSubTabs();
             GUILayout.Space(4);
 
-            if (currentRoleBuffSubTab == 0) DrawNonHostRoleBuffs(columnWidth, roleToggleWidth);
-            else DrawHostRoleBuffs(roleToggleWidth);
+            BeginMultiTabContent("roleBuff", out Matrix4x4 oldMatrix, out Color oldColor);
+            try
+            {
+                if (currentRoleBuffSubTab == 0) DrawNonHostRoleBuffs(columnWidth, roleToggleWidth);
+                else DrawHostRoleBuffs(roleToggleWidth);
+            }
+            finally
+            {
+                EndMultiTabContent(oldMatrix, oldColor);
+            }
 
             GUILayout.EndVertical();
         }
@@ -127,9 +128,9 @@ private void DrawRoleBuffSubTabs()
         {
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("NON HOST", currentRoleBuffSubTab == 0 ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                currentRoleBuffSubTab = 0;
+                SetMultiTab("roleBuff", ref currentRoleBuffSubTab, 0, 2, false);
             if (GUILayout.Button("HOST", currentRoleBuffSubTab == 1 ? activeSubTabStyle : subTabStyle, GUILayout.Height(18)))
-                currentRoleBuffSubTab = 1;
+                SetMultiTab("roleBuff", ref currentRoleBuffSubTab, 1, 2, false);
             GUILayout.EndHorizontal();
         }
 

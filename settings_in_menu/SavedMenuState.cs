@@ -629,6 +629,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
         }
 
         public static bool showWatermark = true;
+        public static bool showWatermarkInfo = true;
 
 public static bool whiteMenuTheme = false;
 
@@ -652,67 +653,14 @@ private static float LoadFloat(string key, float defaultValue)
             return PlayerPrefs.HasKey(key) ? PlayerPrefs.GetFloat(key) : defaultValue;
         }
 
-private void SaveConfig()
+private static void SaveKeybinds()
         {
             try
             {
-                PlayerPrefs.SetInt("M_BndMagnet", (int)bindMagnetCursor);
-                Plugin.SpoofedLevel.Value = spoofLevelString;
-                Plugin.EnableLevelSpoofConfig.Value = enableLevelSpoof;
-                SaveBool("M_EnableLevelSpoof", enableLevelSpoof);
-                Plugin.EnableFriendCodeSpoofConfig.Value = enableFriendCodeSpoof;
-                Plugin.SpoofFriendCodeConfig.Value = spoofFriendCodeInput;
-                Plugin.EnablePlatformSpoof.Value = enablePlatformSpoof;
-                Plugin.AutoBanBrokenFriendCodeConfig.Value = autoBanBrokenFriendCode;
-                Plugin.PlatformIndex.Value = currentPlatformIndex;
-                Plugin.ShowWatermarkConfig.Value = showWatermark;
-                Plugin.UnlockCosmeticsConfig.Value = unlockCosmetics;
-                SaveBool("M_UnlockCosmicubes", unlockCosmicubes);
-                SaveBool("M_ActivateCompletedCosmicubes", activateCompletedCosmicubes);
-                Plugin.MoreLobbyInfoConfig.Value = moreLobbyInfo;
-                Plugin.EnableChatDarkModeConfig.Value = enableChatDarkMode;
-                Plugin.GhostChatColorConfig.Value = SanitizeGhostChatColorSetting(ghostChatColorHex);
-                Plugin.ThrottleDefaultLogsConfig.Value = throttleDefaultLogs;
-                Plugin.DetailedLogsEnabledConfig.Value = detailedLogsEnabled;
-                Plugin.ShowEspFriendCodeConfig.Value = showEspFriendCode;
-                Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
-                Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
-                Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
-                Plugin.RgbMenuTextConfig.Value = rgbMenuText;
-                Plugin.BoldMenuTextConfig.Value = boldMenuText;
-                SaveBool("M_RgbTaskBar", rgbTaskBar);
                 if (menuToggleKey == KeyCode.None) menuToggleKey = KeyCode.Insert;
-                Plugin.MenuKeybind.Value = menuToggleKey;
+
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
-                SaveBool("M_WhiteTheme", whiteMenuTheme);
-                SaveBool("M_RgbMenuText", rgbMenuText);
-                SaveBool("M_BoldMenuText", boldMenuText);
-                PlayerPrefs.SetInt("M_MenuLanguageIndex", currentMenuLanguageIndex);
-                SaveBool("M_LimitFps", limitFps);
-                PlayerPrefs.SetInt("M_FpsLimit", fpsLimit);
-                SaveBool("M_DetailedLogsEnabled", detailedLogsEnabled);
-                SaveBool("M_EnableBackground", enableBackground);
-                SaveBool("M_HardMenu", hardMenu);
-                SaveBool("M_AutoCopyCodeAndLeave", autoCopyCodeAndLeave);
-                SaveBool("M_BlockInnerslothTelemetry", blockInnerslothTelemetry);
-                SaveBool("M_EnableCustomNotifs", EnableCustomNotifs);
-                SaveBool("M_LogAllRPCs", LogAllRPCs);
-                SaveBool("M_DiscordRpcEnabled", discordRpcEnabled);
-                PlayerPrefs.SetInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex);
-                PlayerPrefs.SetFloat("M_MenuWindowX", windowRect.x);
-                PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
-                PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
-                PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
-                PlayerPrefs.SetInt("M_CurrentTab", currentTab);
-                PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
-                PlayerPrefs.SetInt("M_CurrentGeneralSubTab", currentGeneralSubTab);
-                PlayerPrefs.SetInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab);
-                PlayerPrefs.SetInt("M_CurrentSelfSubTab", currentSelfSubTab);
-                PlayerPrefs.SetInt("M_CurrentVisualsSubTab", currentVisualsSubTab);
-                PlayerPrefs.SetInt("M_CurrentPlayersSubTab", currentPlayersSubTab);
-                PlayerPrefs.SetInt("M_CurrentSabotageSubTab", currentSabotageSubTab);
-                PlayerPrefs.SetInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab);
-                PlayerPrefs.SetInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab);
+                PlayerPrefs.SetInt("M_BndMagnet", (int)bindMagnetCursor);
                 PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
                 PlayerPrefs.SetInt("M_BndSpawn", (int)bindSpawnLobby);
                 PlayerPrefs.SetInt("M_BndDespawn", (int)bindDespawnLobby);
@@ -737,6 +685,82 @@ private void SaveConfig()
                 PlayerPrefs.SetInt("M_BndSetAllGhost", (int)bindSetAllGhost);
                 PlayerPrefs.SetInt("M_BndSetAllGhostImp", (int)bindSetAllGhostImp);
                 PlayerPrefs.SetInt("M_BndReviveAll", (int)bindReviveAll);
+                SyncKeybindDictionary();
+                PlayerPrefs.Save();
+            }
+            catch { }
+
+            try
+            {
+                Plugin.MenuKeybind.Value = menuToggleKey;
+                Plugin.MenuConfig.Save();
+            }
+            catch { }
+        }
+
+private void SaveConfig()
+        {
+            try
+            {
+                Plugin.SpoofedLevel.Value = spoofLevelString;
+                Plugin.EnableLevelSpoofConfig.Value = enableLevelSpoof;
+                SaveBool("M_EnableLevelSpoof", enableLevelSpoof);
+                Plugin.EnableFriendCodeSpoofConfig.Value = enableFriendCodeSpoof;
+                Plugin.SpoofFriendCodeConfig.Value = spoofFriendCodeInput;
+                Plugin.EnablePlatformSpoof.Value = enablePlatformSpoof;
+                Plugin.AutoBanBrokenFriendCodeConfig.Value = autoBanBrokenFriendCode;
+                Plugin.PlatformIndex.Value = currentPlatformIndex;
+                Plugin.ShowWatermarkConfig.Value = showWatermark;
+                SaveBool("M_ShowWatermarkInfo", showWatermarkInfo);
+                Plugin.UnlockCosmeticsConfig.Value = unlockCosmetics;
+                SaveBool("M_UnlockCosmicubes", unlockCosmicubes);
+                SaveBool("M_ActivateCompletedCosmicubes", activateCompletedCosmicubes);
+                Plugin.MoreLobbyInfoConfig.Value = moreLobbyInfo;
+                Plugin.EnableChatDarkModeConfig.Value = enableChatDarkMode;
+                Plugin.GhostChatColorConfig.Value = SanitizeGhostChatColorSetting(ghostChatColorHex);
+                Plugin.ThrottleDefaultLogsConfig.Value = throttleDefaultLogs;
+                Plugin.DetailedLogsEnabledConfig.Value = detailedLogsEnabled;
+                Plugin.ShowEspFriendCodeConfig.Value = showEspFriendCode;
+                Plugin.RpcSpoofDelayConfig.Value = rpcSpoofDelay;
+                Plugin.MenuColorIndexConfig.Value = currentMenuColorIndex;
+                Plugin.RgbMenuModeConfig.Value = rgbMenuMode;
+                Plugin.RgbMenuTextConfig.Value = rgbMenuText;
+                Plugin.BoldMenuTextConfig.Value = boldMenuText;
+                SaveBool("M_RgbTaskBar", rgbTaskBar);
+                SaveBool("M_WhiteTheme", whiteMenuTheme);
+                SaveBool("M_RgbMenuText", rgbMenuText);
+                SaveBool("M_BoldMenuText", boldMenuText);
+                PlayerPrefs.SetInt("M_MenuLanguageIndex", currentMenuLanguageIndex);
+                SaveBool("M_MenuLanguageV2", true);
+                PlayerPrefs.SetInt("M_MenuProfileSlot", Mathf.Clamp(selectedMenuProfileIndex, 0, menuProfileCount - 1));
+                SaveBool("M_LimitFps", limitFps);
+                PlayerPrefs.SetInt("M_FpsLimit", fpsLimit);
+                SaveBool("M_DetailedLogsEnabled", detailedLogsEnabled);
+                SaveBool("M_EnableBackground", enableBackground);
+                SaveBool("M_EnableMenuCharacter", enableMenuCharacter);
+                SaveBool("M_HardMenu", hardMenu);
+                SaveBool("M_AutoCopyCodeAndLeave", autoCopyCodeAndLeave);
+                SaveBool("M_BlockInnerslothTelemetry", blockInnerslothTelemetry);
+                SaveBool("M_EnableCustomNotifs", EnableCustomNotifs);
+                SaveBool("M_LogAllRPCs", LogAllRPCs);
+                SaveBool("M_DiscordRpcEnabled", discordRpcEnabled);
+                PlayerPrefs.SetInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex);
+                PlayerPrefs.SetFloat("M_MenuWindowX", windowRect.x);
+                PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
+                PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
+                PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
+                PlayerPrefs.SetFloat("M_MenuScale", Mathf.Clamp(menuScale, 0.65f, 1.75f));
+                SaveBool("M_EnableMenuScaleInput", enableMenuScaleInput);
+                PlayerPrefs.SetInt("M_CurrentTab", currentTab);
+                PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
+                PlayerPrefs.SetInt("M_CurrentGeneralSubTab", currentGeneralSubTab);
+                PlayerPrefs.SetInt("M_CurrentGeneralInfoSubTab", currentGeneralInfoSubTab);
+                PlayerPrefs.SetInt("M_CurrentSelfSubTab", currentSelfSubTab);
+                PlayerPrefs.SetInt("M_CurrentVisualsSubTab", currentVisualsSubTab);
+                PlayerPrefs.SetInt("M_CurrentPlayersSubTab", currentPlayersSubTab);
+                PlayerPrefs.SetInt("M_CurrentSabotageSubTab", currentSabotageSubTab);
+                PlayerPrefs.SetInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab);
+                PlayerPrefs.SetInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab);
                 SaveBool("M_AutoKickBugs", autoKickBugs);
                 PlayerPrefs.SetFloat("M_AutoKickTimer", autoKickTimer);
                 SaveBool("M_DisableVoteKicks", disableVoteKicks);
@@ -747,6 +771,10 @@ private void SaveConfig()
                 PlayerPrefs.SetString("M_LobbyWhitelist", SaveLobbyWhitelist());
                 SaveBool("M_LocalNameSpoof", enableLocalNameSpoof);
                 SaveBool("M_LocalFakeFCEnabled", enableLocalFriendCodeSpoof);
+                SaveBool("M_LocalAlwaysRed", localAlwaysRed);
+                SaveBool("M_LocalFortegreen", localFortegreen);
+                SaveBool("M_LocalSnipeColor", localSnipeColor);
+                PlayerPrefs.SetInt("M_LocalSnipeColorId", Mathf.Clamp(localSnipeColorId, 0, 17));
                 PlayerPrefs.SetString("M_LocalFakeFC", localFriendCodeInput);
                 SaveBool("M_DeviceIdSpoof", enableDeviceIdSpoof);
                 PlayerPrefs.SetString("M_DeviceId", spoofedDeviceId ?? "");
@@ -827,6 +855,7 @@ private void SaveConfig()
                 SaveBool("M_HostAutoKillTarget", hostAutoKillTarget);
                 PlayerPrefs.SetInt("M_HostAutoKillTargetId", hostAutoKillTargetId);
                 SaveBool("M_BugRoomAutoAngel", bugRoomAutoAngel);
+                PlayerPrefs.SetFloat("M_BugRoomAutoAngelIntervalSeconds", Mathf.Clamp(bugRoomAutoAngelIntervalSeconds, 0.001f, 0.50f));
                 SaveBool("M_BugRoomAutoKillShield", bugRoomAutoKillShield);
                 SaveBool("M_BugRoomTimedAutoRun", bugRoomTimedAutoRun);
                 PlayerPrefs.SetInt("M_BugRoomTimedAutoRunMinutes", Mathf.Clamp(bugRoomTimedAutoRunMinutes, 1, 60));
@@ -873,7 +902,10 @@ private void SaveConfig()
                 SaveBool("M_AutoHostCancelBelowMin", AutoHostCancelBelowMin);
                 SaveBool("M_AutoHostInstantStart", AutoHostInstantStart);
                 SaveBool("M_AutoHostAutoRunEnabled", AutoHostAutoRunEnabled);
+                SaveBool("M_AutoClearClonesBeforeGame", NetworkedClones.AutoClearBeforeGame);
+                PlayerPrefs.SetFloat("M_AutoHostAutoRunDelaySeconds", Mathf.Clamp(AutoHostAutoRunDelaySeconds, 0.25f, 10f));
                 SaveBool("M_BugroomScoutEnabled", BugroomScoutEnabled);
+                SaveBool("M_BugroomGlitchFinderEnabled", BugroomGlitchFinderEnabled);
                 SaveBool("M_AutoGhostAfterStart", autoGhostAfterStart);
                 PlayerPrefs.SetInt("M_AutoHostMinPlayers", AutoHostMinPlayers);
                 PlayerPrefs.SetFloat("M_AutoHostStartDelaySeconds", AutoHostStartDelaySeconds);
@@ -894,57 +926,67 @@ private void SaveConfig()
 
 private void DrawAutoHostTab()
         {
-            GUILayout.BeginVertical(menuCardStyle);
+            float contentWidth = Mathf.Max(96f, GetMenuWorkWidth(120f, 760f) - 8f);
+            float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
+                ? menuCardStyle.padding.left + menuCardStyle.padding.right
+                : 28f;
+            float innerWidth = Mathf.Max(68f, contentWidth - cardPaddingWidth);
+            int toggleWidth = Mathf.RoundToInt(Mathf.Min(250f, innerWidth));
+
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(contentWidth));
             DrawMenuSectionHeader(L("AUTO HOST SYSTEM", "СИСТЕМА АВТО-ХОСТА"));
 
             var snapshot = ElysiumAutoHostService.GetStatusSnapshot();
-            GUILayout.Label($"<color=#aaaaaa>{L("Status:", "Статус:")}</color> <color=#FFAC1C>{snapshot.State}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
+            GUILayout.Label($"<color=#aaaaaa>{L("Status:", "Статус:")}</color> <color=#FFAC1C>{snapshot.State}</color>", historyHeaderStyle);
             GUILayout.Space(10);
 
-            AutoHostEnabled = DrawToggle(AutoHostEnabled, L("Enable Auto Host", "Включить Авто-Хост"), 250);
+            AutoHostEnabled = DrawToggle(AutoHostEnabled, L("Enable Auto Host", "Включить Авто-Хост"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostShieldBreakEnabled = DrawToggle(AutoHostShieldBreakEnabled, L("Auto Shield Break (Host)", "Авто-ломать щит (хост)"), 250);
+            AutoHostShieldBreakEnabled = DrawToggle(AutoHostShieldBreakEnabled, L("Auto Shield Break (Host)", "Авто-ломать щит (хост)"), toggleWidth);
             GUILayout.Space(5);
-            AutoReturnLobbyAfterMatch = DrawToggle(AutoReturnLobbyAfterMatch, L("Auto Return To Lobby", "Авто-возврат в лобби"), 250);
+            AutoReturnLobbyAfterMatch = DrawToggle(AutoReturnLobbyAfterMatch, L("Auto Return To Lobby", "Авто-возврат в лобби"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostNotifications = DrawToggle(AutoHostNotifications, L("Show Notifications", "Показывать уведомления"), 250);
+            AutoHostNotifications = DrawToggle(AutoHostNotifications, L("Show Notifications", "Показывать уведомления"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostWaitLoadedPlayers = DrawToggle(AutoHostWaitLoadedPlayers, L("Wait For Players To Load", "Ждать прогрузки игроков"), 250);
+            AutoHostWaitLoadedPlayers = DrawToggle(AutoHostWaitLoadedPlayers, L("Wait For Players To Load", "Ждать прогрузки игроков"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostCancelBelowMin = DrawToggle(AutoHostCancelBelowMin, L("Cancel Countdown If Player Leaves", "Отмена отсчета, если игрок вышел"), 250);
+            AutoHostCancelBelowMin = DrawToggle(AutoHostCancelBelowMin, L("Cancel Countdown If Player Leaves", "Отмена отсчета, если игрок вышел"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostInstantStart = DrawToggle(AutoHostInstantStart, L("Instant Start (No 5s Wait)", "Мгновенный старт (Без 5с)"), 250);
+            AutoHostInstantStart = DrawToggle(AutoHostInstantStart, L("Instant Start (No 5s Wait)", "Мгновенный старт (Без 5с)"), toggleWidth);
             GUILayout.Space(5);
-            autoGhostAfterStart = DrawToggle(autoGhostAfterStart, L("Auto Ghost After Start", "Авто-призрак после старта"), 250);
+            autoGhostAfterStart = DrawToggle(autoGhostAfterStart, L("Auto Ghost After Start", "Авто-призрак после старта"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostForceLastMinute = DrawToggle(AutoHostForceLastMinute, L("Force Start Last Minute", "Форс-старт на последней минуте"), 250);
+            AutoHostForceLastMinute = DrawToggle(AutoHostForceLastMinute, L("Force Start Last Minute", "Форс-старт на последней минуте"), toggleWidth);
 
             GUILayout.Space(15);
 
             string hexColor = GetMenuAccentHex();
-            GUIStyle sliderLabelStyle = new GUIStyle(toggleLabelStyle) { richText = true };
+            GUIStyle sliderLabelStyle = toggleLabelStyle;
+            float sliderLabelWidth = Mathf.Min(175f, Mathf.Max(60f, innerWidth * 0.34f));
+            sliderLabelWidth = Mathf.Min(sliderLabelWidth, innerWidth * 0.48f);
+            float sliderWidth = Mathf.Max(24f, innerWidth - sliderLabelWidth - 8f);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("Min Players:", "Мин. игроков:")} <color=#{hexColor}>{AutoHostMinPlayers}</color>", sliderLabelStyle, GUILayout.Width(175));
-            AutoHostMinPlayers = (int)GUILayout.HorizontalSlider(AutoHostMinPlayers, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(335));
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            GUILayout.Label($"{L("Min Players:", "Мин. игроков:")} <color=#{hexColor}>{AutoHostMinPlayers}</color>", sliderLabelStyle, GUILayout.Width(sliderLabelWidth));
+            AutoHostMinPlayers = (int)GUILayout.HorizontalSlider(AutoHostMinPlayers, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("Start Delay:", "Задержка старта:")} <color=#{hexColor}>{Mathf.Round(AutoHostStartDelaySeconds)}s</color>", sliderLabelStyle, GUILayout.Width(175));
-            AutoHostStartDelaySeconds = GUILayout.HorizontalSlider(AutoHostStartDelaySeconds, 0f, 180f, sliderStyle, sliderThumbStyle, GUILayout.Width(335));
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            GUILayout.Label($"{L("Start Delay:", "Задержка старта:")} <color=#{hexColor}>{Mathf.Round(AutoHostStartDelaySeconds)}s</color>", sliderLabelStyle, GUILayout.Width(sliderLabelWidth));
+            AutoHostStartDelaySeconds = GUILayout.HorizontalSlider(AutoHostStartDelaySeconds, 0f, 180f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("Fast Start Players:", "Игроков для фаст-старта:")} <color=#{hexColor}>{AutoHostFastStartPlayers}</color>", sliderLabelStyle, GUILayout.Width(175));
-            AutoHostFastStartPlayers = (int)GUILayout.HorizontalSlider(AutoHostFastStartPlayers, 0f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(335));
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            GUILayout.Label($"{L("Fast Start Players:", "Игроков для фаст-старта:")} <color=#{hexColor}>{AutoHostFastStartPlayers}</color>", sliderLabelStyle, GUILayout.Width(sliderLabelWidth));
+            AutoHostFastStartPlayers = (int)GUILayout.HorizontalSlider(AutoHostFastStartPlayers, 0f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("Fast Start Delay:", "Задержка фаст-старта:")} <color=#{hexColor}>{Mathf.Round(AutoHostFastStartDelaySeconds)}s</color>", sliderLabelStyle, GUILayout.Width(175));
-            AutoHostFastStartDelaySeconds = GUILayout.HorizontalSlider(AutoHostFastStartDelaySeconds, 0f, 60f, sliderStyle, sliderThumbStyle, GUILayout.Width(335));
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            GUILayout.Label($"{L("Fast Start Delay:", "Задержка фаст-старта:")} <color=#{hexColor}>{Mathf.Round(AutoHostFastStartDelaySeconds)}s</color>", sliderLabelStyle, GUILayout.Width(sliderLabelWidth));
+            AutoHostFastStartDelaySeconds = GUILayout.HorizontalSlider(AutoHostFastStartDelaySeconds, 0f, 60f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
@@ -952,29 +994,39 @@ private void DrawAutoHostTab()
 
 private void DrawBugRoomTab()
         {
-            GUILayout.BeginVertical(menuCardStyle);
+            float contentWidth = Mathf.Max(96f, GetMenuWorkWidth(120f, 760f) - 8f);
+            float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
+                ? menuCardStyle.padding.left + menuCardStyle.padding.right
+                : 28f;
+            float innerWidth = Mathf.Max(68f, contentWidth - cardPaddingWidth);
+            int toggleWidth = Mathf.RoundToInt(Mathf.Min(280f, innerWidth));
+
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(contentWidth));
             DrawMenuSectionHeader("BUG ROOM");
 
-            neverEndGame = DrawToggle(neverEndGame, L("Unlimited Game", "Бесконечная игра"), 280);
+            neverEndGame = DrawToggle(neverEndGame, L("Unlimited Game", "Бесконечная игра"), toggleWidth);
             GUILayout.Space(5);
-            AutoHostAutoRunEnabled = DrawToggle(AutoHostAutoRunEnabled, L("Auto Run 1.75s + Imp Win", "Авто-прогон 1.75с + победа предателей"), 280);
+            AutoHostAutoRunEnabled = DrawToggle(AutoHostAutoRunEnabled, L("Auto Run + Imp Win", "Авто-прогон + победа предателей"), toggleWidth);
             GUILayout.Space(5);
-            DrawBugRoomTimedAutoRun();
+            DrawBugRoomAutoRunDelay(innerWidth);
+            GUILayout.Space(5);
+            DrawBugRoomTimedAutoRun(innerWidth);
             GUILayout.Space(8);
-            hostAutoKillRandom = DrawToggle(hostAutoKillRandom, "Kill Random Target", 280);
+            hostAutoKillRandom = DrawToggle(hostAutoKillRandom, "Kill Random Target", toggleWidth);
             GUILayout.Space(5);
-            hostAutoKillTarget = DrawToggle(hostAutoKillTarget, "Auto Kill Target", 280);
+            hostAutoKillTarget = DrawToggle(hostAutoKillTarget, "Auto Kill Target", toggleWidth);
             GUILayout.Space(5);
-            DrawBugRoomKillTargetPicker();
+            DrawBugRoomKillTargetPicker(innerWidth);
             GUILayout.Space(8);
-            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, "Auto Angel 0.10", 280);
+            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, $"Auto Angel {bugRoomAutoAngelIntervalSeconds:0.000}", toggleWidth);
+            DrawBugRoomAngelInterval(innerWidth);
             GUILayout.Space(5);
-            bugRoomAutoKillShield = DrawToggle(bugRoomAutoKillShield, "Auto Kill Angel Shield 0.13", 280);
+            bugRoomAutoKillShield = DrawToggle(bugRoomAutoKillShield, "Auto Kill Angel Shield 0.13", toggleWidth);
 
             GUILayout.Space(12);
             DrawMenuSectionHeader("BUGROOM SCOUT");
             bool oldScout = BugroomScoutEnabled;
-            BugroomScoutEnabled = DrawToggle(BugroomScoutEnabled, "Auto Create + Find TXT", 280);
+            BugroomScoutEnabled = DrawToggle(BugroomScoutEnabled, "Auto Create + Find TXT", toggleWidth);
             if (oldScout != BugroomScoutEnabled)
             {
                 settingsDirty = true;
@@ -982,28 +1034,99 @@ private void DrawBugRoomTab()
             }
 
             var scout = ElysiumBugroomScoutService.GetStatusSnapshot();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Create / Reload TXT", btnStyle, GUILayout.Width(170), GUILayout.Height(25)))
+            float scoutButtonWidth = Mathf.Min(170f, Mathf.Max(96f, innerWidth * 0.46f));
+            float scoutLabelWidth = Mathf.Max(40f, innerWidth - scoutButtonWidth - 8f);
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            if (GUILayout.Button("Create / Reload TXT", btnStyle, GUILayout.Width(scoutButtonWidth), GUILayout.Height(25)))
             {
                 ElysiumBugroomScoutService.ForceReload();
                 GUIUtility.systemCopyBuffer = scout.FilePath;
                 ShowNotification("<color=#00FFAA>[BUGROOM SCOUT]</color> TXT path copied.");
             }
-            GUILayout.Label($"Targets: <color=#{GetMenuAccentHex()}>{scout.TargetCount}</color> | {scout.State}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 }, GUILayout.Height(25));
+            GUILayout.Label($"Targets: <color=#{GetMenuAccentHex()}>{scout.TargetCount}</color> | {scout.State}", richClipLabelStyle12, GUILayout.Width(scoutLabelWidth), GUILayout.Height(25));
             GUILayout.EndHorizontal();
 
             string code = string.IsNullOrWhiteSpace(scout.CurrentCode) ? "-" : scout.CurrentCode;
             string suffix = string.IsNullOrWhiteSpace(scout.CurrentSuffix) ? "-" : scout.CurrentSuffix;
-            GUILayout.Label($"TXT: {scout.FilePath}", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
-            GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{code}</color> | suffix: <color=#{GetMenuAccentHex()}>{suffix}</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 });
+            GUILayout.Label($"TXT: {scout.FilePath}", richWrapLabelStyle11, GUILayout.Width(innerWidth));
+            GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{code}</color> | suffix: <color=#{GetMenuAccentHex()}>{suffix}</color>", richClipLabelStyle12, GUILayout.Width(innerWidth));
+
+            GUILayout.Space(12);
+            DrawMenuSectionHeader("GLITCH ROOM FINDER");
+            bool oldFinder = BugroomGlitchFinderEnabled;
+            BugroomGlitchFinderEnabled = DrawToggle(BugroomGlitchFinderEnabled, "Create + Test Level Reset", toggleWidth);
+            if (oldFinder != BugroomGlitchFinderEnabled)
+            {
+                settingsDirty = true;
+                ElysiumBugroomGlitchFinder.ResetFlow();
+            }
+
+            var finder = ElysiumBugroomGlitchFinder.GetStatusSnapshot();
+            float finderButtonWidth = Mathf.Min(135f, Mathf.Max(86f, innerWidth * 0.36f));
+            float finderLabelWidth = Mathf.Max(40f, innerWidth - finderButtonWidth - 8f);
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            if (GUILayout.Button("Copy TXT Path", btnStyle, GUILayout.Width(finderButtonWidth), GUILayout.Height(25)))
+            {
+                GUIUtility.systemCopyBuffer = finder.FilePath;
+                ShowNotification("<color=#00FFAA>[GLITCH FINDER]</color> TXT path copied.");
+            }
+            GUILayout.Label($"Seen: <color=#{GetMenuAccentHex()}>{finder.VisitedCount}</color> | Found: <color=#{GetMenuAccentHex()}>{finder.FoundCount}</color> | {finder.State}", richClipLabelStyle12, GUILayout.Width(finderLabelWidth), GUILayout.Height(25));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
+            if (GUILayout.Button("Clear Seen", btnStyle, GUILayout.Width(finderButtonWidth), GUILayout.Height(25)))
+            {
+                ElysiumBugroomGlitchFinder.ClearVisited();
+                ShowNotification("<color=#FFAA00>[GLITCH FINDER]</color> Seen suffixes cleared.");
+            }
+            string finderCode = string.IsNullOrWhiteSpace(finder.CurrentCode) ? "-" : finder.CurrentCode;
+            string finderSuffix = string.IsNullOrWhiteSpace(finder.CurrentSuffix) ? "-" : finder.CurrentSuffix;
+            GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{finderCode}</color> | suffix: <color=#{GetMenuAccentHex()}>{finderSuffix}</color> | Lv: {finder.Level}", richClipLabelStyle12, GUILayout.Width(finderLabelWidth), GUILayout.Height(25));
+            GUILayout.EndHorizontal();
+            GUILayout.Label($"TXT: {finder.FilePath}", richWrapLabelStyle11, GUILayout.Width(innerWidth));
 
             GUILayout.EndVertical();
         }
 
-private void DrawBugRoomTimedAutoRun()
+private void DrawBugRoomAngelInterval(float innerWidth)
         {
-            GUILayout.BeginHorizontal(GUILayout.Width(330), GUILayout.Height(24));
-            bugRoomTimedAutoRun = DrawToggle(bugRoomTimedAutoRun, "Timed Auto Run", 150);
+            float labelWidth = Mathf.Min(155f, Mathf.Max(66f, innerWidth * 0.38f));
+            labelWidth = Mathf.Min(labelWidth, innerWidth * 0.55f);
+            float sliderWidth = Mathf.Max(24f, innerWidth - labelWidth - 8f);
+
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(22));
+            GUILayout.Label($"Angel Delay: <color=#{GetMenuAccentHex()}>{bugRoomAutoAngelIntervalSeconds:0.000}s</color>", lobbyRichLabelStyle11, GUILayout.Width(labelWidth), GUILayout.Height(22));
+
+            float old = bugRoomAutoAngelIntervalSeconds;
+            float val = GUILayout.HorizontalSlider(bugRoomAutoAngelIntervalSeconds, 0.001f, 0.50f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
+            bugRoomAutoAngelIntervalSeconds = Mathf.Clamp(Mathf.Round(val * 1000f) / 1000f, 0.001f, 0.50f);
+            if (Mathf.Abs(old - bugRoomAutoAngelIntervalSeconds) > 0.0001f) settingsDirty = true;
+            GUILayout.EndHorizontal();
+        }
+
+private void DrawBugRoomAutoRunDelay(float innerWidth)
+        {
+            float labelWidth = Mathf.Min(155f, Mathf.Max(66f, innerWidth * 0.38f));
+            labelWidth = Mathf.Min(labelWidth, innerWidth * 0.55f);
+            float sliderWidth = Mathf.Max(24f, innerWidth - labelWidth - 8f);
+
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(22));
+            GUILayout.Label($"Auto Run Delay: <color=#{GetMenuAccentHex()}>{AutoHostAutoRunDelaySeconds:0.00}s</color>", lobbyRichLabelStyle11, GUILayout.Width(labelWidth), GUILayout.Height(22));
+
+            float old = AutoHostAutoRunDelaySeconds;
+            float val = GUILayout.HorizontalSlider(AutoHostAutoRunDelaySeconds, 0.25f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
+            AutoHostAutoRunDelaySeconds = Mathf.Clamp(Mathf.Round(val * 100f) / 100f, 0.25f, 10f);
+            if (Mathf.Abs(old - AutoHostAutoRunDelaySeconds) > 0.001f) settingsDirty = true;
+            GUILayout.EndHorizontal();
+        }
+
+private void DrawBugRoomTimedAutoRun(float innerWidth)
+        {
+            float rowWidth = Mathf.Max(68f, innerWidth);
+            int timedToggleWidth = Mathf.RoundToInt(Mathf.Min(150f, Mathf.Max(82f, rowWidth - 85f)));
+
+            GUILayout.BeginHorizontal(GUILayout.Width(rowWidth), GUILayout.Height(24));
+            bugRoomTimedAutoRun = DrawToggle(bugRoomTimedAutoRun, "Timed Auto Run", timedToggleWidth);
             GUILayout.Space(8);
 
             if (!isEditingBugRoomTimedAutoRun) bugRoomTimedAutoRunInput = bugRoomTimedAutoRunMinutes.ToString();
@@ -1012,19 +1135,15 @@ private void DrawBugRoomTimedAutoRun()
                 isEditingBugRoomTimedAutoRun = true;
                 bugRoomTimedAutoRunInput = string.Empty;
             }
-            GUILayout.Label("min", new GUIStyle(toggleLabelStyle) { fontSize = 12 }, GUILayout.Width(32), GUILayout.Height(22));
+            GUILayout.Label("min", toggleLabelStyle, GUILayout.Width(32), GUILayout.Height(22));
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(GetBugRoomTimedAutoRunText(), new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11 });
+            GUILayout.Label(GetBugRoomTimedAutoRunText(), richClipLabelStyle11, GUILayout.Width(rowWidth));
         }
 
 private bool DrawBugRoomMinuteInput()
         {
-            GUIStyle style = new GUIStyle(isEditingBugRoomTimedAutoRun ? activeTabStyle : inputBlockStyle);
-            style.alignment = TextAnchor.MiddleCenter;
-            style.clipping = TextClipping.Clip;
-            style.wordWrap = false;
-            style.padding = CreateRectOffset(4, 4, 0, 0);
+            GUIStyle style = isEditingBugRoomTimedAutoRun ? activeSmallInputStyle : smallInputStyle;
 
             Rect rect = GUILayoutUtility.GetRect(45f, 22f, GUILayout.Width(45f), GUILayout.Height(22f));
             string text = string.IsNullOrEmpty(bugRoomTimedAutoRunInput) ? (isEditingBugRoomTimedAutoRun ? "|" : bugRoomTimedAutoRunMinutes.ToString()) : bugRoomTimedAutoRunInput;
@@ -1041,12 +1160,12 @@ private string GetBugRoomTimedAutoRunText()
             return $"<color=#{GetMenuAccentHex()}>Timer:</color> {Mathf.FloorToInt(left / 60f):00}:{Mathf.FloorToInt(left % 60f):00}";
         }
 
-private void DrawBugRoomKillTargetPicker()
+private void DrawBugRoomKillTargetPicker(float innerWidth)
         {
             List<PlayerControl> plrs = GetBugRoomKillTargets();
             if (plrs.Count == 0)
             {
-                GUILayout.Label("<color=#aaaaaa>Target: none</color>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 12 });
+                GUILayout.Label("<color=#aaaaaa>Target: none</color>", richClipLabelStyle12, GUILayout.Width(innerWidth));
                 return;
             }
 
@@ -1057,7 +1176,7 @@ private void DrawBugRoomKillTargetPicker()
                 hostAutoKillTargetId = plrs[0].PlayerId;
             }
 
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
             {
                 idx--;
@@ -1071,13 +1190,7 @@ private void DrawBugRoomKillTargetPicker()
             if (nm.Length > 18) nm = nm.Substring(0, 18) + "..";
             if (target.Data != null && target.Data.IsDead) nm += " [dead]";
 
-            GUIStyle mid = new GUIStyle(btnStyle);
-            mid.normal.background = null;
-            mid.hover.background = null;
-            mid.normal.textColor = GetMenuAccentColor();
-            mid.fontStyle = FontStyle.Bold;
-            mid.alignment = TextAnchor.MiddleCenter;
-            GUILayout.Label(nm, mid, GUILayout.Height(24), GUILayout.ExpandWidth(true));
+            GUILayout.Label(nm, morphValueStyle, GUILayout.Height(24), GUILayout.ExpandWidth(true));
 
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
             {
@@ -1089,23 +1202,5 @@ private void DrawBugRoomKillTargetPicker()
             GUILayout.EndHorizontal();
         }
 
-private static List<PlayerControl> GetBugRoomKillTargets()
-        {
-            List<PlayerControl> plrs = new List<PlayerControl>();
-            try
-            {
-                if (PlayerControl.AllPlayerControls == null) return plrs;
-                PlayerControl local = PlayerControl.LocalPlayer;
-                foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
-                {
-                    if (pc == null || pc == local || pc.Data == null) continue;
-                    if (pc.Data.Disconnected || pc.PlayerId >= 100) continue;
-                    plrs.Add(pc);
-                }
-                plrs.Sort((a, b) => a.PlayerId.CompareTo(b.PlayerId));
-            }
-            catch { }
-            return plrs;
-        }
 }
 }

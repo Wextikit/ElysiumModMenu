@@ -43,60 +43,22 @@ namespace ElysiumModMenu
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
 
-private void LoadConfig()
+private static void LoadKeybinds()
         {
             try
             {
-                spoofLevelString = Plugin.SpoofedLevel.Value;
-                enableLevelSpoof = LoadBool("M_EnableLevelSpoof", Plugin.EnableLevelSpoofConfig.Value);
-                enableFriendCodeSpoof = Plugin.EnableFriendCodeSpoofConfig.Value;
-                spoofFriendCodeInput = Plugin.SpoofFriendCodeConfig.Value;
-                enablePlatformSpoof = Plugin.EnablePlatformSpoof.Value;
-                autoBanBrokenFriendCode = Plugin.AutoBanBrokenFriendCodeConfig.Value;
-                currentPlatformIndex = Mathf.Clamp(Plugin.PlatformIndex.Value, 0, platformValues.Length - 1);
-                showWatermark = Plugin.ShowWatermarkConfig.Value;
-                unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
-                unlockCosmicubes = LoadBool("M_UnlockCosmicubes", true);
-                activateCompletedCosmicubes = LoadBool("M_ActivateCompletedCosmicubes", false);
-                moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;
-                enableChatDarkMode = Plugin.EnableChatDarkModeConfig.Value;
-                ghostChatColorHex = SanitizeGhostChatColorSetting(Plugin.GhostChatColorConfig.Value);
-                throttleDefaultLogs = Plugin.ThrottleDefaultLogsConfig.Value;
-                detailedLogsEnabled = LoadBool("M_DetailedLogsEnabled", Plugin.DetailedLogsEnabledConfig.Value);
-                throttleDefaultLogs = !detailedLogsEnabled;
-                showEspFriendCode = Plugin.ShowEspFriendCodeConfig.Value;
-                rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
-                currentMenuColorIndex = Plugin.MenuColorIndexConfig.Value;
-                rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
-                rgbTaskBar = LoadBool("M_RgbTaskBar", rgbTaskBar);
-                rgbMenuText = LoadBool("M_RgbMenuText", Plugin.RgbMenuTextConfig.Value);
-                boldMenuText = LoadBool("M_BoldMenuText", Plugin.BoldMenuTextConfig.Value);
-                whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
-                currentMenuLanguageIndex = Mathf.Clamp(LoadInt("M_MenuLanguageIndex", currentMenuLanguageIndex), 0, menuLanguageNames.Length - 1);
-                limitFps = LoadBool("M_LimitFps", limitFps);
-                fpsLimit = Mathf.Clamp(LoadInt("M_FpsLimit", fpsLimit), 1, 560);
-                autoCopyCodeAndLeave = LoadBool("M_AutoCopyCodeAndLeave", autoCopyCodeAndLeave);
-                blockInnerslothTelemetry = LoadBool("M_BlockInnerslothTelemetry", blockInnerslothTelemetry);
-                ApplyTelemetryPreference();
-                ApplyFpsLimit();
-                autoKickBugs = LoadBool("M_AutoKickBugs", autoKickBugs);
-                if (PlayerPrefs.HasKey("M_AutoKickTimer")) autoKickTimer = PlayerPrefs.GetFloat("M_AutoKickTimer");
-                disableVoteKicks = LoadBool("M_DisableVoteKicks", disableVoteKicks);
-                banVoteKickVoters = LoadBool("M_BanVoteKickVoters", banVoteKickVoters);
-                votekickAutoRejoin = LoadBool("M_VotekickAutoRejoin", votekickAutoRejoin);
-                votekickCopyCode = LoadBool("M_VotekickCopyCode", votekickCopyCode);
-                whitelistOnlyLobby = LoadBool("M_WhitelistOnlyLobby", whitelistOnlyLobby);
-                LoadLobbyWhitelist(PlayerPrefs.GetString("M_LobbyWhitelist", PlayerPrefs.GetString("M_VotekickWhitelist", string.Empty)));
-                enableLocalNameSpoof = LoadBool("M_LocalNameSpoof", enableLocalNameSpoof);
-                enableLocalFriendCodeSpoof = LoadBool("M_LocalFakeFCEnabled", enableLocalFriendCodeSpoof);
-                if (PlayerPrefs.HasKey("M_LocalFakeFC")) localFriendCodeInput = PlayerPrefs.GetString("M_LocalFakeFC");
-                enableDeviceIdSpoof = LoadBool("M_DeviceIdSpoof", enableDeviceIdSpoof);
-                if (PlayerPrefs.HasKey("M_DeviceId")) spoofedDeviceId = PlayerPrefs.GetString("M_DeviceId");
-                spoofAprilFoolsDate = LoadBool("M_SpoofAprilDate", spoofAprilFoolsDate);
-                if (PlayerPrefs.HasKey("M_BndMagnet")) bindMagnetCursor = (KeyCode)PlayerPrefs.GetInt("M_BndMagnet");
                 menuToggleKey = Plugin.MenuKeybind.Value == KeyCode.None ? KeyCode.Insert : Plugin.MenuKeybind.Value;
+            }
+            catch
+            {
+                menuToggleKey = KeyCode.Insert;
+            }
+
+            try
+            {
                 if (PlayerPrefs.HasKey("M_MenuToggleKey")) menuToggleKey = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKey");
                 if (menuToggleKey == KeyCode.None) menuToggleKey = KeyCode.Insert;
+                if (PlayerPrefs.HasKey("M_BndMagnet")) bindMagnetCursor = (KeyCode)PlayerPrefs.GetInt("M_BndMagnet");
                 if (PlayerPrefs.HasKey("M_BndMMorph")) bindMassMorph = (KeyCode)PlayerPrefs.GetInt("M_BndMMorph");
                 if (PlayerPrefs.HasKey("M_BndSpawn")) bindSpawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndSpawn");
                 if (PlayerPrefs.HasKey("M_BndDespawn")) bindDespawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndDespawn");
@@ -121,7 +83,74 @@ private void LoadConfig()
                 if (PlayerPrefs.HasKey("M_BndSetAllGhost")) bindSetAllGhost = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhost");
                 if (PlayerPrefs.HasKey("M_BndSetAllGhostImp")) bindSetAllGhostImp = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhostImp");
                 if (PlayerPrefs.HasKey("M_BndReviveAll")) bindReviveAll = (KeyCode)PlayerPrefs.GetInt("M_BndReviveAll");
+                SyncKeybindDictionary();
+            }
+            catch { }
+        }
 
+private void LoadConfig()
+        {
+            LoadKeybinds();
+            try
+            {
+                spoofLevelString = Plugin.SpoofedLevel.Value;
+                enableLevelSpoof = uint.TryParse(spoofLevelString, out uint spoofLevel) && spoofLevel > 0;
+                enableFriendCodeSpoof = Plugin.EnableFriendCodeSpoofConfig.Value;
+                spoofFriendCodeInput = Plugin.SpoofFriendCodeConfig.Value;
+                enablePlatformSpoof = Plugin.EnablePlatformSpoof.Value;
+                autoBanBrokenFriendCode = Plugin.AutoBanBrokenFriendCodeConfig.Value;
+                currentPlatformIndex = Mathf.Clamp(Plugin.PlatformIndex.Value, 0, platformValues.Length - 1);
+                showWatermark = Plugin.ShowWatermarkConfig.Value;
+                showWatermarkInfo = LoadBool("M_ShowWatermarkInfo", showWatermarkInfo);
+                unlockCosmetics = Plugin.UnlockCosmeticsConfig.Value;
+                unlockCosmicubes = LoadBool("M_UnlockCosmicubes", true);
+                activateCompletedCosmicubes = LoadBool("M_ActivateCompletedCosmicubes", false);
+                moreLobbyInfo = Plugin.MoreLobbyInfoConfig.Value;
+                enableChatDarkMode = Plugin.EnableChatDarkModeConfig.Value;
+                ghostChatColorHex = SanitizeGhostChatColorSetting(Plugin.GhostChatColorConfig.Value);
+                throttleDefaultLogs = Plugin.ThrottleDefaultLogsConfig.Value;
+                detailedLogsEnabled = LoadBool("M_DetailedLogsEnabled", Plugin.DetailedLogsEnabledConfig.Value);
+                throttleDefaultLogs = !detailedLogsEnabled;
+                showEspFriendCode = Plugin.ShowEspFriendCodeConfig.Value;
+                rpcSpoofDelay = Plugin.RpcSpoofDelayConfig.Value;
+                currentMenuColorIndex = Mathf.Clamp(Plugin.MenuColorIndexConfig.Value, 0, menuColors.Length - 1);
+                rgbMenuMode = Plugin.RgbMenuModeConfig.Value;
+                rgbTaskBar = LoadBool("M_RgbTaskBar", rgbTaskBar);
+                rgbMenuText = LoadBool("M_RgbMenuText", Plugin.RgbMenuTextConfig.Value);
+                boldMenuText = LoadBool("M_BoldMenuText", Plugin.BoldMenuTextConfig.Value);
+                whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
+                currentMenuLanguageIndex = 0;
+                selectedMenuProfileIndex = Mathf.Clamp(LoadInt("M_MenuProfileSlot", selectedMenuProfileIndex), 0, menuProfileCount - 1);
+                limitFps = LoadBool("M_LimitFps", limitFps);
+                fpsLimit = Mathf.Clamp(LoadInt("M_FpsLimit", fpsLimit), 1, 560);
+                autoCopyCodeAndLeave = LoadBool("M_AutoCopyCodeAndLeave", autoCopyCodeAndLeave);
+                blockInnerslothTelemetry = LoadBool("M_BlockInnerslothTelemetry", blockInnerslothTelemetry);
+                ApplyTelemetryPreference();
+                ApplyFpsLimit();
+                autoKickBugs = LoadBool("M_AutoKickBugs", autoKickBugs);
+                if (PlayerPrefs.HasKey("M_AutoKickTimer")) autoKickTimer = PlayerPrefs.GetFloat("M_AutoKickTimer");
+                disableVoteKicks = LoadBool("M_DisableVoteKicks", disableVoteKicks);
+                banVoteKickVoters = LoadBool("M_BanVoteKickVoters", banVoteKickVoters);
+                votekickAutoRejoin = LoadBool("M_VotekickAutoRejoin", votekickAutoRejoin);
+                votekickCopyCode = LoadBool("M_VotekickCopyCode", votekickCopyCode);
+                whitelistOnlyLobby = LoadBool("M_WhitelistOnlyLobby", whitelistOnlyLobby);
+                LoadLobbyWhitelist(PlayerPrefs.GetString("M_LobbyWhitelist", PlayerPrefs.GetString("M_VotekickWhitelist", string.Empty)));
+                enableLocalNameSpoof = LoadBool("M_LocalNameSpoof", enableLocalNameSpoof);
+                enableLocalFriendCodeSpoof = LoadBool("M_LocalFakeFCEnabled", enableLocalFriendCodeSpoof);
+                localAlwaysRed = LoadBool("M_LocalAlwaysRed", localAlwaysRed);
+                localFortegreen = LoadBool("M_LocalFortegreen", localFortegreen);
+                localSnipeColor = LoadBool("M_LocalSnipeColor", localSnipeColor);
+                localSnipeColorId = Mathf.Clamp(LoadInt("M_LocalSnipeColorId", localSnipeColorId), 0, 17);
+                if (localSnipeColor)
+                {
+                    localAlwaysRed = false;
+                    localFortegreen = false;
+                }
+                else if (localFortegreen) localAlwaysRed = false;
+                if (PlayerPrefs.HasKey("M_LocalFakeFC")) localFriendCodeInput = PlayerPrefs.GetString("M_LocalFakeFC");
+                enableDeviceIdSpoof = LoadBool("M_DeviceIdSpoof", enableDeviceIdSpoof);
+                if (PlayerPrefs.HasKey("M_DeviceId")) spoofedDeviceId = PlayerPrefs.GetString("M_DeviceId");
+                spoofAprilFoolsDate = LoadBool("M_SpoofAprilDate", spoofAprilFoolsDate);
                 if (!rgbMenuMode && currentMenuColorIndex >= 0 && currentMenuColorIndex < menuColors.Length)
                 {
                     currentAccentColor = menuColors[currentMenuColorIndex];
@@ -154,7 +183,9 @@ private void LoadConfig()
                 enableFastChat = LoadBool("M_EnableFastChat", enableFastChat);
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
-                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 80);
+                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 300);
+                if (chatHistoryLimit <= 20)
+                    chatHistoryLimit = 80;
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -209,6 +240,7 @@ private void LoadConfig()
                 hostAutoKillTarget = LoadBool("M_HostAutoKillTarget", hostAutoKillTarget);
                 hostAutoKillTargetId = (byte)Mathf.Clamp(LoadInt("M_HostAutoKillTargetId", hostAutoKillTargetId), 0, 255);
                 bugRoomAutoAngel = LoadBool("M_BugRoomAutoAngel", bugRoomAutoAngel);
+                bugRoomAutoAngelIntervalSeconds = Mathf.Clamp(LoadFloat("M_BugRoomAutoAngelIntervalSeconds", bugRoomAutoAngelIntervalSeconds), 0.001f, 0.50f);
                 bugRoomAutoKillShield = LoadBool("M_BugRoomAutoKillShield", bugRoomAutoKillShield);
                 bugRoomTimedAutoRun = LoadBool("M_BugRoomTimedAutoRun", bugRoomTimedAutoRun);
                 if (PlayerPrefs.HasKey("M_BugRoomTimedAutoRunMinutes"))
@@ -259,7 +291,9 @@ private void LoadConfig()
                 AutoHostCancelBelowMin = LoadBool("M_AutoHostCancelBelowMin", AutoHostCancelBelowMin);
                 AutoHostInstantStart = LoadBool("M_AutoHostInstantStart", AutoHostInstantStart);
                 AutoHostAutoRunEnabled = LoadBool("M_AutoHostAutoRunEnabled", AutoHostAutoRunEnabled);
+                AutoHostAutoRunDelaySeconds = Mathf.Clamp(LoadFloat("M_AutoHostAutoRunDelaySeconds", AutoHostAutoRunDelaySeconds), 0.25f, 10f);
                 BugroomScoutEnabled = LoadBool("M_BugroomScoutEnabled", BugroomScoutEnabled);
+                BugroomGlitchFinderEnabled = LoadBool("M_BugroomGlitchFinderEnabled", BugroomGlitchFinderEnabled);
                 autoGhostAfterStart = LoadBool("M_AutoGhostAfterStart", autoGhostAfterStart);
                 if (PlayerPrefs.HasKey("M_AutoHostMinPlayers")) AutoHostMinPlayers = PlayerPrefs.GetInt("M_AutoHostMinPlayers");
                 if (PlayerPrefs.HasKey("M_AutoHostStartDelaySeconds")) AutoHostStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostStartDelaySeconds");
@@ -270,6 +304,7 @@ private void LoadConfig()
                 for (int i = 0; i < favoriteOutfitSlots.Length; i++)
                     favoriteOutfitSlots[i] = PlayerPrefs.GetString($"M_FavoriteOutfit_{i}", string.Empty);
                 enableBackground = LoadBool("M_EnableBackground", enableBackground);
+                enableMenuCharacter = LoadBool("M_EnableMenuCharacter", enableMenuCharacter);
                 hardMenu = LoadBool("M_HardMenu", hardMenu);
                 EnableCustomNotifs = LoadBool("M_EnableCustomNotifs", EnableCustomNotifs);
                 LogAllRPCs = LoadBool("M_LogAllRPCs", LogAllRPCs);
@@ -287,6 +322,7 @@ private void LoadConfig()
                 currentSelfSubTab = Mathf.Clamp(LoadInt("M_CurrentSelfSubTab", currentSelfSubTab), 0, selfSubTabs.Length - 1);
                 currentVisualsSubTab = Mathf.Clamp(LoadInt("M_CurrentVisualsSubTab", currentVisualsSubTab), 0, visualsSubTabs.Length - 1);
                 currentPlayersSubTab = Mathf.Clamp(LoadInt("M_CurrentPlayersSubTab", currentPlayersSubTab), 0, playersSubTabs.Length - 1);
+                NetworkedClones.AutoClearBeforeGame = LoadBool("M_AutoClearClonesBeforeGame", NetworkedClones.AutoClearBeforeGame);
                 currentSabotageSubTab = Mathf.Clamp(LoadInt("M_CurrentSabotageSubTab", currentSabotageSubTab), 0, 3);
                 currentHostOnlySubTab = Mathf.Clamp(LoadInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab), 0, hostOnlySubTabs.Length - 1);
                 currentAutoHostSubTab = Mathf.Clamp(LoadInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab), 0, autoHostSubTabs.Length - 1);
@@ -321,7 +357,7 @@ private static void TrimChatHistoryToLimit()
         {
             try
             {
-                chatHistoryLimit = Mathf.Clamp(chatHistoryLimit, 5, 80);
+                chatHistoryLimit = Mathf.Clamp(chatHistoryLimit, 5, 300);
                 while (ChatHistory.sentMessages.Count > chatHistoryLimit)
                     ChatHistory.sentMessages.RemoveAt(0);
 
@@ -385,6 +421,33 @@ private Texture2D MakeRoundedTex(int size, Color col, float radius)
             }
             result.SetPixels(pix); result.Apply();
             return result;
+        }
+
+private void UpdateRoundedGradientTex(Texture2D tex, Color left, Color right, float radius)
+        {
+            int width = tex.width;
+            int height = tex.height;
+            Color[] pix = new Color[width * height];
+            float cx = width / 2f;
+            float cy = height / 2f;
+            float innerX = Mathf.Max(0f, cx - radius);
+            float innerY = Mathf.Max(0f, cy - radius);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float dx = Mathf.Max(0f, Mathf.Abs(x - cx + 0.5f) - innerX);
+                    float dy = Mathf.Max(0f, Mathf.Abs(y - cy + 0.5f) - innerY);
+                    float alpha = Mathf.Clamp01(radius - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                    Color col = Color.Lerp(left, right, width > 1 ? (float)x / (width - 1) : 0f);
+                    col.a *= alpha;
+                    pix[y * width + x] = col;
+                }
+            }
+
+            tex.SetPixels(pix);
+            tex.Apply();
         }
 
 private RectOffset CreateRectOffset(int left, int right, int top, int bottom)
@@ -500,6 +563,41 @@ private static Color GetStableMenuAccentSource()
             {
                 if (activeGui != null && activeGui.menuColors != null && activeGui.menuColors.Length > 0)
                     return activeGui.menuColors[Mathf.Clamp(activeGui.currentMenuColorIndex, 0, activeGui.menuColors.Length - 1)];
+            }
+            catch { }
+
+            return currentAccentColor;
+        }
+
+private bool HasMenuAccentPair()
+        {
+            return currentMenuColorIndex >= menuColors.Length - menuPairColors.Length;
+        }
+
+private static bool MenuAccentPairActive()
+        {
+            try
+            {
+                return activeGui != null && activeGui.HasMenuAccentPair();
+            }
+            catch { }
+
+            return false;
+        }
+
+private Color GetSelectedMenuControlColor()
+        {
+            int index = Mathf.Clamp(currentMenuColorIndex, 0, menuColors.Length - 1);
+            int pairIndex = index - (menuColors.Length - menuPairColors.Length);
+            return pairIndex >= 0 && pairIndex < menuPairColors.Length ? menuPairColors[pairIndex] : menuColors[index];
+        }
+
+private static Color GetStableMenuControlAccentSource()
+        {
+            try
+            {
+                if (activeGui != null)
+                    return activeGui.GetSelectedMenuControlColor();
             }
             catch { }
 

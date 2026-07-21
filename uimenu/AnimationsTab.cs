@@ -91,12 +91,15 @@ public static class ChatHistory
             public static int HistoryIndex = -1;
             public static string DraftBeforeHistory = "";
             public static bool BrowsingHistory = false;
+            private static int lastNavFrame = -1;
 
             public static void Remember(string message)
             {
                 if (!enableChatHistory) return;
                 if (string.IsNullOrWhiteSpace(message)) return;
-                ElysiumModMenuGUI.chatHistoryLimit = Mathf.Clamp(ElysiumModMenuGUI.chatHistoryLimit, 5, 80);
+                ElysiumModMenuGUI.chatHistoryLimit = Mathf.Clamp(ElysiumModMenuGUI.chatHistoryLimit, 5, 300);
+                if (ElysiumModMenuGUI.chatHistoryLimit <= 20)
+                    ElysiumModMenuGUI.chatHistoryLimit = 80;
                 bool isNewEntry = sentMessages.Count == 0 || sentMessages[sentMessages.Count - 1] != message;
                 if (isNewEntry)
                 {
@@ -105,29 +108,58 @@ public static class ChatHistory
                         sentMessages.RemoveAt(0);
                 }
                 HistoryIndex = sentMessages.Count;
+                DraftBeforeHistory = "";
+                BrowsingHistory = false;
             }
 
-            public static void HandleNavigation(ChatController chat)
+            public static bool HandleNavigation(ChatController chat)
             {
-                if (!enableChatHistory) return;
-                if (sentMessages.Count == 0 || chat.freeChatField == null || chat.freeChatField.textArea == null || !chat.freeChatField.textArea.hasFocus)
-                    return;
-
                 if (Input.GetKeyDown(KeyCode.UpArrow))
+                    return Navigate(chat, KeyCode.UpArrow);
+                if (Input.GetKeyDown(KeyCode.DownArrow))
+                    return Navigate(chat, KeyCode.DownArrow);
+                return false;
+            }
+
+            public static bool HandleGuiEvent(Event e)
+            {
+                if (e == null || e.type != EventType.KeyDown) return false;
+                if (e.keyCode != KeyCode.UpArrow && e.keyCode != KeyCode.DownArrow) return false;
+                ChatController chat = HudManager.Instance?.Chat;
+                bool used = Navigate(chat, e.keyCode);
+                if (used) e.Use();
+                return used;
+            }
+
+            private static bool Navigate(ChatController chat, KeyCode key)
+            {
+                if (!enableChatHistory) return false;
+                if (chat == null || sentMessages.Count == 0 || chat.freeChatField == null || chat.freeChatField.textArea == null)
+                    return false;
+                if (!chat.IsOpenOrOpening && !chat.freeChatField.textArea.hasFocus)
+                    return false;
+
+                if (lastNavFrame == Time.frameCount)
+                    return true;
+                lastNavFrame = Time.frameCount;
+                HistoryIndex = Mathf.Clamp(HistoryIndex, 0, sentMessages.Count);
+
+                if (key == KeyCode.UpArrow)
                 {
                     if (!BrowsingHistory)
                     {
                         DraftBeforeHistory = chat.freeChatField.textArea.text;
                         BrowsingHistory = true;
                     }
-                    if (HistoryIndex <= 0) return;
+                    if (HistoryIndex <= 0) return true;
 
                     HistoryIndex = Mathf.Clamp(HistoryIndex - 1, 0, sentMessages.Count - 1);
                     chat.freeChatField.textArea.SetText(sentMessages[HistoryIndex], string.Empty);
+                    return true;
                 }
-                else if (Input.GetKeyDown(KeyCode.DownArrow))
+                else if (key == KeyCode.DownArrow)
                 {
-                    if (!BrowsingHistory) return;
+                    if (!BrowsingHistory) return false;
 
                     HistoryIndex += 1;
                     if (HistoryIndex < sentMessages.Count)
@@ -139,7 +171,9 @@ public static class ChatHistory
                         chat.freeChatField.textArea.SetText(DraftBeforeHistory, string.Empty);
                         BrowsingHistory = false;
                     }
+                    return true;
                 }
+                return false;
             }
         }
 
@@ -466,13 +500,18 @@ public static class ClipboardBridge
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.Update))]
         public static class ChatHistory_Update_Patch
         {
+            [HarmonyPriority(Priority.First)]
+            public static bool Prefix(ChatController __instance)
+            {
+                return !ChatHistory.HandleNavigation(__instance);
+            }
+
             public static void Postfix(ChatController __instance)
             {
                 if (__instance != null && __instance.freeChatField != null && __instance.freeChatField.textArea != null)
                 {
                     ClipboardBridge.Run(__instance.freeChatField.textArea);
                 }
-                ChatHistory.HandleNavigation(__instance);
                 ChatBubbleCopyHandler.Check(__instance);
             }
         }
@@ -509,7 +548,7 @@ private void DrawAnimationsTab()
 
             string animInfo = L("<color=#777777>Animations are looped. They will run as long as the toggle is ON.</color>",
                                 "<color=#777777>Анимации зациклены. Будут работать, пока включен тумблер.</color>");
-            GUILayout.Label(animInfo, new GUIStyle(GUI.skin.label) { richText = true, fontSize = 11, wordWrap = true });
+            GUILayout.Label(animInfo, richWrapLabelStyle11);
 
             GUILayout.Space(10);
 

@@ -42,6 +42,12 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private static bool zoomOwnsCamera = false;
+private static float zoomBaseMainSize = 3f;
+private static float zoomBaseUiSize = 3f;
+private static float zoomLastMainSize = 3f;
+private static float zoomLastUiSize = 3f;
+
 private static void ApplyCameraZoomTick()
         {
             try
@@ -50,47 +56,53 @@ private static void ApplyCameraZoomTick()
                 Camera uiCamera = HudManager.Instance?.UICamera;
                 if (mainCamera == null) return;
 
-                if (IsHudModalActive())
+                if (IsHudModalActive() || !cameraZoom)
                 {
-                    bool changed = Mathf.Abs(mainCamera.orthographicSize - 3f) > 0.001f ||
-                                   (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - 3f) > 0.001f);
+                    if (!zoomOwnsCamera) return;
 
-                    mainCamera.orthographicSize = 3f;
-                    if (uiCamera != null) uiCamera.orthographicSize = 3f;
+                    if (Mathf.Abs(mainCamera.orthographicSize - zoomLastMainSize) <= 0.01f)
+                        mainCamera.orthographicSize = zoomBaseMainSize;
+                    if (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - zoomLastUiSize) <= 0.01f)
+                        uiCamera.orthographicSize = zoomBaseUiSize;
 
-                    if (changed || zoomResolutionRefreshNeeded)
-                    {
+                    zoomOwnsCamera = false;
+                    if (zoomResolutionRefreshNeeded)
                         RefreshHudResolutionForZoom();
-                        zoomResolutionRefreshNeeded = false;
-                    }
-
-                    return;
-                }
-
-                if (!cameraZoom)
-                {
-                    bool changed = Mathf.Abs(mainCamera.orthographicSize - 3f) > 0.001f ||
-                                   (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - 3f) > 0.001f);
-
-                    mainCamera.orthographicSize = 3f;
-                    if (uiCamera != null) uiCamera.orthographicSize = 3f;
-
-                    if (zoomResolutionRefreshNeeded || changed)
-                    {
-                        RefreshHudResolutionForZoom();
-                        zoomResolutionRefreshNeeded = false;
-                    }
+                    zoomResolutionRefreshNeeded = false;
 
                     return;
                 }
 
                 float scrollWheel = Input.GetAxis("Mouse ScrollWheel");
-                if (Mathf.Abs(scrollWheel) <= 0.0001f || !IsCameraZoomScrollAllowed()) return;
+                if (Mathf.Abs(scrollWheel) <= 0.0001f)
+                {
+                    if (zoomOwnsCamera &&
+                        (Mathf.Abs(mainCamera.orthographicSize - zoomLastMainSize) > 0.01f ||
+                         (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - zoomLastUiSize) > 0.01f)))
+                    {
+                        zoomOwnsCamera = false;
+                        if (zoomResolutionRefreshNeeded)
+                            RefreshHudResolutionForZoom();
+                        zoomResolutionRefreshNeeded = false;
+                    }
+                    return;
+                }
+                if (!IsCameraZoomScrollAllowed()) return;
+                if (scrollWheel > 0f && mainCamera.orthographicSize <= 3f) return;
+
+                if (!zoomOwnsCamera)
+                {
+                    zoomBaseMainSize = mainCamera.orthographicSize;
+                    zoomBaseUiSize = uiCamera != null ? uiCamera.orthographicSize : 3f;
+                    zoomOwnsCamera = true;
+                }
 
                 if (scrollWheel < 0f)
                 {
                     mainCamera.orthographicSize += 1f;
                     if (uiCamera != null) uiCamera.orthographicSize += 1f;
+                    zoomLastMainSize = mainCamera.orthographicSize;
+                    zoomLastUiSize = uiCamera != null ? uiCamera.orthographicSize : zoomBaseUiSize;
                     zoomResolutionRefreshNeeded = true;
                     RefreshHudResolutionForZoom();
                 }
@@ -98,6 +110,8 @@ private static void ApplyCameraZoomTick()
                 {
                     mainCamera.orthographicSize -= 1f;
                     if (uiCamera != null) uiCamera.orthographicSize = Mathf.Max(3f, uiCamera.orthographicSize - 1f);
+                    zoomLastMainSize = mainCamera.orthographicSize;
+                    zoomLastUiSize = uiCamera != null ? uiCamera.orthographicSize : zoomBaseUiSize;
                     zoomResolutionRefreshNeeded = true;
                     RefreshHudResolutionForZoom();
                 }
