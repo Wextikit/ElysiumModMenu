@@ -253,7 +253,6 @@ Include the Elysium version, game platform, what happened, exact reproduction st
 <img width="1919" height="1079" alt="Elysium Mod Menu screenshot 1" src="https://github.com/user-attachments/assets/e295ce9d-557e-4420-8f57-37f8b79e47b1" />
 <img width="1919" height="1079" alt="Elysium Mod Menu screenshot 2" src="https://github.com/user-attachments/assets/e1cc97d3-edfb-46d4-9049-0fcd95be5226" />
 <img width="1919" height="1079" alt="Elysium Mod Menu screenshot 3" src="https://github.com/user-attachments/assets/e9062d61-424a-471f-a739-ec4508858cc0" />
-<img width="1919" height="1079" alt="Elysium Mod Menu screenshot 4" src="https://github.com/user-attachments/assets/3bf4ade8-96d5-44d-a3f2-5607f101dc95" />
 
 </details>
 
@@ -279,7 +278,7 @@ The project is built around a small feedback loop: try a feature in a consenting
 
 When posting logs, remove lobby codes, Friend Codes, PUIDs, chat messages and personal filesystem paths.
 
-## Disclaimer
+## Disclaimer :3
 
 > [!IMPORTANT]
 > Elysium Mod Menu is an independent, unofficial modification. It is not affiliated with, endorsed by, sponsored by or approved by Innersloth LLC. Among Us, its name, trademarks and game assets belong to their respective owners.
