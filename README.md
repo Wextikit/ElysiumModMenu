@@ -296,7 +296,7 @@ Support is not provided for harassment, disruption, moderation evasion, unauthor
 Elysium Mod Menu is distributed under the [GNU General Public License v3.0](LICENSE).
 
 Developed and maintained by **Meowchelo**.
-## ✨ Inspiration
+ ## ✨ Inspiration
 
  [EHR](https://github.com/Gurge44/EndlessHostRoles) by [Gurge44](https://github.com/Gurge44)  
  [MalumMenu](https://github.com/scp222thj/MalumMenu) by [scp222thj](https://github.com/scp222thj)  
