@@ -180,6 +180,12 @@ private void DrawMenuTab()
             GUILayout.Label(L("Makes the client use April Fools date locally.", "Локально включает дату первоапрельского режима."), menuDescStyle);
             GUILayout.Space(8);
 
+            bool prevGuestSpoof = spoofGuestAccount;
+            spoofGuestAccount = DrawToggle(spoofGuestAccount, L("Spoof Guest Account", "Гостевой аккаунт"), 260);
+            if (prevGuestSpoof != spoofGuestAccount) menuPrefsChanged = true;
+            GUILayout.Label(L("Uses the game's temporary account login flow after restart.", "После перезапуска использует временный гостевой вход игры."), menuDescStyle);
+            GUILayout.Space(8);
+
             bool prevGuestExtra = guestExtraFeatures;
             guestExtraFeatures = DrawToggle(guestExtraFeatures, L("Guest Extra Features", "Р”РѕРї. С„СѓРЅРєС†РёРё РіРѕСЃС‚СЋ"), 260);
             if (prevGuestExtra != guestExtraFeatures) menuPrefsChanged = true;
@@ -475,6 +481,7 @@ private void ResetSlidersToDefault()
             bugRoomTimedAutoRunMinutes = 10;
             bugRoomTimedAutoRunInput = "10";
             isEditingBugRoomTimedAutoRun = false;
+            bugRoomAutoRejoin = false;
             AutoHostAutoRunDelaySeconds = 1.75f;
             bugRoomLv35Rehost = false;
             bugRoomHostPassRejoin = false;
@@ -507,6 +514,9 @@ private void ResetSlidersToDefault()
             extendedLobby = false;
             moreLobbyInfo = true;
             alwaysShowLobbyTimer = false;
+            rainbowLobbyTimer = false;
+            flipSkeld = false;
+            FlippedSkeld = false;
             noClip = false;
             tpToCursor = false;
             dragToCursor = false;
@@ -575,17 +585,23 @@ private void ResetSlidersToDefault()
             hostAutoKillRandom = false;
             hostAutoKillTarget = false;
             hostAutoKillTargetId = byte.MaxValue;
+            hostAutoKillRate = 1;
             bugRoomAutoAngel = false;
             bugRoomAutoAngelIntervalSeconds = 0.15f;
             bugRoomAutoKillShield = false;
+            glitchRoomBypassShield = false;
+            glitchRoomGodMode = false;
+            glitchRoomGodModeAll = false;
             killWhileVanishedHostOnly = false;
             disableEndGameSafeMode = false;
             disableMapSafeMode = false;
+            noAbilityCooldown = false;
             DisableRoleBuffImmortality();
             roleBuffImmortality = false;
             neverEndGame = false;
             autoChatEveryone = false;
             removePenalty = true;
+            spoofGuestAccount = false;
             guestExtraFeatures = false;
             bypassAgeRestrictions = false;
             autoGhostAfterStart = false;
@@ -599,7 +615,6 @@ private void ResetSlidersToDefault()
             AutoHostInstantStart = false;
             AutoHostAutoRunEnabled = false;
             BugroomScoutEnabled = false;
-            BugroomGlitchFinderEnabled = false;
             autoBanEnabled = true;
             allowDuplicateColors = false;
             blockSpoofRPC = true;
@@ -628,6 +643,7 @@ private void ResetSlidersToDefault()
             enableUnownedSpawnGuard = true;
             enableLocalNameSpoof = false;
             enableLocalFriendCodeSpoof = false;
+            enableFriendCodeSpoof = false;
             SpoofMenuEnabled = false;
             enableBackground = false;
             showWatermark = true;

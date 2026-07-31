@@ -176,6 +176,8 @@ private void DrawAntiCheatTab()
             GUILayout.Space(5);
             banQuickChatEmptySpammer = DrawToggle(banQuickChatEmptySpammer, L("Ban QuickChat Spammer (Host)", "Бан за QuickChat спам (Хост)"), antiCheatToggleWidth);
             GUILayout.Space(5);
+            enableUnownedSpawnGuard = DrawToggle(enableUnownedSpawnGuard, L("Unowned Spawn Freeze Guard", "Защита от фриза unowned spawn"), antiCheatToggleWidth);
+            GUILayout.Space(5);
             GUILayout.Space(15);
             DrawMenuSectionHeader(L("OTHER PROTECTIONS", "ПРОЧАЯ ЗАЩИТА"));
 

@@ -1,5 +1,19 @@
 ﻿# Changelog
 
+## v1.4.5 — 2026-07-29
+
+### Changed
+
+- Extended host bot bans to detect `bot` or `бот` anywhere in raw platform names without case sensitivity.
+- Removed the `Hidden` Friend Code mode and its temporary-account and serialization patches.
+- Renamed `Public Friend Code` to `Spoof Friend Code` in the identity menu and registration notifications.
+
+## v1.4.4 — 2026-07-25
+
+### Added
+
+- Added a saved `Realistic Mode` for the radar with detailed layouts for The Skeld, Mira HQ, Polus, Airship, and Fungle while keeping the original radar available.
+
 ## v1.3.9 — 2026-06-22
 
 ### Added

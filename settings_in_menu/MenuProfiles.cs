@@ -59,7 +59,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_BanQuickChatEmptySpammer", "M_BanVoteKickVoters", "M_BlockChatFloodRpc", "M_BlockFortegreenChat",
             "M_BlockGameRpcInLobby", "M_BlockInnerslothTelemetry", "M_BlockMeetingFloodRpc", "M_BlockRainbowChat",
             "M_BlockSabotageRPC", "M_BlockServerTeleports", "M_BlockSpoofRPC", "M_BlockVentKickExploit",
-            "M_BoldMenuText", "M_BugRoomAutoAngel", "M_BugRoomAutoKillShield", "M_BugroomGlitchFinderEnabled", "M_BugroomScoutEnabled",
+            "M_BoldMenuText", "M_BugRoomAutoAngel", "M_BugRoomAutoKillShield", "M_BugRoomAutoRejoin", "M_BugRoomImpMeeting", "M_BugroomScoutEnabled",
             "M_BugRoomTimedAutoRun", "M_BypassAgeRestrictions", "M_CameraZoom", "M_ChatAsEveryone",
             "M_DetailedLogsEnabled", "M_DeviceIdSpoof", "M_DisableEndGameSafeMode", "M_DisableMapSafeMode",
             "M_DisableVoteKicks", "M_DiscordRpcEnabled", "M_DragToCursor", "M_EnableBackground", "M_EnableMenuCharacter",
@@ -67,12 +67,12 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_EnableClipboard", "M_EnableColorCommand", "M_EnableCustomNotifs", "M_EnableExtendedChat",
             "M_EnableFastChat", "M_EnableLevelSpoof", "M_EnableMenuScaleInput", "M_EspShimmerMode",
             "M_ExtendedLobby", "M_Freecam", "M_FullBright", "M_GuestExtraFeatures",
-            "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
+            "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
             "M_KillWhileVanishedHostOnly", "M_LimitFps", "M_LobbyAllColor", "M_LobbyRainbowAll",
             "M_LocalAlwaysRed", "M_LocalFakeFCEnabled", "M_LocalFortegreen", "M_LocalNameSpoof", "M_LocalSnipeColor", "M_LockRadar", "M_LogAllRPCs",
             "M_MalformedPacketGuard", "M_MoreLobbyInfo", "M_NeverEndGame", "M_NoClip",
-            "M_NoMapCooldowns", "M_NoTaskMode", "M_OverflowProtection", "M_PasosLimit",
-            "M_QuickChatEmptyGuard", "M_RadarBorder", "M_RadarDrawIcons", "M_RadarRightClickTp",
+            "M_NoAbilityCooldown", "M_NoMapCooldowns", "M_NoTaskMode", "M_OverflowProtection", "M_PasosLimit",
+            "M_QuickChatEmptyGuard", "M_RadarBorder", "M_RadarDrawIcons", "M_RadarRightClickTp", "M_RainbowLobbyTimer", "M_RealisticRadar",
             "M_ReadGhostChat", "M_RemovePenalty", "M_ReplayDrawIcons", "M_ReplayOnlyLastSeconds",
             "M_RevealMeetingRoles", "M_RevealVotes", "M_RgbMenuText", "M_RgbTaskBar",
             "M_RoleBuffImmortality", "M_SeeGhosts", "M_SeeKillCooldown", "M_SeePhantoms",
@@ -80,7 +80,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_ShowDeadTracers", "M_ShowEspBoxes", "M_ShowEspVoteKicks", "M_ShowImpostorTracers",
             "M_ShowPlayerInfo", "M_ShowRadar", "M_ShowRadarDeadBodies", "M_ShowRadarGhosts",
             "M_ShowReplay", "M_ShowTracers", "M_ShowWatermarkInfo", "M_SkipKillAnimation",
-            "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofMenuEnabled", "M_TpToCursor",
+            "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofGuestAccount", "M_SpoofMenuEnabled", "M_TpToCursor",
             "M_UnfixableLights", "M_UnlockCosmicubes", "M_UnlockVents", "M_UnownedSpawnGuard",
             "M_VotekickAutoRejoin", "M_VotekickCopyCode", "M_WalkInVents", "M_WhitelistOnlyLobby", "M_WhiteTheme"
         };
@@ -96,7 +96,7 @@ private static readonly string[] menuProfileIntKeys = {
             "M_BugRoomTimedAutoRunMinutes", "M_ChatHistoryLimit", "M_CurrentAutoHostSubTab", "M_CurrentGeneralInfoSubTab",
             "M_CurrentGeneralSubTab", "M_CurrentHostOnlySubTab", "M_CurrentPlayersSubTab", "M_CurrentSabotageSubTab",
             "M_CurrentSelfSubTab", "M_CurrentTab", "M_CurrentVisualsSubTab", "M_FpsLimit",
-            "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuToggleKey",
+            "M_HostAutoKillRate", "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuToggleKey",
             "M_PunishmentMode", "M_SelectedSpoofMenuIndex", "M_TargetTab"
         };
 

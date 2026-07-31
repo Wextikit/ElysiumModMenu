@@ -14,6 +14,12 @@ namespace ElysiumModMenu
     {
 private static byte bugRoomAngelLastTargetId = byte.MaxValue;
 
+private const float bugRoomImpMeetingDelay = 20f;
+
+private static readonly HashSet<byte> glitchRoomProtectedPlayers = new HashSet<byte>();
+
+private static readonly List<byte> glitchRoomProtectionRemove = new List<byte>();
+
 private void TryBugRoomAutoAngelTick()
         {
             if (!bugRoomAutoAngel)
@@ -68,7 +74,6 @@ private void TryBugRoomAutoKillShieldTick()
             if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
             {
                 if (!TryFindBugRoomHostShieldPair(out PlayerControl killer, out PlayerControl hostTarget)) return;
-
                 try { killer.CmdCheckMurder(hostTarget); } catch { }
                 return;
             }
@@ -79,6 +84,317 @@ private void TryBugRoomAutoKillShieldTick()
             if (target == null) return;
 
             try { local.CmdCheckMurder(target); } catch { }
+        }
+
+private void TryBugRoomImpMeetingTick()
+        {
+            if (!bugRoomImpMeeting)
+            {
+                bugRoomImpMeetingTimer = 0f;
+                bugRoomImpMeetingDone = false;
+                return;
+            }
+
+            AmongUsClient client = AmongUsClient.Instance;
+            if (client == null ||
+                client.GameState != InnerNetClient.GameStates.Started ||
+                ShipStatus.Instance == null ||
+                LobbyBehaviour.Instance != null)
+            {
+                bugRoomImpMeetingTimer = 0f;
+                bugRoomImpMeetingDone = false;
+                return;
+            }
+
+            if (client.AmHost)
+            {
+                bugRoomImpMeetingTimer = 0f;
+                bugRoomImpMeetingDone = false;
+                return;
+            }
+
+            PlayerControl local = PlayerControl.LocalPlayer;
+            if (local == null || local.Data == null || local.Data.Disconnected || local.Data.IsDead || local.Data.Role == null)
+            {
+                bugRoomImpMeetingTimer = 0f;
+                return;
+            }
+
+            bool imp = false;
+            try { imp = local.Data.Role.IsImpostor; } catch { }
+            try { imp = imp || RoleManager.IsImpostorRole(local.Data.RoleType); } catch { }
+            if (!imp)
+            {
+                bugRoomImpMeetingTimer = 0f;
+                bugRoomImpMeetingDone = false;
+                return;
+            }
+
+            if (bugRoomImpMeetingDone) return;
+            if (IsMeetingOrExileActive())
+            {
+                bugRoomImpMeetingTimer = 0f;
+                bugRoomImpMeetingDone = true;
+                return;
+            }
+            if (IntroCutscene.Instance != null) return;
+
+            bugRoomImpMeetingTimer += Time.deltaTime;
+            if (bugRoomImpMeetingTimer < bugRoomImpMeetingDelay) return;
+
+            bugRoomImpMeetingTimer = 0f;
+            bugRoomImpMeetingDone = true;
+            callMeetingPublic();
+        }
+
+private void TryGlitchRoomGodModeTick()
+        {
+            if (!glitchRoomGodMode)
+            {
+                glitchRoomGodModeTimer = -1f;
+                return;
+            }
+
+            if (!CanRunBugRoomTick()) return;
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+
+            PlayerControl local = PlayerControl.LocalPlayer;
+            if (local == null || local.Data == null || local.Data.Disconnected || local.Data.IsDead) return;
+            if (local.protectedByGuardianId >= 0) return;
+
+            float now = Time.unscaledTime;
+            if (glitchRoomGodModeTimer > 0f && now < glitchRoomGodModeTimer) return;
+            glitchRoomGodModeTimer = now + 0.20f;
+
+            try { local.RpcProtectPlayer(local, local.Data.DefaultOutfit.ColorId); } catch { }
+        }
+
+private void TryGlitchRoomGodModeAllTick()
+        {
+            if (!glitchRoomGodModeAll)
+            {
+                glitchRoomGodModeAllTimer = -1f;
+                return;
+            }
+
+            if (!CanRunBugRoomTick()) return;
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+
+            float now = Time.unscaledTime;
+            if (glitchRoomGodModeAllTimer > 0f && now < glitchRoomGodModeAllTimer) return;
+            glitchRoomGodModeAllTimer = now + 0.20f;
+
+            ProtectGlitchRoomEveryone(false);
+        }
+
+private static void ProtectGlitchRoomEveryone(bool notify)
+        {
+            try
+            {
+                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+                {
+                    if (notify) ShowNotification("<color=#FF0000>[GLITCH ROOM]</color> Host required.");
+                    return;
+                }
+
+                if (!CanRunBugRoomTick() || PlayerControl.AllPlayerControls == null)
+                {
+                    if (notify) ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Protection is unavailable now.");
+                    return;
+                }
+
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local == null || local.Data == null) return;
+
+                int count = 0;
+                foreach (PlayerControl target in PlayerControl.AllPlayerControls)
+                {
+                    if (target == null || target.Data == null || target.PlayerId >= 100) continue;
+                    if (target.Data.Disconnected || target.Data.IsDead || target.protectedByGuardianId >= 0) continue;
+
+                    try
+                    {
+                        local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId);
+                        count++;
+                    }
+                    catch { }
+                }
+
+                if (!notify) return;
+                if (count > 0)
+                    ShowNotification($"<color=#00FFAA>[GLITCH ROOM]</color> Protected players: {count}.");
+                else
+                    ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Everyone is already protected.");
+            }
+            catch
+            {
+                if (notify) ShowNotification("<color=#FF0000>[GLITCH ROOM]</color> Protect Everyone failed.");
+            }
+        }
+
+private void TryGlitchRoomForcedProtectionTick()
+        {
+            if (glitchRoomProtectedPlayers.Count == 0)
+            {
+                glitchRoomProtectionTimer = -1f;
+                return;
+            }
+
+            if (AmongUsClient.Instance == null ||
+                !AmongUsClient.Instance.AmHost ||
+                AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
+            {
+                glitchRoomProtectedPlayers.Clear();
+                glitchRoomProtectionTimer = -1f;
+                return;
+            }
+
+            if (!CanRunBugRoomTick()) return;
+
+            float now = Time.unscaledTime;
+            if (glitchRoomProtectionTimer > 0f && now < glitchRoomProtectionTimer) return;
+            glitchRoomProtectionTimer = now + 0.10f;
+            glitchRoomProtectionRemove.Clear();
+
+            foreach (byte id in glitchRoomProtectedPlayers)
+            {
+                PlayerControl target = GameData.Instance?.GetPlayerById(id)?.Object;
+                if (target == null || target.Data == null || target.Data.Disconnected || target.Data.IsDead)
+                {
+                    if (target != null && target.protectedByGuardianId >= 0)
+                    {
+                        try { target.RemoveProtection(); } catch { }
+                    }
+
+                    glitchRoomProtectionRemove.Add(id);
+                    continue;
+                }
+
+                if (target.protectedByGuardianId >= 0) continue;
+
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local == null || local.Data == null) continue;
+                try { local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId); } catch { }
+            }
+
+            foreach (byte id in glitchRoomProtectionRemove)
+                glitchRoomProtectedPlayers.Remove(id);
+        }
+
+private static bool IsGlitchRoomProtected(PlayerControl target)
+        {
+            return target != null && glitchRoomProtectedPlayers.Contains(target.PlayerId);
+        }
+
+private static void ProtectGlitchRoomTarget(bool force)
+        {
+            try
+            {
+                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
+                {
+                    ShowNotification("<color=#FF0000>[GLITCH ROOM]</color> Host required.");
+                    return;
+                }
+
+                if (!CanRunBugRoomTick())
+                {
+                    ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Protection is unavailable now.");
+                    return;
+                }
+
+                PlayerControl local = PlayerControl.LocalPlayer;
+                PlayerControl target = FindHostAutoKillTarget(local);
+                bool validSelf = force &&
+                                 target == local &&
+                                 local != null &&
+                                 local.Data != null &&
+                                 !local.Data.Disconnected &&
+                                 !local.Data.IsDead;
+                if (local == null || target == null || (!validSelf && !IsBugRoomAngelTarget(target, local)))
+                {
+                    ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Select a living target.");
+                    return;
+                }
+
+                if (force)
+                {
+                    if (glitchRoomProtectedPlayers.Remove(target.PlayerId))
+                    {
+                        if (target.protectedByGuardianId >= 0) target.RemoveProtection();
+                        ShowNotification($"<color=#FFAA00>[GLITCH ROOM]</color> Forced protection OFF: {target.Data.PlayerName}.");
+                        return;
+                    }
+
+                    glitchRoomProtectedPlayers.Add(target.PlayerId);
+                    if (target.protectedByGuardianId < 0)
+                        local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId);
+                    ShowNotification($"<color=#00FFAA>[GLITCH ROOM]</color> Forced protection ON: {target.Data.PlayerName}.");
+                    return;
+                }
+
+                if (target.protectedByGuardianId >= 0)
+                {
+                    ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Target is already protected.");
+                    return;
+                }
+
+                GuardianAngelRole role = local.Data.Role as GuardianAngelRole;
+                if (role == null || local.Data.Role.Role != RoleTypes.GuardianAngel)
+                {
+                    ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Guardian Angel role required.");
+                    return;
+                }
+
+                if (role.cooldownSecondsRemaining > 0f)
+                {
+                    ShowNotification($"<color=#FFAA00>[GLITCH ROOM]</color> Protect cooldown: {role.cooldownSecondsRemaining:0.0}s.");
+                    return;
+                }
+
+                local.CmdCheckProtect(target);
+                ShowNotification($"<color=#00FFAA>[GLITCH ROOM]</color> Guardian protection: {target.Data.PlayerName}.");
+            }
+            catch
+            {
+                ShowNotification("<color=#FF0000>[GLITCH ROOM]</color> Protection failed.");
+            }
+        }
+
+private void ResetGlitchRoomState()
+        {
+            bugRoomAutoAngel = false;
+            bugRoomAutoKillShield = false;
+            bugRoomImpMeeting = false;
+            glitchRoomBypassShield = false;
+            glitchRoomGodMode = false;
+            glitchRoomGodModeAll = false;
+            bugRoomAngelTimer = -1f;
+            bugRoomShieldKillTimer = -1f;
+            bugRoomImpMeetingTimer = 0f;
+            bugRoomImpMeetingDone = false;
+            glitchRoomGodModeTimer = -1f;
+            glitchRoomGodModeAllTimer = -1f;
+            glitchRoomProtectionTimer = -1f;
+            bugRoomAngelLastTargetId = byte.MaxValue;
+            glitchRoomProtectedPlayers.Clear();
+            glitchRoomProtectionRemove.Clear();
+
+            try
+            {
+                if (PlayerControl.AllPlayerControls != null)
+                {
+                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == null || pc.protectedByGuardianId < 0) continue;
+                        pc.RemoveProtection();
+                    }
+                }
+            }
+            catch { }
+
+            PlayerControl_TurnOnProtection_Patch.ClearProtectionState();
+            settingsDirty = true;
+            ShowNotification("<color=#FFAA00>[GLITCH ROOM]</color> Angel state reset.");
         }
 
 private void TryBugRoomTimedAutoRunTick()
@@ -113,7 +429,7 @@ private void TryBugRoomTimedAutoRunTick()
             bugRoomTimedAutoRunDone = true;
             bugRoomTimedAutoRunTimer = 0f;
             settingsDirty = true;
-            ShowNotification($"<color=#FF00FF>[BUG ROOM]</color> Auto Run {AutoHostAutoRunDelaySeconds:0.00}s enabled.");
+            ShowNotification($"<color=#FF00FF>[GLITCH ROOM]</color> Auto Run {AutoHostAutoRunDelaySeconds:0.00}s enabled.");
         }
 
 private static bool IsBugRoomTimedAutoRunInGame()
@@ -378,6 +694,7 @@ private static bool IsBugRoomReadyKiller(PlayerControl pc)
                 try { imp = imp || RoleManager.IsImpostorRole(pc.Data.RoleType); } catch { }
                 if (!canKill || !imp) return false;
                 if (pc.inVent || pc.onLadder || pc.inMovingPlat) return false;
+
                 return Mathf.Max(0f, pc.killTimer) <= 0.05f;
             }
             catch { return false; }
@@ -407,7 +724,7 @@ private static List<PlayerControl> GetBugRoomKillTargets()
                 PlayerControl local = PlayerControl.LocalPlayer;
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc == null || pc == local || pc.Data == null) continue;
+                    if (pc == null || pc.Data == null) continue;
                     if (pc.Data.Disconnected || pc.PlayerId >= 100) continue;
                     plrs.Add(pc);
                 }

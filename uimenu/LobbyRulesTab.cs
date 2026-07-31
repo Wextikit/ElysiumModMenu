@@ -91,8 +91,10 @@ private void DrawLobbySettingsTab()
             if (compact) GUILayout.BeginVertical(GUILayout.Width(w));
             else GUILayout.BeginHorizontal(GUILayout.Width(w));
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(250f));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(276f));
             DrawMenuSectionHeader("GAME");
+            DrawLobbyToggle(ref noSettingLimit, "No Setting Limit", Mathf.RoundToInt(rowW));
+            GUILayout.Space(2);
             DrawLocalIntRow("Map", rowW, ref lobbySetMap, 0, 5, 1);
             DrawLocalIntRow("Players", rowW, ref lobbySetPlayers, 4, 15, 1);
             DrawLocalIntRow("Imposters", rowW, ref lobbySetImps, 1, 3, 1);
@@ -167,8 +169,10 @@ private void DrawHnsSettingsTab()
             if (compact) GUILayout.BeginVertical(GUILayout.Width(w));
             else GUILayout.BeginHorizontal(GUILayout.Width(w));
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(312f));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(338f));
             DrawMenuSectionHeader("H&S MAIN");
+            DrawLobbyToggle(ref noSettingLimit, "No Setting Limit", Mathf.RoundToInt(rowW));
+            GUILayout.Space(2);
             DrawLocalIntRow("Map", rowW, ref lobbySetMap, 0, 5, 1);
             DrawLocalIntRow("Players", rowW, ref lobbySetPlayers, 4, 15, 1);
             DrawLocalIntRow("Imposters", rowW, ref lobbySetImps, 1, 3, 1);
@@ -451,7 +455,7 @@ private void DrawLocalFloatRow(string label, float width, ref float val, float s
                 string raw = lobbySetInputs[key].Replace(',', '.');
                 if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out float n))
                 {
-                    if (Mathf.Abs(n - val) > 0.00001f) lobbySettingsDirty = true;
+                    if (n != val) lobbySettingsDirty = true;
                     val = n;
                 }
             }

@@ -229,20 +229,57 @@ public static string GetCachedOriginalFriendCode(NetworkedPlayerInfo data, strin
             return emptyValue;
         }
 
-public static bool PrepareLocalFriendCodeForSerialize(NetworkedPlayerInfo data, out string restoreValue)
+        [HideFromIl2Cpp]
+        private void ApplyPublicFriendCode()
         {
-            restoreValue = null;
-            return false;
-        }
+            spoofFriendCodeInput = SanitizeSpoofFriendCode(spoofFriendCodeInput);
+            if (string.IsNullOrEmpty(spoofFriendCodeInput)) return;
 
-public static void RestoreLocalFriendCodeAfterSerialize(NetworkedPlayerInfo data, string restoreValue)
-        {
             try
             {
-                if (data == null || restoreValue == null) return;
-                TrySetStringMember(data, "FriendCode", restoreValue);
+                FriendsListManager mgr = FriendsListManager.Instance;
+                if (mgr == null)
+                {
+                    ShowNotification("<color=#FF4444>[SPOOF FC]</color> Friends manager not ready.");
+                    return;
+                }
+
+                var callback = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<
+                    Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>>(
+                    new System.Action<Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>(
+                        OnPublicFriendCodeResponse));
+                mgr.SetFriendCode(spoofFriendCodeInput, callback);
+                ShowNotification("<color=#00FFAA>[SPOOF FC]</color> Sent to server.");
+            }
+            catch
+            {
+                ShowNotification("<color=#FF4444>[SPOOF FC]</color> Registration failed.");
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void OnPublicFriendCodeResponse(Assets.InnerNet.ResponseState state,
+            Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode> response)
+        {
+            if (state != Assets.InnerNet.ResponseState.Success || response == null ||
+                response.Data == null || response.Data.Attributes == null)
+            {
+                ShowNotification("<color=#FF4444>[SPOOF FC]</color> Server rejected registration.");
+                return;
+            }
+
+            string username = response.Data.Attributes.Username ?? string.Empty;
+            string discriminator = response.Data.Attributes.Discriminator ?? string.Empty;
+            string friendCode = string.IsNullOrEmpty(discriminator) ? username : username + "#" + discriminator;
+            try
+            {
+                EOSManager eos = EOSManager.Instance;
+                if (eos != null) eos.FriendCode = friendCode;
+                FriendsListUI.Instance?.UpdateFriendCodeUI();
             }
             catch { }
+
+            ShowNotification($"<color=#00FFAA>[SPOOF FC]</color> Registered: <b>{friendCode}</b>");
         }
 
 private static string FormatInputPreview(string value, bool editing, int maxChars = 52)
@@ -410,8 +447,8 @@ private void TryAutoKickLowLevelTick()
                     lowLevelKickPunishedOwners.Add(owner);
 
                     string name = string.IsNullOrWhiteSpace(pc.Data.PlayerName) ? "Unknown" : pc.Data.PlayerName;
+                    RegisterAntiCheatDisconnectNotice(owner, name, $"Level {level} below minimum {minLevel}", false);
                     AmongUsClient.Instance.KickPlayer(owner, false);
-                    ShowNotification($"<color=#FF4444>[LEVEL KICK]</color> {name} kicked: level {level} < {minLevel}");
                 }
             }
             catch { }
@@ -822,8 +859,8 @@ private void DrawSelfSpoof()
             DrawIdentityTextRow(ref enableLocalFriendCodeSpoof, "Local Friend Code", ref localFriendCodeInput, ref isEditingLocalFriendCode,
                 () => ApplyLocalFriendCodeSelf(localFriendCodeInput, true), RestoreLocalFriendCodeSelf, 54, identityLabelWidth);
             GUILayout.Space(3);
-            DrawIdentityTextRow(ref enableFriendCodeSpoof, "Public Friend Code", ref spoofFriendCodeInput, ref isEditingFriendCode,
-                () => spoofFriendCodeInput = SanitizeSpoofFriendCode(spoofFriendCodeInput), null, 54, identityLabelWidth);
+            DrawIdentityTextRow(ref enableFriendCodeSpoof, "Spoof Friend Code", ref spoofFriendCodeInput, ref isEditingFriendCode,
+                ApplyPublicFriendCode, null, 54, identityLabelWidth);
             GUILayout.Space(3);
             DrawIdentityTextRow(ref enableDeviceIdSpoof, "Device ID", ref spoofedDeviceId, ref isEditingDeviceId,
                 () => spoofedDeviceId = (spoofedDeviceId ?? "").Trim(), null, 64, identityLabelWidth, true);
@@ -898,11 +935,11 @@ private void CompleteLocalTasks()
                     return;
                 }
 
-                List<PlayerTask> tasks = new List<PlayerTask>();
+                List<NormalPlayerTask> tasks = new List<NormalPlayerTask>();
                 foreach (var task in local.myTasks)
                 {
-                    if (task == null || task.IsComplete) continue;
-                    tasks.Add(task);
+                    if (task is NormalPlayerTask normal && normal.taskStep < normal.MaxStep)
+                        tasks.Add(normal);
                 }
 
                 if (tasks.Count == 0)
@@ -916,19 +953,19 @@ private void CompleteLocalTasks()
             catch { }
         }
 
-private IEnumerator CompleteLocalTasksCoroutine(List<PlayerTask> tasks)
+private IEnumerator CompleteLocalTasksCoroutine(List<NormalPlayerTask> tasks)
         {
             completeLocalTasksRunning = true;
             int done = 0;
 
             for (int i = 0; i < tasks.Count; i++)
             {
-                PlayerTask task = tasks[i];
-                if (task != null && !task.IsComplete && CompleteLocalTask(task))
+                NormalPlayerTask task = tasks[i];
+                if (task != null && task.taskStep < task.MaxStep && CompleteLocalTask(task))
                     done++;
 
                 if (i < tasks.Count - 1)
-                    yield return new WaitForSeconds(0.85f);
+                    yield return new WaitForSeconds(0.1f);
             }
 
             completeLocalTasksRunning = false;
@@ -936,9 +973,9 @@ private IEnumerator CompleteLocalTasksCoroutine(List<PlayerTask> tasks)
                 ShowNotification($"<color=#00FFAA>[TASKS]</color> Completed {done} task(s).");
         }
 
-private static bool CompleteLocalTask(PlayerTask task)
+private static bool CompleteLocalTask(NormalPlayerTask task)
         {
-            if (task == null || task.IsComplete) return false;
+            if (task == null || task.taskStep >= task.MaxStep) return false;
 
             PlayerControl local = PlayerControl.LocalPlayer;
             AmongUsClient client = AmongUsClient.Instance;
@@ -946,20 +983,12 @@ private static bool CompleteLocalTask(PlayerTask task)
 
             try
             {
-                if (client.NetworkMode == NetworkModes.FreePlay)
-                {
-                    local.RpcCompleteTask(task.Id);
-                    return true;
-                }
-
-                if (IsLocalImpostorRole() && !allowTasksAsImpostor)
-                    return false;
-
-                var host = client.GetHost();
-                if (host == null || host.Character == null || host.Character.Data == null || host.Character.Data.Disconnected)
+                if (client.NetworkMode != NetworkModes.FreePlay && IsLocalImpostorRole() && !allowTasksAsImpostor)
                     return false;
 
                 local.RpcCompleteTask(task.Id);
+                while (task.taskStep < task.MaxStep)
+                    task.NextStep();
                 return true;
             }
             catch { }
@@ -1052,10 +1081,135 @@ private void DrawVisualsTab()
                 if (__instance == null || GameData.Instance == null || AmongUsClient.Instance == null) return;
                 if (AmongUsClient.Instance.NetworkMode == NetworkModes.LocalGame || !AmongUsClient.Instance.AmHost) return;
 
-                if (HudManager.Instance != null)
+                RainbowLobbyCodeTimer_Patch.Reset(__instance);
+                if (!ElysiumModMenuGUI.rainbowLobbyTimer && HudManager.Instance != null)
                 {
                     HudManager.Instance.ShowLobbyTimer(600);
                 }
+            }
+        }
+
+[HarmonyPatch(typeof(TimerTextTMP), nameof(TimerTextTMP.Update))]
+        public static class LobbyTimerColor_Patch
+        {
+            private static TimerTextTMP timer;
+            private static Color normalColor;
+            private static bool rainbowApplied;
+
+            public static void Postfix(TimerTextTMP __instance)
+            {
+                try
+                {
+                    if (__instance == null || __instance.text == null || HudManager.Instance == null) return;
+                    if (HudManager.Instance.LobbyTimerExtensionUI == null ||
+                        HudManager.Instance.LobbyTimerExtensionUI.timerText != __instance) return;
+
+                    if (timer != __instance)
+                    {
+                        if (timer != null && timer.text != null && rainbowApplied)
+                            timer.text.color = normalColor;
+
+                        timer = __instance;
+                        normalColor = __instance.text.color;
+                        rainbowApplied = false;
+                    }
+
+                    if (ElysiumModMenuGUI.alwaysShowLobbyTimer && ElysiumModMenuGUI.rainbowLobbyTimer)
+                    {
+                        if (!rainbowApplied)
+                        {
+                            normalColor = __instance.text.color;
+                            rainbowApplied = true;
+                        }
+
+                        __instance.text.enabled = false;
+                    }
+                    else if (rainbowApplied)
+                    {
+                        __instance.text.enabled = true;
+                        __instance.text.color = normalColor;
+                        rainbowApplied = false;
+                    }
+                }
+                catch { }
+            }
+        }
+
+[HarmonyPatch(typeof(GameStartManager), "Update")]
+        public static class RainbowLobbyCodeTimer_Patch
+        {
+            private static GameStartManager manager;
+            private static string baseText = "";
+            private static string renderedText = "";
+            private static float timer = 600f;
+            private static bool applied;
+
+            public static void Reset(GameStartManager instance)
+            {
+                manager = instance;
+                baseText = instance != null && instance.GameRoomNameCode != null
+                    ? instance.GameRoomNameCode.text ?? ""
+                    : "";
+                renderedText = "";
+                timer = 600f;
+                applied = false;
+            }
+
+            public static void Postfix(GameStartManager __instance)
+            {
+                try
+                {
+                    if (__instance == null || __instance.GameRoomNameCode == null) return;
+                    if (manager != __instance) Reset(__instance);
+
+                    bool inLobby = LobbyBehaviour.Instance != null &&
+                                   AmongUsClient.Instance != null &&
+                                   AmongUsClient.Instance.NetworkMode != NetworkModes.LocalGame &&
+                                   AmongUsClient.Instance.AmHost;
+                    if (inLobby)
+                        timer = Mathf.Max(0f, timer - Time.deltaTime);
+
+                    bool rainbow = inLobby &&
+                                   ElysiumModMenuGUI.alwaysShowLobbyTimer &&
+                                   ElysiumModMenuGUI.rainbowLobbyTimer;
+                    TimerTextTMP timerText = null;
+                    if (HudManager.Instance != null && HudManager.Instance.LobbyTimerExtensionUI != null)
+                        timerText = HudManager.Instance.LobbyTimerExtensionUI.timerText;
+
+                    if (!rainbow)
+                    {
+                        if (applied && __instance.GameRoomNameCode.text == renderedText)
+                            __instance.GameRoomNameCode.text = baseText;
+
+                        if (timerText != null && timerText.text != null)
+                            timerText.text.enabled = true;
+
+                        if (applied && inLobby && ElysiumModMenuGUI.alwaysShowLobbyTimer &&
+                            HudManager.Instance != null && HudManager.Instance.LobbyTimerExtensionUI == null)
+                        {
+                            HudManager.Instance.ShowLobbyTimer(Mathf.CeilToInt(timer));
+                        }
+
+                        applied = false;
+                        renderedText = "";
+                        return;
+                    }
+
+                    if (timerText != null && timerText.text != null)
+                        timerText.text.enabled = false;
+
+                    string current = __instance.GameRoomNameCode.text ?? "";
+                    if (!applied || current != renderedText)
+                        baseText = current;
+
+                    int seconds = Mathf.Max(0, Mathf.FloorToInt(timer));
+                    Color color = Color.HSVToRGB(Mathf.Repeat(Time.unscaledTime * 0.18f, 1f), 0.85f, 1f);
+                    string hex = ColorUtility.ToHtmlStringRGB(color);
+                    renderedText = $"{baseText} <color=#{hex}>({seconds / 60}:{seconds % 60:00})</color>";
+                    __instance.GameRoomNameCode.text = renderedText;
+                    applied = true;
+                }
+                catch { }
             }
         }
 

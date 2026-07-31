@@ -194,6 +194,8 @@ private void DrawNonHostRoleBuffs(float availableWidth, int width)
 
                 GUILayout.Space(5);
                 DrawMenuSectionHeader("GLOBAL");
+                noAbilityCooldown = DrawCompactToggle(noAbilityCooldown, "No Ability Cooldown", colWidth);
+                GUILayout.Space(2);
                 roleBuffImmortality = DrawCompactToggle(roleBuffImmortality, "Immortality", colWidth);
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
@@ -247,6 +249,8 @@ private void DrawNonHostRoleBuffs(float availableWidth, int width)
 
             GUILayout.Space(5);
             DrawMenuSectionHeader("GLOBAL");
+            noAbilityCooldown = DrawCompactToggle(noAbilityCooldown, "No Ability Cooldown", width);
+            GUILayout.Space(2);
             roleBuffImmortality = DrawCompactToggle(roleBuffImmortality, "Immortality", width);
         }
 
@@ -256,6 +260,12 @@ private void DrawHostRoleBuffs(int width)
             noKillCooldownHostOnly = DrawCompactToggle(noKillCooldownHostOnly, "Kill Cooldown 0", width);
             GUILayout.Space(2);
             killWhileVanishedHostOnly = DrawCompactToggle(killWhileVanishedHostOnly, "Kill While Vanished", width);
+
+            GUILayout.Space(5);
+            DrawMenuSectionHeader("GLOBAL");
+            glitchRoomGodMode = DrawCompactToggle(glitchRoomGodMode, "God Mode", width);
+            GUILayout.Space(2);
+            glitchRoomGodModeAll = DrawCompactToggle(glitchRoomGodModeAll, "God Mode: Everyone", width);
         }
     }
 }

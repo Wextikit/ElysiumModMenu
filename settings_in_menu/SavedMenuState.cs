@@ -826,6 +826,7 @@ private void SaveConfig()
                 SaveBool("M_Freecam", freecam);
                 SaveBool("M_CameraZoom", cameraZoom);
                 SaveBool("M_ShowRadar", showRadar);
+                SaveBool("M_RealisticRadar", realisticRadar);
                 SaveBool("M_ShowRadarDeadBodies", showRadarDeadBodies);
                 SaveBool("M_ShowRadarGhosts", showRadarGhosts);
                 SaveBool("M_RadarRightClickTp", radarRightClickTp);
@@ -854,21 +855,30 @@ private void SaveConfig()
                 SaveBool("M_HostAutoKillRandom", hostAutoKillRandom);
                 SaveBool("M_HostAutoKillTarget", hostAutoKillTarget);
                 PlayerPrefs.SetInt("M_HostAutoKillTargetId", hostAutoKillTargetId);
+                PlayerPrefs.SetInt("M_HostAutoKillRate", Mathf.Clamp(hostAutoKillRate, 1, 35));
                 SaveBool("M_BugRoomAutoAngel", bugRoomAutoAngel);
                 PlayerPrefs.SetFloat("M_BugRoomAutoAngelIntervalSeconds", Mathf.Clamp(bugRoomAutoAngelIntervalSeconds, 0.001f, 0.50f));
                 SaveBool("M_BugRoomAutoKillShield", bugRoomAutoKillShield);
+                SaveBool("M_BugRoomImpMeeting", bugRoomImpMeeting);
+                SaveBool("M_GlitchRoomBypassShield", glitchRoomBypassShield);
+                SaveBool("M_GlitchRoomGodMode", glitchRoomGodMode);
+                SaveBool("M_GlitchRoomGodModeAll", glitchRoomGodModeAll);
                 SaveBool("M_BugRoomTimedAutoRun", bugRoomTimedAutoRun);
                 PlayerPrefs.SetInt("M_BugRoomTimedAutoRunMinutes", Mathf.Clamp(bugRoomTimedAutoRunMinutes, 1, 60));
+                SaveBool("M_BugRoomAutoRejoin", bugRoomAutoRejoin);
                 SaveBool("M_KillWhileVanishedHostOnly", killWhileVanishedHostOnly);
                 SaveBool("M_DisableEndGameSafeMode", disableEndGameSafeMode);
                 SaveBool("M_DisableMapSafeMode", disableMapSafeMode);
+                SaveBool("M_NoAbilityCooldown", noAbilityCooldown);
                 SaveBool("M_RoleBuffImmortality", roleBuffImmortality);
                 SaveBool("M_NeverEndGame", neverEndGame);
                 SaveBool("M_ChatAsEveryone", autoChatEveryone);
                 SaveBool("M_RemovePenalty", removePenalty);
+                SaveBool("M_SpoofGuestAccount", spoofGuestAccount);
                 SaveBool("M_GuestExtraFeatures", guestExtraFeatures);
                 SaveBool("M_BypassAgeRestrictions", bypassAgeRestrictions);
                 SaveBool("M_AlwaysShowLobbyTimer", alwaysShowLobbyTimer);
+                SaveBool("M_RainbowLobbyTimer", rainbowLobbyTimer);
                 SaveBool("M_AutoBanEnabled", autoBanEnabled);
                 SaveBool("M_AllowDuplicateColors", allowDuplicateColors);
                 SaveBool("M_BlockSpoofRPC", blockSpoofRPC);
@@ -905,7 +915,6 @@ private void SaveConfig()
                 SaveBool("M_AutoClearClonesBeforeGame", NetworkedClones.AutoClearBeforeGame);
                 PlayerPrefs.SetFloat("M_AutoHostAutoRunDelaySeconds", Mathf.Clamp(AutoHostAutoRunDelaySeconds, 0.25f, 10f));
                 SaveBool("M_BugroomScoutEnabled", BugroomScoutEnabled);
-                SaveBool("M_BugroomGlitchFinderEnabled", BugroomGlitchFinderEnabled);
                 SaveBool("M_AutoGhostAfterStart", autoGhostAfterStart);
                 PlayerPrefs.SetInt("M_AutoHostMinPlayers", AutoHostMinPlayers);
                 PlayerPrefs.SetFloat("M_AutoHostStartDelaySeconds", AutoHostStartDelaySeconds);
@@ -998,94 +1007,186 @@ private void DrawBugRoomTab()
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
                 ? menuCardStyle.padding.left + menuCardStyle.padding.right
                 : 28f;
-            float innerWidth = Mathf.Max(68f, contentWidth - cardPaddingWidth);
-            int toggleWidth = Mathf.RoundToInt(Mathf.Min(280f, innerWidth));
+            float innerWidth = Mathf.Floor(Mathf.Max(68f, contentWidth - cardPaddingWidth));
+            int toggleWidth = Mathf.RoundToInt(Mathf.Min(300f, innerWidth));
+            string accent = GetMenuAccentHex();
 
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(contentWidth));
-            DrawMenuSectionHeader("BUG ROOM");
 
+            DrawMenuSectionHeader(L("GAME FLOW", "ХОД ИГРЫ"));
             neverEndGame = DrawToggle(neverEndGame, L("Unlimited Game", "Бесконечная игра"), toggleWidth);
-            GUILayout.Space(5);
+            GUILayout.Space(6);
             AutoHostAutoRunEnabled = DrawToggle(AutoHostAutoRunEnabled, L("Auto Run + Imp Win", "Авто-прогон + победа предателей"), toggleWidth);
-            GUILayout.Space(5);
+            GUILayout.Space(6);
             DrawBugRoomAutoRunDelay(innerWidth);
-            GUILayout.Space(5);
+            GUILayout.Space(6);
             DrawBugRoomTimedAutoRun(innerWidth);
-            GUILayout.Space(8);
-            hostAutoKillRandom = DrawToggle(hostAutoKillRandom, "Kill Random Target", toggleWidth);
-            GUILayout.Space(5);
-            hostAutoKillTarget = DrawToggle(hostAutoKillTarget, "Auto Kill Target", toggleWidth);
-            GUILayout.Space(5);
-            DrawBugRoomKillTargetPicker(innerWidth);
-            GUILayout.Space(8);
-            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, $"Auto Angel {bugRoomAutoAngelIntervalSeconds:0.000}", toggleWidth);
-            DrawBugRoomAngelInterval(innerWidth);
-            GUILayout.Space(5);
-            bugRoomAutoKillShield = DrawToggle(bugRoomAutoKillShield, "Auto Kill Angel Shield 0.13", toggleWidth);
+            GUILayout.Space(6);
+            bugRoomAutoRejoin = DrawToggle(bugRoomAutoRejoin, L("Rejoin Once Per Game", "Перезаход один раз за игру"), toggleWidth);
+            GUILayout.Space(6);
+            bugRoomImpMeeting = DrawToggle(bugRoomImpMeeting, L("Imp Meeting After 20s (Client)", "Митинг через 20с за импа (клиент)"), toggleWidth);
 
-            GUILayout.Space(12);
-            DrawMenuSectionHeader("BUGROOM SCOUT");
+            GUILayout.Space(14);
+            DrawMenuSectionHeader(L("TARGET & KILLS", "ЦЕЛЬ И КИЛЛЫ"));
+            DrawBugRoomKillTargetPicker(innerWidth);
+            GUILayout.Space(6);
+            hostAutoKillRandom = DrawToggle(hostAutoKillRandom, L("Kill Random Target", "Килл случайной цели"), toggleWidth);
+            GUILayout.Space(6);
+            hostAutoKillTarget = DrawToggle(hostAutoKillTarget, L("Auto Kill Target", "Авто-килл цели"), toggleWidth);
+            GUILayout.Space(6);
+            DrawBugRoomAutoKillRate(innerWidth);
+
+            GUILayout.Space(14);
+            DrawMenuSectionHeader(L("PROTECTION", "ЗАЩИТА"));
+            glitchRoomBypassShield = DrawToggle(glitchRoomBypassShield, L("Bypass Angel Shield", "Игнорировать щит ангела"), toggleWidth);
+            GUILayout.Space(6);
+            glitchRoomGodMode = DrawToggle(glitchRoomGodMode, L("God Mode", "Режим бога"), toggleWidth);
+            GUILayout.Space(6);
+            glitchRoomGodModeAll = DrawToggle(glitchRoomGodModeAll, L("God Mode: Everyone", "Режим бога: все"), toggleWidth);
+            GUILayout.Space(6);
+            bugRoomAutoAngel = DrawToggle(bugRoomAutoAngel, L("Auto Angel", "Авто-ангел"), toggleWidth);
+            GUILayout.Space(6);
+            DrawBugRoomAngelInterval(innerWidth);
+            GUILayout.Space(6);
+            bugRoomAutoKillShield = DrawToggle(bugRoomAutoKillShield, L("Auto Kill Angel Shield 0.13", "Авто-снять щит ангела 0.13"), toggleWidth);
+            GUILayout.Space(8);
+
+            if (DrawBugRoomWideButton(innerWidth, L("Protect Everyone (Network)", "Защитить всех (сеть)")))
+                ProtectGlitchRoomEveryone(true);
+            GUILayout.Space(6);
+
+            bool forceProtectOn = glitchRoomProtectedPlayers.Contains(hostAutoKillTargetId);
+            if (DrawBugRoomRowButton(innerWidth, 0, L("Protect as Angel", "Защитить ангелом")))
+                ProtectGlitchRoomTarget(false);
+            if (DrawBugRoomRowButton(innerWidth, 1, forceProtectOn
+                ? L("Force Protect: ON", "Защита: ВКЛ")
+                : L("Force Protect: OFF", "Защита: ВЫКЛ")))
+                ProtectGlitchRoomTarget(true);
+            DrawBugRoomRowButtonEnd();
+            GUILayout.Space(6);
+            if (DrawBugRoomWideButton(innerWidth, L("Reset State", "Сбросить состояние")))
+                ResetGlitchRoomState();
+
+            GUILayout.Space(14);
+            DrawMenuSectionHeader(L("SCOUT", "СКАУТ"));
             bool oldScout = BugroomScoutEnabled;
-            BugroomScoutEnabled = DrawToggle(BugroomScoutEnabled, "Auto Create + Find TXT", toggleWidth);
+            BugroomScoutEnabled = DrawToggle(BugroomScoutEnabled, L("Auto Create + Find TXT", "Авто создать + найти TXT"), toggleWidth);
             if (oldScout != BugroomScoutEnabled)
             {
                 settingsDirty = true;
                 ElysiumBugroomScoutService.ForceReload();
             }
+            GUILayout.Space(6);
 
             var scout = ElysiumBugroomScoutService.GetStatusSnapshot();
-            float scoutButtonWidth = Mathf.Min(170f, Mathf.Max(96f, innerWidth * 0.46f));
-            float scoutLabelWidth = Mathf.Max(40f, innerWidth - scoutButtonWidth - 8f);
-            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
-            if (GUILayout.Button("Create / Reload TXT", btnStyle, GUILayout.Width(scoutButtonWidth), GUILayout.Height(25)))
+            DrawBugRoomStatRow(innerWidth, L("Status", "Статус"), BugRoomStatusValue(scout.State));
+            DrawBugRoomStatRow(innerWidth, L("Targets", "Цели"), $"<color=#{accent}>{scout.TargetCount}</color>");
+            DrawBugRoomStatRow(innerWidth, L("Room", "Комната"), BugRoomCodeValue(scout.CurrentCode, scout.CurrentSuffix, accent));
+            DrawBugRoomFileRow(innerWidth, L("File", "Файл"), scout.FilePath);
+            GUILayout.Space(6);
+            if (DrawBugRoomRowButton(innerWidth, 0, L("Reload TXT", "Перезагрузить TXT")))
             {
                 ElysiumBugroomScoutService.ForceReload();
+                ShowNotification("<color=#00FFAA>[SCOUT]</color> TXT reloaded.");
+            }
+            if (DrawBugRoomRowButton(innerWidth, 1, L("Copy Path", "Копировать путь")))
+            {
                 GUIUtility.systemCopyBuffer = scout.FilePath;
-                ShowNotification("<color=#00FFAA>[BUGROOM SCOUT]</color> TXT path copied.");
+                ShowNotification("<color=#00FFAA>[SCOUT]</color> TXT path copied.");
             }
-            GUILayout.Label($"Targets: <color=#{GetMenuAccentHex()}>{scout.TargetCount}</color> | {scout.State}", richClipLabelStyle12, GUILayout.Width(scoutLabelWidth), GUILayout.Height(25));
-            GUILayout.EndHorizontal();
-
-            string code = string.IsNullOrWhiteSpace(scout.CurrentCode) ? "-" : scout.CurrentCode;
-            string suffix = string.IsNullOrWhiteSpace(scout.CurrentSuffix) ? "-" : scout.CurrentSuffix;
-            GUILayout.Label($"TXT: {scout.FilePath}", richWrapLabelStyle11, GUILayout.Width(innerWidth));
-            GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{code}</color> | suffix: <color=#{GetMenuAccentHex()}>{suffix}</color>", richClipLabelStyle12, GUILayout.Width(innerWidth));
-
-            GUILayout.Space(12);
-            DrawMenuSectionHeader("GLITCH ROOM FINDER");
-            bool oldFinder = BugroomGlitchFinderEnabled;
-            BugroomGlitchFinderEnabled = DrawToggle(BugroomGlitchFinderEnabled, "Create + Test Level Reset", toggleWidth);
-            if (oldFinder != BugroomGlitchFinderEnabled)
-            {
-                settingsDirty = true;
-                ElysiumBugroomGlitchFinder.ResetFlow();
-            }
-
-            var finder = ElysiumBugroomGlitchFinder.GetStatusSnapshot();
-            float finderButtonWidth = Mathf.Min(135f, Mathf.Max(86f, innerWidth * 0.36f));
-            float finderLabelWidth = Mathf.Max(40f, innerWidth - finderButtonWidth - 8f);
-            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
-            if (GUILayout.Button("Copy TXT Path", btnStyle, GUILayout.Width(finderButtonWidth), GUILayout.Height(25)))
-            {
-                GUIUtility.systemCopyBuffer = finder.FilePath;
-                ShowNotification("<color=#00FFAA>[GLITCH FINDER]</color> TXT path copied.");
-            }
-            GUILayout.Label($"Seen: <color=#{GetMenuAccentHex()}>{finder.VisitedCount}</color> | Found: <color=#{GetMenuAccentHex()}>{finder.FoundCount}</color> | {finder.State}", richClipLabelStyle12, GUILayout.Width(finderLabelWidth), GUILayout.Height(25));
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth));
-            if (GUILayout.Button("Clear Seen", btnStyle, GUILayout.Width(finderButtonWidth), GUILayout.Height(25)))
-            {
-                ElysiumBugroomGlitchFinder.ClearVisited();
-                ShowNotification("<color=#FFAA00>[GLITCH FINDER]</color> Seen suffixes cleared.");
-            }
-            string finderCode = string.IsNullOrWhiteSpace(finder.CurrentCode) ? "-" : finder.CurrentCode;
-            string finderSuffix = string.IsNullOrWhiteSpace(finder.CurrentSuffix) ? "-" : finder.CurrentSuffix;
-            GUILayout.Label($"Room: <color=#{GetMenuAccentHex()}>{finderCode}</color> | suffix: <color=#{GetMenuAccentHex()}>{finderSuffix}</color> | Lv: {finder.Level}", richClipLabelStyle12, GUILayout.Width(finderLabelWidth), GUILayout.Height(25));
-            GUILayout.EndHorizontal();
-            GUILayout.Label($"TXT: {finder.FilePath}", richWrapLabelStyle11, GUILayout.Width(innerWidth));
+            DrawBugRoomRowButtonEnd();
 
             GUILayout.EndVertical();
+        }
+
+private static readonly char[] bugRoomPathSeparators = { '/', '\\' };
+
+private static float GetBugRoomLabelWidth(float innerWidth)
+        {
+            float labelWidth = Mathf.Floor(Mathf.Clamp(innerWidth * 0.38f, 54f, 150f));
+            if (labelWidth > innerWidth - 40f)
+                labelWidth = Mathf.Floor(Mathf.Max(24f, innerWidth * 0.45f));
+            return labelWidth;
+        }
+
+private void DrawBugRoomStatRow(float innerWidth, string label, string value)
+        {
+            float labelWidth = GetBugRoomLabelWidth(innerWidth);
+            float valueWidth = Mathf.Max(24f, innerWidth - labelWidth - 6f);
+
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(20));
+            GUILayout.Label(label, lobbyRichLabelStyle11, GUILayout.Width(labelWidth), GUILayout.Height(20));
+            GUILayout.Space(6);
+            GUILayout.Label(value, richClipLabelStyle11, GUILayout.Width(valueWidth), GUILayout.Height(20));
+            GUILayout.EndHorizontal();
+        }
+
+private void DrawBugRoomFileRow(float innerWidth, string label, string path)
+        {
+            float labelWidth = GetBugRoomLabelWidth(innerWidth);
+            float valueWidth = Mathf.Max(24f, innerWidth - labelWidth - 6f);
+            DrawBugRoomStatRow(innerWidth, label, ShortenBugRoomPath(path, valueWidth));
+        }
+
+private static string ShortenBugRoomPath(string path, float valueWidth)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return "<color=#777777>-</color>";
+
+            string name = path;
+            int separator = name.LastIndexOfAny(bugRoomPathSeparators);
+            if (separator >= 0 && separator < name.Length - 1)
+                name = name.Substring(separator + 1);
+
+            int budget = Mathf.Max(6, Mathf.FloorToInt(valueWidth / 6.4f));
+            if (name.Length > budget)
+                name = name.Substring(0, Mathf.Max(3, budget - 2)) + "..";
+            return name;
+        }
+
+private bool DrawBugRoomRowButton(float innerWidth, int slot, string text)
+        {
+            float half = Mathf.Floor((innerWidth - 8f) * 0.5f);
+            float width = slot == 0 ? half : Mathf.Max(24f, innerWidth - half - 8f);
+
+            if (slot == 0)
+                GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(25));
+            else
+                GUILayout.Space(8);
+
+            return GUILayout.Button(text, btnStyle, GUILayout.Width(width), GUILayout.Height(25));
+        }
+
+private void DrawBugRoomRowButtonEnd()
+        {
+            GUILayout.EndHorizontal();
+        }
+
+private bool DrawBugRoomWideButton(float innerWidth, string text)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(25));
+            bool clicked = GUILayout.Button(text, btnStyle, GUILayout.Width(innerWidth), GUILayout.Height(25));
+            GUILayout.EndHorizontal();
+            return clicked;
+        }
+
+private static string BugRoomStatusValue(string state)
+        {
+            if (string.IsNullOrWhiteSpace(state)) return "<color=#777777>-</color>";
+            string trimmed = state.Trim();
+            bool off = trimmed.Equals("Off", StringComparison.OrdinalIgnoreCase)
+                || trimmed.Equals("Disabled", StringComparison.OrdinalIgnoreCase);
+            return off ? $"<color=#777777>{trimmed}</color>" : $"<color=#66FF99>{trimmed}</color>";
+        }
+
+private static string BugRoomCodeValue(string code, string suffix, string accent)
+        {
+            bool hasCode = !string.IsNullOrWhiteSpace(code);
+            bool hasSuffix = !string.IsNullOrWhiteSpace(suffix);
+            if (!hasCode && !hasSuffix) return "<color=#777777>-</color>";
+
+            string codeText = hasCode ? $"<color=#{accent}>{code.Trim()}</color>" : "<color=#777777>-</color>";
+            if (!hasSuffix) return codeText;
+            return $"{codeText} <color=#777777>·</color> <color=#{accent}>{suffix.Trim()}</color>";
         }
 
 private void DrawBugRoomAngelInterval(float innerWidth)
@@ -1188,6 +1289,7 @@ private void DrawBugRoomKillTargetPicker(float innerWidth)
             PlayerControl target = plrs[idx];
             string nm = target.Data != null && !string.IsNullOrWhiteSpace(target.Data.PlayerName) ? target.Data.PlayerName : $"Player {target.PlayerId}";
             if (nm.Length > 18) nm = nm.Substring(0, 18) + "..";
+            if (target == PlayerControl.LocalPlayer) nm += " [you]";
             if (target.Data != null && target.Data.IsDead) nm += " [dead]";
 
             GUILayout.Label(nm, morphValueStyle, GUILayout.Height(24), GUILayout.ExpandWidth(true));
@@ -1199,6 +1301,22 @@ private void DrawBugRoomKillTargetPicker(float innerWidth)
                 hostAutoKillTargetId = plrs[idx].PlayerId;
                 settingsDirty = true;
             }
+            GUILayout.EndHorizontal();
+        }
+
+private void DrawBugRoomAutoKillRate(float innerWidth)
+        {
+            float labelWidth = Mathf.Min(155f, Mathf.Max(66f, innerWidth * 0.38f));
+            labelWidth = Mathf.Min(labelWidth, innerWidth * 0.55f);
+            float sliderWidth = Mathf.Max(24f, innerWidth - labelWidth - 8f);
+            int old = hostAutoKillRate;
+            float delay = 1f / Mathf.Clamp(hostAutoKillRate, 1, 35);
+
+            GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(22));
+            GUILayout.Label($"Kill Rate: <color=#{GetMenuAccentHex()}>{hostAutoKillRate}/s ({delay:0.###}s)</color>", lobbyRichLabelStyle11, GUILayout.Width(labelWidth), GUILayout.Height(22));
+            float val = GUILayout.HorizontalSlider(hostAutoKillRate, 1f, 35f, sliderStyle, sliderThumbStyle, GUILayout.Width(sliderWidth));
+            hostAutoKillRate = Mathf.Clamp(Mathf.RoundToInt(val), 1, 35);
+            if (old != hostAutoKillRate) settingsDirty = true;
             GUILayout.EndHorizontal();
         }
 

@@ -417,7 +417,6 @@ private static void CaptureSafeIdentity(ClientData client)
                     safeIdentityCaptureAttempts.Remove(clientId);
                     safeIdentityNextCaptureAt.Remove(clientId);
                     ventExploitBannedOwners.Remove(clientId);
-                    pendingVentKickRpcSteps.Remove(clientId);
                 }
                 catch { }
             }

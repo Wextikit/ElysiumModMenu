@@ -25,4 +25,14 @@ namespace ElysiumModMenu
             __result = new Il2CppSystem.DateTime(dt.Ticks);
         }
     }
+
+    [HarmonyPatch(typeof(AprilFoolsMode), nameof(AprilFoolsMode.ShouldFlipSkeld))]
+    public static class FlipSkeld_ShouldFlipSkeld_Patch
+    {
+        public static void Postfix(ref bool __result)
+        {
+            if (ElysiumModMenuGUI.flipSkeld)
+                __result = true;
+        }
+    }
 }

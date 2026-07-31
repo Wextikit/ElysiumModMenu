@@ -42,6 +42,21 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
+private const float hostAutoKillStartDelay = 5.4f;
+
+public static void ResetHostAutoKillStartDelay()
+        {
+            hostAutoKillReadyAt = Time.time + hostAutoKillStartDelay;
+        }
+
+private static bool HostAutoKillStartReady()
+        {
+            if (hostAutoKillReadyAt < 0f)
+                hostAutoKillReadyAt = Time.time + hostAutoKillStartDelay;
+
+            return Time.time >= hostAutoKillReadyAt;
+        }
+
 private void TryKillAuraTick()
         {
             if (!killAuraHostOnly)
@@ -58,7 +73,7 @@ private void TryKillAuraTick()
             if (MeetingHud.Instance != null) return;
             if (localPlayer.inVent || localPlayer.onLadder || localPlayer.inMovingPlat) return;
 
-            bool hostCooldownBypass = AmongUsClient.Instance.AmHost && noKillCooldownHostOnly;
+            bool hostCooldownBypass = AmongUsClient.Instance.AmHost && (noKillCooldownHostOnly || noAbilityCooldown);
             if (!hostCooldownBypass && GetRemainingKillCooldown(localPlayer.PlayerId) > 0.05f) return;
 
             killAuraTimer += Time.deltaTime;
@@ -87,6 +102,12 @@ private void TryHostAutoKillRandomTick()
                 return;
             }
 
+            if (!HostAutoKillStartReady())
+            {
+                hostAutoKillTimer = 0f;
+                return;
+            }
+
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
             if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null) return;
             if (IsMeetingOrExileActive() || IntroCutscene.Instance != null) return;
@@ -96,10 +117,15 @@ private void TryHostAutoKillRandomTick()
             if (PlayerControl.AllPlayerControls == null) return;
 
             hostAutoKillTimer += Time.deltaTime;
-            if (hostAutoKillTimer < 0.125f) return;
+            float delay = 1f / Mathf.Clamp(hostAutoKillRate, 1, 35);
+            if (hostAutoKillTimer < delay) return;
 
             PlayerControl target = FindRandomHostAutoKillTarget(localPlayer);
-            if (target == null) return;
+            if (target == null)
+            {
+                hostAutoKillTimer = 0f;
+                return;
+            }
 
             hostAutoKillTimer = 0f;
             TryHostElysiumMurderPlayer(target);
@@ -133,6 +159,12 @@ private void TryHostAutoKillTargetTick()
                 return;
             }
 
+            if (!HostAutoKillStartReady())
+            {
+                hostAutoKillTargetTimer = 0f;
+                return;
+            }
+
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
             if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null) return;
             if (IsMeetingOrExileActive() || IntroCutscene.Instance != null) return;
@@ -142,10 +174,15 @@ private void TryHostAutoKillTargetTick()
             if (PlayerControl.AllPlayerControls == null) return;
 
             hostAutoKillTargetTimer += Time.deltaTime;
-            if (hostAutoKillTargetTimer < 0.125f) return;
+            float delay = 1f / Mathf.Clamp(hostAutoKillRate, 1, 35);
+            if (hostAutoKillTargetTimer < delay) return;
 
             PlayerControl target = FindHostAutoKillTarget(localPlayer);
-            if (target == null) return;
+            if (target == null || target == localPlayer)
+            {
+                hostAutoKillTargetTimer = 0f;
+                return;
+            }
 
             hostAutoKillTargetTimer = 0f;
             TryHostElysiumMurderPlayer(target);
@@ -158,7 +195,7 @@ private static PlayerControl FindHostAutoKillTarget(PlayerControl localPlayer)
                 if (localPlayer == null || PlayerControl.AllPlayerControls == null) return null;
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc == null || pc == localPlayer || pc.Data == null) continue;
+                    if (pc == null || pc.Data == null) continue;
                     if (pc.Data.Disconnected) continue;
                     if (pc.PlayerId == hostAutoKillTargetId) return pc;
                 }

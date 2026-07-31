@@ -54,13 +54,6 @@ private static readonly Dictionary<int, AntiCheatDisconnectNotice> pendingAntiCh
 
 private static readonly HashSet<int> ventExploitBannedOwners = new HashSet<int>();
 
-private struct VentKickRpcStep
-        {
-            public float RegisteredAt;
-        }
-
-private static readonly Dictionary<int, VentKickRpcStep> pendingVentKickRpcSteps = new Dictionary<int, VentKickRpcStep>();
-
 public static void RegisterAntiCheatDisconnectNotice(int clientId, string playerName, string reason, bool ban)
         {
             try
@@ -131,13 +124,13 @@ private static bool TryConsumeAntiCheatDisconnectNotice(PlayerControl player, ou
 private static string BuildAntiCheatDisconnectNotification(string playerName, string reason, bool ban)
         {
             string action = ban ? "Banned" : "Kicked";
-            return $"<color=#FF4444>[ANTICHEAT]</color> <b>{playerName}</b>\n{action} from Anti cheat Among Us\nReason: {reason}";
+            return $"<color=#FF4444>[ELYSIUM ANTICHEAT]</color> {action}: <b>{playerName}</b>\nReason: {reason}";
         }
 
 private static string BuildAntiCheatDisconnectGameMessage(string playerName, string reason, bool ban)
         {
             string action = ban ? "Banned" : "Kicked";
-            return $"<color=#FF4444>{action} from Anti cheat Among Us</color>\n<b>{playerName}</b>\nReason: {reason}";
+            return $"<color=#FF4444>[ELYSIUM ANTICHEAT]</color> {action}: <b>{playerName}</b>\nReason: {reason}";
         }
 
 [HarmonyPatch(typeof(HudManager), nameof(HudManager.NotifyOfDisconnect))]
@@ -256,45 +249,27 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
                 PlayerControl plr = copy.ReadNetObject<PlayerControl>();
                 if (system != SystemTypes.Ventilation) return false;
 
-                ushort sequence = copy.ReadUInt16();
-                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
-                byte vent = copy.ReadByte();
+                if (!AmongUsClient.Instance.AmHost)
+                {
+                    string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
+                    ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
+                    return true;
+                }
+
                 if (plr == null || plr == PlayerControl.LocalPlayer) return false;
+
+                copy.ReadUInt16();
+                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
+                copy.ReadByte();
+                if (op != VentilationSystem.Operation.BootImpostors) return false;
 
                 int owner = ElysiumNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
                 if (owner < 0 && plr.Data != null) owner = plr.Data.ClientId;
                 if (owner < 0) owner = plr.OwnerId;
-                if (owner < 0) return false;
+                if (owner < 0) return true;
 
-                if (op == VentilationSystem.Operation.Enter && sequence == 0 && vent == 0)
-                {
-                    pendingVentKickRpcSteps[owner] = new VentKickRpcStep
-                    {
-                        RegisteredAt = Time.realtimeSinceStartup
-                    };
-                    return false;
-                }
-
-                if (op != VentilationSystem.Operation.BootImpostors || sequence != 1 || vent != 0)
-                    return false;
-
-                if (!pendingVentKickRpcSteps.TryGetValue(owner, out VentKickRpcStep step))
-                    return false;
-
-                pendingVentKickRpcSteps.Remove(owner);
-                if (Time.realtimeSinceStartup - step.RegisteredAt > 1f)
-                    return false;
-
-                string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
-                if (AmongUsClient.Instance.AmHost)
-                {
-                    if (!IsProtectedFromAnticheat(owner))
-                        BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
-                }
-                else
-                {
-                    ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
-                }
+                if (!IsProtectedFromAnticheat(owner))
+                    BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
 
                 return true;
             }

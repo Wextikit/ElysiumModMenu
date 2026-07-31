@@ -61,6 +61,9 @@ internal static class NetworkMessageProtectionPatch
 {
 	public static bool Prefix(InnerNetClient __instance, MessageReader reader, SendOption sendOption)
 	{
+		if (!NetworkGuard.CheckUnownedSpawnFreeze(__instance, reader))
+			return false;
+
 		if (!ElysiumModMenu.ElysiumModMenuGUI.oldAntiCheatVersion &&
 			!(ElysiumModMenu.ElysiumModMenuGUI.overflowProtection && __instance != null && __instance.AmHost))
 			return true;

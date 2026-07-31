@@ -10,6 +10,7 @@ namespace ElysiumModMenu
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
         public static bool showRadar = false;
+        public static bool realisticRadar = false;
         public static bool showRadarDeadBodies = false;
         public static bool showRadarGhosts = true;
         public static bool radarRightClickTp = false;
@@ -46,6 +47,16 @@ namespace ElysiumModMenu
             new RadarMap { id = 3, res = "ElysiumModMenu.radar_skeld.png", x = 277f, y = 77f, scale = 11.5f },
             new RadarMap { id = 4, res = "ElysiumModMenu.radar_airship.png", x = 162f, y = 107f, scale = 6f },
             new RadarMap { id = 5, res = "ElysiumModMenu.radar_fungle.png", x = 237f, y = 140f, scale = 8.5f }
+        };
+
+        private static readonly RadarMap[] realisticRadarMaps =
+        {
+            new RadarMap { id = 0, res = "ElysiumModMenu.radar_realistic_skeld.png", x = 277f, y = 77f, scale = 11.5f },
+            new RadarMap { id = 1, res = "ElysiumModMenu.radar_realistic_mira_hq.png", x = 115f, y = 240f, scale = 9.25f },
+            new RadarMap { id = 2, res = "ElysiumModMenu.radar_realistic_polus.png", x = 8f, y = 21f, scale = 10f },
+            new RadarMap { id = 3, res = "ElysiumModMenu.radar_realistic_skeld.png", x = 277f, y = 77f, scale = 11.5f },
+            new RadarMap { id = 4, res = "ElysiumModMenu.radar_realistic_airship.png", x = 162f, y = 107f, scale = 6f },
+            new RadarMap { id = 5, res = "ElysiumModMenu.radar_realistic_fungle.png", x = 237f, y = 140f, scale = 8.5f }
         };
 
         private static void DrawVisualRadar()
@@ -97,17 +108,18 @@ namespace ElysiumModMenu
         {
             int id = 0;
             try { id = Mathf.Clamp(GetCurrentMapId(), 0, 5); } catch { }
-            for (int i = 0; i < radarMaps.Length; i++)
+            RadarMap[] maps = realisticRadar ? realisticRadarMaps : radarMaps;
+            for (int i = 0; i < maps.Length; i++)
             {
-                if (radarMaps[i].id != id) continue;
-                if (radarMaps[i].tex == null)
-                    radarMaps[i].tex = LoadRadarTex(radarMaps[i].res);
-                if (radarMaps[i].tex != null && radarMaps[i].style == null)
+                if (maps[i].id != id) continue;
+                if (maps[i].tex == null)
+                    maps[i].tex = LoadRadarTex(maps[i].res);
+                if (maps[i].tex != null && maps[i].style == null)
                 {
-                    radarMaps[i].style = new GUIStyle(GUIStyle.none);
-                    radarMaps[i].style.normal.background = radarMaps[i].tex;
+                    maps[i].style = new GUIStyle(GUIStyle.none);
+                    maps[i].style.normal.background = maps[i].tex;
                 }
-                return radarMaps[i].tex == null ? null : radarMaps[i];
+                return maps[i].tex == null ? null : maps[i];
             }
             return null;
         }

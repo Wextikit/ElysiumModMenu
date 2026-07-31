@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/Runtime-IL2CPP-111827?style=flat-square" alt="IL2CPP">
   <img src="https://img.shields.io/badge/Loader-BepInEx-374151?style=flat-square" alt="BepInEx">
   <img src="https://img.shields.io/badge/Language-C%23-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/Version-1.4.4-a855f7?style=flat-square" alt="Version 1.4.4">
+  <img src="https://img.shields.io/badge/Version-1.4.5-a855f7?style=flat-square" alt="Version 1.4.5">
   <img src="https://img.shields.io/github/downloads/Wextikit/ElysiumModMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
 </p>
 

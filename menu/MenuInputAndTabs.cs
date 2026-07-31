@@ -170,14 +170,14 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["CUSTOM KEYBINDS"] = "ПОЛЬЗОВАТЕЛЬСКИЕ БИНДЫ",
             ["PANIC"] = "ПАНИКА",
             ["PROFILES"] = "ПРОФИЛИ",
-            ["BUG ROOM"] = "БАГ-КОМНАТА",
-            ["BUGROOM SCOUT"] = "ПОИСК БАГ-КОМНАТ",
-            ["GLITCH ROOM FINDER"] = "ПОИСК ГЛИТЧ-КОМНАТ",
+            ["GLITCH ROOM"] = "ГЛИТЧ-КОМНАТА",
+            ["GLITCH ROOM SCOUT"] = "ПОИСК ГЛИТЧ-КОМНАТ",
             ["Overflow Protection"] = "Защита от переполнения",
             ["ESP Boxes"] = "ESP-рамки",
             ["ESP Shimmer"] = "Перелив ESP",
             ["Vote Kicks ESP"] = "ESP vote-kick",
             ["Show Radar"] = "Показывать радар",
+            ["Realistic Mode"] = "Реалистичный режим",
             ["Draw Icons"] = "Рисовать иконки",
             ["Show Dead Bodies"] = "Показывать тела",
             ["Show Ghosts"] = "Показывать призраков",
@@ -247,7 +247,6 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["Auto Kill Target"] = "Авто-килл цели",
             ["Auto Kill Angel Shield 0.13"] = "Авто-снять щит ангела 0.13",
             ["Auto Create + Find TXT"] = "Авто создать + найти TXT",
-            ["Create + Test Level Reset"] = "Создать + проверить сброс уровня",
             ["Timed Auto Run"] = "Автозапуск по таймеру",
             ["Press any key..."] = "Нажмите клавишу...",
             ["Clear"] = "Очистить"
@@ -571,6 +570,8 @@ public static bool EndlessTracking = false;
 
 public static bool NoTrackingCooldown = false;
 
+public static bool noAbilityCooldown = false;
+
 public static bool UnlimitedInterrogateRange = false;
 
 public static bool allowTasksAsImpostor = false;
@@ -593,11 +594,21 @@ public static bool hostAutoKillTarget = false;
 
 private static byte hostAutoKillTargetId = byte.MaxValue;
 
+public static int hostAutoKillRate = 1;
+
 public static bool bugRoomAutoAngel = false;
 
 public static float bugRoomAutoAngelIntervalSeconds = 0.15f;
 
 public static bool bugRoomAutoKillShield = false;
+
+public static bool bugRoomImpMeeting = false;
+
+public static bool glitchRoomBypassShield = false;
+
+public static bool glitchRoomGodMode = false;
+
+public static bool glitchRoomGodModeAll = false;
 
 public static bool noKillCooldownHostOnly = false;
 
@@ -613,9 +624,21 @@ private float hostAutoKillTimer = 0f;
 
 private float hostAutoKillTargetTimer = 0f;
 
+private static float hostAutoKillReadyAt = -1f;
+
 private float bugRoomAngelTimer = 0f;
 
 private float bugRoomShieldKillTimer = 0f;
+
+private float bugRoomImpMeetingTimer = 0f;
+
+private bool bugRoomImpMeetingDone = false;
+
+private float glitchRoomGodModeTimer = 0f;
+
+private float glitchRoomGodModeAllTimer = 0f;
+
+private float glitchRoomProtectionTimer = 0f;
 
 private float bugRoomTimedAutoRunTimer = 0f;
 
@@ -771,13 +794,15 @@ public static float globalRoomColorId = 0f;
 
 private int currentHostOnlySubTab = 0;
 
-private static readonly string[] hostOnlySubTabs = { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), L("BUG ROOM", "БАГ-КОМНАТА"), L("MAPS", "КАРТЫ") }
+private static readonly string[] hostOnlySubTabs = { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), L("GLITCH ROOM", "ГЛИТЧ-КОМНАТА") }
 
 ;
 
 public static bool UseSnapToRPC = true;
 
 private static bool isSkeldFlipped = false;
+
+public static bool flipSkeld = false;
 
 public static float selectedMapSpawnIdx = 0f;
 
@@ -788,11 +813,21 @@ public static bool FlippedSkeld
             get { return isSkeldFlipped; }
             set
             {
-                if (AmongUsClient.Instance == null || isSkeldFlipped == value) return;
-                var temp = AmongUsClient.Instance.ShipPrefabs[3];
-                AmongUsClient.Instance.ShipPrefabs[3] = AmongUsClient.Instance.ShipPrefabs[0];
-                AmongUsClient.Instance.ShipPrefabs[0] = temp;
-                isSkeldFlipped = value;
+                if (isSkeldFlipped == value) return;
+                if (AmongUsClient.Instance == null)
+                {
+                    if (!value) isSkeldFlipped = false;
+                    return;
+                }
+                try
+                {
+                    if (AmongUsClient.Instance.ShipPrefabs == null || AmongUsClient.Instance.ShipPrefabs.Count <= 3) return;
+                    var temp = AmongUsClient.Instance.ShipPrefabs[3];
+                    AmongUsClient.Instance.ShipPrefabs[3] = AmongUsClient.Instance.ShipPrefabs[0];
+                    AmongUsClient.Instance.ShipPrefabs[0] = temp;
+                    isSkeldFlipped = value;
+                }
+                catch { }
             }
         }
 

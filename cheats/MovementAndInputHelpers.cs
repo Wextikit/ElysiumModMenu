@@ -119,16 +119,7 @@ private void SmartEndGame(string outcome)
 
 private static string SanitizeSpoofFriendCode(string input)
         {
-            if (string.IsNullOrWhiteSpace(input)) return "";
-
-            string clean = "";
-            foreach (char c in input.ToLowerInvariant())
-            {
-                if (char.IsWhiteSpace(c)) break;
-                if (char.IsLetterOrDigit(c)) clean += c;
-                if (clean.Length >= 10) break;
-            }
-            return clean;
+            return string.IsNullOrWhiteSpace(input) ? "" : input.Trim();
         }
 
 private static string SanitizeHexColor(string input, string fallback)

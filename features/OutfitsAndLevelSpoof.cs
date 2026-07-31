@@ -670,6 +670,8 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
 
 public static bool alwaysShowLobbyTimer = false;
 
+public static bool rainbowLobbyTimer = false;
+
 public static bool enableChatLog = true;
 
 public static bool enableFastChat = true;

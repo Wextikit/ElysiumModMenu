@@ -163,7 +163,6 @@ public void Update()
             ElysiumAutoLobbyReturn.UpdateLogic();
             ElysiumBugroomFarmService.Tick();
             ElysiumBugroomScoutService.Tick();
-            ElysiumBugroomGlitchFinder.Tick();
             ApplyFpsLimit();
             TryAutoGhostAfterStartTick();
             TryAutoBanCustomPlatformsTick();
@@ -200,6 +199,10 @@ public void Update()
                 TryHostAutoKillTargetTick();
                 TryBugRoomAutoAngelTick();
                 TryBugRoomAutoKillShieldTick();
+                TryBugRoomImpMeetingTick();
+                TryGlitchRoomGodModeTick();
+                TryGlitchRoomGodModeAllTick();
+                TryGlitchRoomForcedProtectionTick();
                 TryBugRoomTimedAutoRunTick();
                 TryAutoBanBrokenFriendCodeTick();
                 TryAutoKickLowLevelTick();
@@ -314,8 +317,8 @@ public void Update()
                                 int currentColor = (int)player.DefaultOutfit.ColorId;
                                 if (currentColor == 18 || currentColor >= Palette.PlayerColors.Length)
                                 {
+                                    RegisterAntiCheatDisconnectNotice(player.ClientId, player.PlayerName, $"Invalid player color ({currentColor})", false);
                                     AmongUsClient.Instance.KickPlayer(player.ClientId, false);
-                                    ShowNotification($"<color=#FF0000>[AUTO-KICK]</color> Player <b>{player.PlayerName}</b> kicked (color bug)!");
                                 }
                             }
                             fortegreenTimer.Remove(pid);
@@ -444,15 +447,27 @@ public void Update()
                             bool hasIdentity = TryGetSafeIdentity(pc, out identity);
                             string botName = hasIdentity ? identity.Name : $"Player {pc.PlayerId}";
                             string botFc = hasIdentity ? identity.FriendCode : string.Empty;
+                            string botPuid = hasIdentity ? identity.Puid : string.Empty;
 
-                            bool isBot = IsBotName(botName) || (!string.IsNullOrEmpty(botFc) && IsBotBannedFc(botFc));
-                            if (!isBot) continue;
+                            ClientData client = null;
+                            try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch { }
+                            if (client != null)
+                            {
+                                if (!hasIdentity && !string.IsNullOrWhiteSpace(client.PlayerName)) botName = client.PlayerName;
+                                if (!HasBanId(botFc)) botFc = client.FriendCode;
+                                if (!HasBanId(botPuid)) botPuid = client.ProductUserId;
+                            }
 
-                            string banFc = string.IsNullOrEmpty(botFc) ? "Unknown" : botFc;
-                            string botPuid = hasIdentity ? identity.Puid : "Unknown";
+                            bool rawBot = IsBotRawPlatform(client, out string rawPlatformName);
+                            bool listedBot = IsBotBannedIdentity(botFc, botPuid, botName);
+                            if (!rawBot && !listedBot) continue;
 
-                            AddToBotBanList(banFc, botPuid, string.IsNullOrEmpty(botName) ? "Unknown" : botName, "Bot nickname");
-                            RegisterAntiCheatDisconnectNotice(pc.OwnerId, string.IsNullOrEmpty(botName) ? "Unknown" : botName, "Bot nickname", true);
+                            string banFc = HasBanId(botFc) ? botFc : "Unknown";
+                            string banPuid = HasBanId(botPuid) ? botPuid : "Unknown";
+                            string reason = rawBot ? $"Bot raw platform ({rawPlatformName})" : "Bot ban list";
+
+                            AddToBotBanList(banFc, banPuid, string.IsNullOrEmpty(botName) ? "Unknown" : botName, reason);
+                            RegisterAntiCheatDisconnectNotice(pc.OwnerId, string.IsNullOrEmpty(botName) ? "Unknown" : botName, reason, true);
                             AmongUsClient.Instance.KickPlayer(pc.OwnerId, true);
                         }
                     }

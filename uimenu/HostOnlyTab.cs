@@ -153,6 +153,8 @@ public static string bugRoomTimedAutoRunInput = "10";
 
 public static bool isEditingBugRoomTimedAutoRun = false;
 
+public static bool bugRoomAutoRejoin = false;
+
 public static bool bugRoomLv35Rehost = false;
 
 public static bool bugRoomHostPassRejoin = false;
@@ -245,6 +247,8 @@ public static Platforms[] platformValues = {
 
 public static bool unlockFeatures = true;
 
+public static bool spoofGuestAccount = false;
+
 public static bool guestExtraFeatures = false;
 
 public static bool bypassAgeRestrictions = false;
@@ -325,10 +329,15 @@ public static bool blockServerTeleports = true;
 
 public static bool overflowProtection = true;
 
-public static readonly string[] botNameTokens = new string[]
+public static readonly string[] botRawPlatformTokens = new string[]
         {
-            "UCbot", "bot", "бот", "Ucбот", "sixseven", "лут", "67",
-            "какойтобот", "бот67", "бот69"
+            "bot", "бот"
+        };
+
+public static readonly string[] defaultBotBanEntries = new string[]
+        {
+            "Holy bot",
+            "bot"
         };
 
 public static void LoadBanList()
@@ -449,6 +458,25 @@ public static void LoadBotBanList()
                     System.IO.File.Create(botBanListPath).Dispose();
                 }
                 botBannedEntries = new List<string>(System.IO.File.ReadAllLines(botBanListPath));
+                bool changed = false;
+                foreach (string defaultEntry in defaultBotBanEntries)
+                {
+                    bool exists = false;
+                    foreach (string entry in botBannedEntries)
+                    {
+                        if (entry.Trim().Equals(defaultEntry, StringComparison.OrdinalIgnoreCase))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (exists) continue;
+                    botBannedEntries.Add(defaultEntry);
+                    changed = true;
+                }
+                if (changed)
+                    System.IO.File.WriteAllLines(botBanListPath, botBannedEntries.ToArray());
             }
             catch { }
         }
@@ -458,24 +486,14 @@ public static void AddToBotBanList(string friendCode, string puid, string name, 
             try
             {
                 string fc = string.IsNullOrWhiteSpace(friendCode) ? "Unknown" : friendCode.Trim();
+                string productId = string.IsNullOrWhiteSpace(puid) ? "Unknown" : puid.Trim();
                 string nm = string.IsNullOrWhiteSpace(name) ? "Unknown" : name.Trim();
-                string fcLower = fc.ToLower();
-                string nameLower = nm.ToLower();
 
-                bool already = false;
-                foreach (var e in botBannedEntries)
+                if (string.IsNullOrEmpty(botBanListPath)) LoadBotBanList();
+                if (!IsBotBannedIdentity(fc, productId, nm))
                 {
-                    if (string.IsNullOrWhiteSpace(e) || e.TrimStart().StartsWith("#")) continue;
-                    string[] parts = e.Split('|');
-                    if (parts.Length > 0 && fcLower != "unknown" && parts[0].Trim().ToLower() == fcLower) { already = true; break; }
-                    if (fcLower == "unknown" && parts.Length >= 3 && parts[2].Trim().ToLower() == nameLower) { already = true; break; }
-                }
-
-                if (!already)
-                {
-                    if (string.IsNullOrEmpty(botBanListPath)) LoadBotBanList();
                     string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
-                    string entry = $"{fc}|{puid}|{nm}|{date}|{reason}";
+                    string entry = $"{fc}|{productId}|{nm}|{date}|{reason}";
                     botBannedEntries.Add(entry);
                     System.IO.File.AppendAllText(botBanListPath, entry + Environment.NewLine);
                 }
@@ -483,46 +501,87 @@ public static void AddToBotBanList(string friendCode, string puid, string name, 
             catch { }
         }
 
-public static bool IsBotName(string name)
+public static bool IsBotRawPlatform(ClientData client, out string rawPlatformName)
         {
+            rawPlatformName = "";
             try
             {
-                if (string.IsNullOrWhiteSpace(name)) return false;
-                string n = name.Trim().ToLowerInvariant();
+                if (client == null || client.PlatformData == null) return false;
+                rawPlatformName = (client.PlatformData.PlatformName ?? "").Trim();
+                if (rawPlatformName.Length == 0) return false;
 
-                foreach (var token in botNameTokens)
+                foreach (string token in botRawPlatformTokens)
                 {
                     if (string.IsNullOrWhiteSpace(token)) continue;
-                    if (n.Contains(token.Trim().ToLowerInvariant())) return true;
-                }
-
-                foreach (var e in botBannedEntries)
-                {
-                    if (string.IsNullOrWhiteSpace(e) || e.TrimStart().StartsWith("#")) continue;
-                    string[] parts = e.Split('|');
-                    string nick = parts.Length >= 3 ? parts[2].Trim().ToLowerInvariant() : e.Trim().ToLowerInvariant();
-                    if (!string.IsNullOrWhiteSpace(nick) && nick != "unknown" && n.Contains(nick)) return true;
+                    if (rawPlatformName.IndexOf(token.Trim(), StringComparison.OrdinalIgnoreCase) >= 0)
+                        return true;
                 }
             }
             catch { }
             return false;
         }
 
-public static bool IsBotBannedFc(string fc)
+public static bool IsBotBannedIdentity(string friendCode, string puid, string name)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(fc)) return false;
-                string f = fc.Trim().ToLowerInvariant();
-                foreach (var e in botBannedEntries)
+                string fc = string.IsNullOrWhiteSpace(friendCode) ? "" : friendCode.Trim();
+                string productId = string.IsNullOrWhiteSpace(puid) ? "" : puid.Trim();
+                string nm = string.IsNullOrWhiteSpace(name) ? "" : name.Trim();
+
+                foreach (string entry in botBannedEntries)
                 {
-                    if (string.IsNullOrWhiteSpace(e) || e.TrimStart().StartsWith("#")) continue;
-                    string[] parts = e.Split('|');
-                    if (parts.Length > 0 && parts[0].Trim().ToLowerInvariant() == f) return true;
+                    if (string.IsNullOrWhiteSpace(entry) || entry.TrimStart().StartsWith("#")) continue;
+                    string[] parts = entry.Split('|');
+                    if (parts.Length >= 3)
+                    {
+                        if (HasBanId(fc) && fc.Equals(parts[0].Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+                        if (HasBanId(productId) && productId.Equals(parts[1].Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+                        if (HasBanId(nm) && nm.Equals(parts[2].Trim(), StringComparison.OrdinalIgnoreCase)) return true;
+                        continue;
+                    }
+
+                    string token = entry.Trim();
+                    if (HasBanId(fc) && fc.Equals(token, StringComparison.OrdinalIgnoreCase)) return true;
+                    if (HasBanId(productId) && productId.Equals(token, StringComparison.OrdinalIgnoreCase)) return true;
+                    if (HasBanId(nm) && nm.Equals(token, StringComparison.OrdinalIgnoreCase)) return true;
+                    if (token.IndexOf("bot", StringComparison.OrdinalIgnoreCase) >= 0 && IsBotNameVariant(nm, token)) return true;
                 }
             }
             catch { }
             return false;
+        }
+
+private static bool IsBotNameVariant(string name, string token)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(token)) return false;
+
+            char[] nameChars = new char[name.Length];
+            int nameLength = 0;
+            foreach (char c in name)
+            {
+                if (char.IsLetterOrDigit(c))
+                    nameChars[nameLength++] = char.ToLowerInvariant(c);
+            }
+
+            char[] tokenChars = new char[token.Length];
+            int tokenLength = 0;
+            foreach (char c in token)
+            {
+                if (char.IsLetterOrDigit(c))
+                    tokenChars[tokenLength++] = char.ToLowerInvariant(c);
+            }
+
+            if (nameLength < tokenLength || tokenLength == 0) return false;
+            for (int i = 0; i < tokenLength; i++)
+            {
+                if (nameChars[i] != tokenChars[i]) return false;
+            }
+            for (int i = tokenLength; i < nameLength; i++)
+            {
+                if (!char.IsDigit(nameChars[i])) return false;
+            }
+            return true;
         }
 
 public static bool killReach = false, killAnyone = false;
@@ -936,7 +995,7 @@ private GUIStyle topSidebarStyle, activeTopSidebarStyle, microMenuHintStyle, com
 
 private GUIStyle hostSubTabStyle10, activeHostSubTabStyle10, hostSubTabStyle11, activeHostSubTabStyle11;
 
-private readonly float[] hostSubTabWidths = new float[6];
+private readonly float[] hostSubTabWidths = new float[5];
 
 private float hostSubTabLayoutWidth = -1f;
 
@@ -1026,7 +1085,6 @@ private void DrawHostOnlyTab()
                 else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
                 else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
                 else if (currentHostOnlySubTab == 4) DrawBugRoomTab();
-                else if (currentHostOnlySubTab == 5) DrawMapsTab();
             }
             finally
             {
@@ -1111,7 +1169,7 @@ private void DrawVisualsInGame()
 
             GUILayout.BeginHorizontal();
             lockRadar = DrawToggle(lockRadar, "Lock Position", 210);
-            GUILayout.FlexibleSpace();
+            realisticRadar = DrawToggle(realisticRadar, "Realistic Mode", 210);
             GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
@@ -1178,7 +1236,7 @@ private void DrawVisualsInGame()
             DrawMenuSectionHeader(L("OTHER", "ДРУГОЕ"));
             GUILayout.BeginHorizontal();
             alwaysShowLobbyTimer = DrawToggle(alwaysShowLobbyTimer, L("Always Show Lobby Timer", "Всегда показывать таймер лобби"), 210);
-            GUILayout.FlexibleSpace();
+            rainbowLobbyTimer = DrawToggle(rainbowLobbyTimer, L("Rainbow Lobby Timer", "Радужный таймер лобби"), 210);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 

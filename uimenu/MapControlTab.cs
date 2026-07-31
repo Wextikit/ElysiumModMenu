@@ -58,6 +58,25 @@ private void DrawMapsTab()
             isManualMapSpawn = DrawToggle(isManualMapSpawn, L("Manual Map Spawn Mode", "Ручной спавн карты"), 250);
             GUILayout.Space(5);
             disableMapSafeMode = DrawToggle(disableMapSafeMode, "Disable Map Safe Mode", 250);
+            GUILayout.Space(5);
+            bool flip = DrawToggle(flipSkeld, L("Flip Skeld", "Перевернуть Skeld"), 250);
+            if (flip != flipSkeld)
+            {
+                if (flip && FlippedSkeld)
+                    FlippedSkeld = false;
+                flipSkeld = flip && !FlippedSkeld;
+            }
+            GUILayout.Space(5);
+            bool dleks = DrawToggle(FlippedSkeld, "Dleks", 250);
+            if (dleks != FlippedSkeld)
+            {
+                if (dleks)
+                    flipSkeld = false;
+                FlippedSkeld = dleks;
+                if (FlippedSkeld != dleks)
+                    ShowNotification("<color=#FFAA00>[MAP]</color> Dleks prefab is not available.");
+            }
+            GUILayout.Label(L("Dleks replaces The Skeld on the next map start.", "Dleks заменит The Skeld при следующем запуске карты."), menuDescStyle);
             GUILayout.Space(10);
 
             GUILayout.BeginHorizontal();

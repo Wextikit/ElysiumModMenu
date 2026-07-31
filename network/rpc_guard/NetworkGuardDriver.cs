@@ -60,6 +60,7 @@ public sealed class NetworkGuardDriver : MonoBehaviour
 {
 	public void Update()
 	{
+		NetworkGuard.UpdateClientSpawnDrop();
 		if (!ElysiumModMenu.ElysiumModMenuGUI.oldAntiCheatVersion) return;
 		using (ElysiumNetGuard.NetGuardProfiler.Sample("Net.Cleanup"))
 		{

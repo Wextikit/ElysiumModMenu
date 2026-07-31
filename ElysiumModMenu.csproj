@@ -7,11 +7,11 @@
 		<LangVersion>latest</LangVersion>
 		<AssemblyName>ElysiumModMenu</AssemblyName>
 		<RootNamespace>ElysiumModMenu</RootNamespace>
-		<Version>1.4.4</Version>
-		<InformationalVersion>1.4.4</InformationalVersion>
+		<Version>1.4.5</Version>
+		<InformationalVersion>1.4.5</InformationalVersion>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-		<AssemblyVersion>1.4.4.0</AssemblyVersion>
-		<FileVersion>1.4.4.0</FileVersion>
+		<AssemblyVersion>1.4.5.0</AssemblyVersion>
+		<FileVersion>1.4.5.0</FileVersion>
 		<AmongUsDir Condition="'$(AmongUsDir)' == '' and Exists('E:\AmongUs\BepInEx\interop\Assembly-CSharp.dll')">E:\AmongUs</AmongUsDir>
 		<AmongUsDir Condition="'$(AmongUsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsDir>
 	</PropertyGroup>
@@ -394,6 +394,11 @@
 		<EmbeddedResource Include="resources\radar_polus.png" LogicalName="ElysiumModMenu.radar_polus.png" />
 		<EmbeddedResource Include="resources\radar_airship.png" LogicalName="ElysiumModMenu.radar_airship.png" />
 		<EmbeddedResource Include="resources\radar_fungle.png" LogicalName="ElysiumModMenu.radar_fungle.png" />
+		<EmbeddedResource Include="resources\radar_realistic_skeld.png" LogicalName="ElysiumModMenu.radar_realistic_skeld.png" />
+		<EmbeddedResource Include="resources\radar_realistic_mira_hq.png" LogicalName="ElysiumModMenu.radar_realistic_mira_hq.png" />
+		<EmbeddedResource Include="resources\radar_realistic_polus.png" LogicalName="ElysiumModMenu.radar_realistic_polus.png" />
+		<EmbeddedResource Include="resources\radar_realistic_airship.png" LogicalName="ElysiumModMenu.radar_realistic_airship.png" />
+		<EmbeddedResource Include="resources\radar_realistic_fungle.png" LogicalName="ElysiumModMenu.radar_realistic_fungle.png" />
 		<EmbeddedResource Include="resources\radar_player.png" LogicalName="ElysiumModMenu.radar_player.png" />
 		<EmbeddedResource Include="resources\radar_player_visor.png" LogicalName="ElysiumModMenu.radar_player_visor.png" />
 		<EmbeddedResource Include="resources\radar_cross.png" LogicalName="ElysiumModMenu.radar_cross.png" />

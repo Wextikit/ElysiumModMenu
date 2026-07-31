@@ -45,13 +45,6 @@ namespace ElysiumModMenu
 
         public static void Tick()
         {
-            if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled)
-            {
-                ResetRoomState();
-                state = "Paused by Glitch Finder";
-                return;
-            }
-
             if (!ElysiumModMenuGUI.BugroomScoutEnabled)
             {
                 ResetRoomState();
@@ -573,8 +566,10 @@ namespace ElysiumModMenu
         {
             public bool MainEnabled;
             public bool PassEnabled;
+            public bool RoundEnabled;
             public string MainState = string.Empty;
             public string PassState = string.Empty;
+            public string RoundState = string.Empty;
             public int Players;
             public int Level;
             public float TimerLeft;
@@ -582,27 +577,34 @@ namespace ElysiumModMenu
 
         private const float FarmDelay = 240f;
         private const float PassDelay = 2f;
+        private const float RoundDelay = 4f;
         private const float RejoinDelay = 2f;
         private const float JoinTimeout = 18f;
         private const float PassCooldown = 8f;
 
         private static string mainState = "Off";
         private static string passState = "Off";
+        private static string roundState = "Off";
         private static float mainAt = -1f;
         private static float passAt = -1f;
+        private static float roundAt = -1f;
         private static float lastPassAt = -20f;
         private static int mainCode;
         private static int passCode;
+        private static int roundCode;
         private static bool mainRun;
         private static bool mainSawGame;
         private static bool mainLeaving;
         private static bool mainJoining;
         private static bool passLeaving;
         private static bool passJoining;
+        private static bool roundSawGame;
+        private static bool roundLeaving;
+        private static bool roundJoining;
 
         public static void Tick()
         {
-            if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled)
+            if (TickRound())
             {
                 ResetMain();
                 ResetPass();
@@ -619,8 +621,10 @@ namespace ElysiumModMenu
             {
                 MainEnabled = ElysiumModMenuGUI.bugRoomLv35Rehost,
                 PassEnabled = ElysiumModMenuGUI.bugRoomHostPassRejoin,
+                RoundEnabled = ElysiumModMenuGUI.bugRoomAutoRejoin,
                 MainState = mainState ?? string.Empty,
                 PassState = passState ?? string.Empty,
+                RoundState = roundState ?? string.Empty,
                 Players = CountPlayers(),
                 Level = GetLocalLevel(),
                 TimerLeft = mainAt > 0f && !mainRun && !mainLeaving && !mainJoining ? Mathf.Max(0f, mainAt - Time.unscaledTime) : 0f,
@@ -645,6 +649,124 @@ namespace ElysiumModMenu
             passLeaving = false;
             passJoining = false;
             passState = ElysiumModMenuGUI.bugRoomHostPassRejoin ? "Waiting host" : "Off";
+        }
+
+        private static void ResetRound()
+        {
+            roundAt = -1f;
+            roundCode = 0;
+            roundSawGame = false;
+            roundLeaving = false;
+            roundJoining = false;
+            roundState = ElysiumModMenuGUI.bugRoomAutoRejoin ? "Waiting game" : "Off";
+        }
+
+        private static bool TickRound()
+        {
+            if (!ElysiumModMenuGUI.bugRoomAutoRejoin)
+            {
+                ResetRound();
+                return false;
+            }
+
+            float now = Time.unscaledTime;
+            InnerNetClient client = TryGetClient();
+
+            if (roundLeaving)
+            {
+                if (InRoom() || now < roundAt) return true;
+
+                Rejoin(roundCode);
+                roundAt = now + JoinTimeout;
+                roundLeaving = false;
+                roundJoining = true;
+                roundState = "Rejoining";
+                return true;
+            }
+
+            if (roundJoining)
+            {
+                if (InRoom())
+                {
+                    roundAt = -1f;
+                    roundCode = 0;
+                    roundJoining = false;
+                    roundState = "Back, waiting game";
+                    return true;
+                }
+
+                if (now >= roundAt)
+                {
+                    if (roundCode != 0)
+                        GUIUtility.systemCopyBuffer = GameCode.IntToGameName(roundCode);
+                    ResetRound();
+                    roundState = "Rejoin failed";
+                    ElysiumModMenuGUI.ShowNotification("<color=#FF4444>[BUG ROOM]</color> Rejoin failed, code copied.");
+                }
+                return true;
+            }
+
+            if (client == null)
+            {
+                ResetRound();
+                roundState = "Waiting room";
+                return false;
+            }
+
+            if (ShipStatus.Instance != null && LobbyBehaviour.Instance == null)
+            {
+                roundSawGame = true;
+                roundCode = client.GameId;
+                roundAt = -1f;
+                roundState = "In game";
+                return false;
+            }
+
+            if (LobbyBehaviour.Instance == null)
+            {
+                roundState = roundSawGame ? "Waiting lobby" : "Waiting game";
+                return false;
+            }
+
+            if (!roundSawGame)
+            {
+                roundState = "Waiting game";
+                return false;
+            }
+
+            if (roundCode == 0 || client.GameId != roundCode)
+            {
+                ResetRound();
+                return false;
+            }
+
+            if (client.AmHost && CountPlayers() < 2)
+            {
+                roundAt = -1f;
+                roundState = "Waiting players";
+                return true;
+            }
+
+            if (roundAt < 0f)
+            {
+                roundAt = now + RoundDelay;
+                roundState = "Rejoin in 4s";
+                return true;
+            }
+
+            if (now < roundAt)
+            {
+                roundState = $"Rejoin in {Mathf.CeilToInt(roundAt - now)}s";
+                return true;
+            }
+
+            Leave();
+            roundAt = now + RejoinDelay;
+            roundSawGame = false;
+            roundLeaving = true;
+            roundState = "Leaving";
+            ElysiumModMenuGUI.ShowNotification("<color=#FF00FF>[BUG ROOM]</color> Rejoining after game.");
+            return true;
         }
 
         private static void TickMain()

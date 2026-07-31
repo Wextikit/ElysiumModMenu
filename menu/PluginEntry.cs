@@ -43,7 +43,7 @@ namespace ElysiumModMenu
     [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.4.4";
+        public const string PluginVersion = "1.4.5";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;
@@ -104,10 +104,11 @@ namespace ElysiumModMenu
             string botBanFile = System.IO.Path.Combine(ElysiumFolder, "ElysiumBotBanList.txt");
             if (!System.IO.File.Exists(botBanFile))
             {
-                System.IO.File.WriteAllText(botBanFile, "# Auto bot ban list. Format: FriendCode|PUID|Nickname|Date|Reason\n# You can also add one nickname, Friend Code, or PUID per line to always ban matching players.\n");
+                System.IO.File.WriteAllText(botBanFile, "# Auto bot ban list. Format: FriendCode|PUID|Nickname|Date|Reason\n# You can also add one nickname, Friend Code, or PUID per line to always ban matching players.\nHoly bot\nbot\n");
             }
 
             string configPath = System.IO.Path.Combine(ElysiumFolder, "ElysiumModMenu.cfg");
+            MigratePlatformSpoofKey(configPath);
             MenuConfig = new ConfigFile(configPath, true);
             RpcSpoofDelayConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "RpcDelay", 4f, "");
             MenuKeybind = MenuConfig.Bind("ElysiumModMenu.GUI", "Keybind", KeyCode.Insert, "");
@@ -115,7 +116,11 @@ namespace ElysiumModMenu
             EnableLevelSpoofConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "EnableLevelSpoof", true, "");
             EnableFriendCodeSpoofConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "EnableFriendCodeSpoof", false, "");
             SpoofFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Spoofing", "FriendCode", "crewmate01", "");
-            EnablePlatformSpoof = MenuConfig.Bind("ElysiumModMenu.Spoofing", "EnablePlatformSpoof", true, "");
+            EnablePlatformSpoof = MenuConfig.Bind(
+                "ElysiumModMenu.Spoofing",
+                "ElysiumPlatformSpoof",
+                true,
+                "True: sends the ElysiumModMenu name in raw PlatformName and may be detected by other mods or anti-cheats. False: keeps the game's original raw platform name.");
             AutoBanBrokenFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Anticheat", "AutoBanBrokenFriendCode", false, "");
             int nativePlatformIndex = DetectNativePlatformIndex();
             PlatformIndex = MenuConfig.Bind("ElysiumModMenu.Spoofing", "PlatformIndex", nativePlatformIndex, "");
@@ -137,6 +142,7 @@ namespace ElysiumModMenu
             ThrottleDefaultLogsConfig = MenuConfig.Bind("ElysiumModMenu.Diagnostics", "ThrottleDefaultLogs", true, "Legacy compatibility setting. DetailedLogsEnabled now controls routine log output.");
             DetailedLogsEnabledConfig = MenuConfig.Bind("ElysiumModMenu.Diagnostics", "DetailedLogsEnabled", false, "Enables verbose Unity/BepInEx Message, Info and Debug output. Warnings and errors are always shown.");
             ShowEspFriendCodeConfig = MenuConfig.Bind("ElysiumModMenu.Visuals", "ShowEspFriendCode", true, "Show Friend Code in ESP player info.");
+            MenuConfig.Save();
             ElysiumModMenuGUI.detailedLogsEnabled = DetailedLogsEnabledConfig.Value;
             RepeatedLogFilter.Install();
 
@@ -158,6 +164,57 @@ namespace ElysiumModMenu
 
             var harmony = new Harmony("com.elysiummodmenu.harmony");
             harmony.PatchAll();
+        }
+
+        private static void MigratePlatformSpoofKey(string path)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(path)) return;
+
+                var lines = new List<string>(System.IO.File.ReadAllLines(path));
+                var oldKeys = new List<int>();
+                bool inSpoofing = false;
+                bool hasNewKey = false;
+
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    string line = lines[i].Trim();
+                    if (line.StartsWith("[") && line.EndsWith("]"))
+                    {
+                        inSpoofing = line.Equals("[ElysiumModMenu.Spoofing]", StringComparison.OrdinalIgnoreCase);
+                        continue;
+                    }
+
+                    if (!inSpoofing) continue;
+                    int separator = line.IndexOf('=');
+                    if (separator < 0) continue;
+
+                    string key = line.Substring(0, separator).Trim();
+                    if (key.Equals("ElysiumPlatformSpoof", StringComparison.OrdinalIgnoreCase))
+                        hasNewKey = true;
+                    else if (key.Equals("EnablePlatformSpoof", StringComparison.OrdinalIgnoreCase))
+                        oldKeys.Add(i);
+                }
+
+                if (oldKeys.Count == 0) return;
+
+                if (!hasNewKey)
+                {
+                    int index = oldKeys[0];
+                    int keyStart = lines[index].IndexOf("EnablePlatformSpoof", StringComparison.OrdinalIgnoreCase);
+                    lines[index] = lines[index].Substring(0, keyStart) +
+                                   "ElysiumPlatformSpoof" +
+                                   lines[index].Substring(keyStart + "EnablePlatformSpoof".Length);
+                    oldKeys.RemoveAt(0);
+                }
+
+                for (int i = oldKeys.Count - 1; i >= 0; i--)
+                    lines.RemoveAt(oldKeys[i]);
+
+                System.IO.File.WriteAllLines(path, lines);
+            }
+            catch { }
         }
 
         private static int DetectNativePlatformIndex()

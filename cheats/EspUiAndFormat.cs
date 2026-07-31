@@ -633,6 +633,9 @@ private void DrawLobbyControls()
             GUILayout.EndHorizontal();
             GUILayout.Space(hostActionGap);
 
+            if (GUILayout.Button(L("BUG MEETING", "БАГ-МИТИНГ"), btnStyle, GUILayout.Width(cardInnerWidth), GUILayout.Height(hostActionButtonHeight))) SpawnBugMeeting();
+            GUILayout.Space(hostActionGap);
+
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(L("Kill All", "Убить всех"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KillAll();
             GUILayout.Space(hostActionGap);

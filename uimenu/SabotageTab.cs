@@ -43,7 +43,7 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
-private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), "LOBBY SETTINGS", "H&S", L("ANIMATIONS", "АНИМАЦИИ") };
+private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), "LOBBY SETTINGS", "H&S", L("ANIMATIONS", "АНИМАЦИИ"), L("MAPS", "КАРТЫ") };
 
 private readonly List<SystemTypes> doorRooms = new List<SystemTypes>();
 
@@ -83,7 +83,8 @@ private void DrawSabotageAnimationTab()
                 if (currentSabotageSubTab == 0) DrawSabotagesTab();
                 else if (currentSabotageSubTab == 1) DrawLobbySettingsTab();
                 else if (currentSabotageSubTab == 2) DrawHnsSettingsTab();
-                else DrawAnimationsTab();
+                else if (currentSabotageSubTab == 3) DrawAnimationsTab();
+                else DrawMapsTab();
             }
             finally
             {

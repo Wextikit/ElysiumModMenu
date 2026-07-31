@@ -23,6 +23,21 @@ private static MeetingHud SpawnMeetingHudSafe()
             return mtg;
         }
 
+private static void SpawnBugMeeting()
+        {
+            try
+            {
+                HudManager hud = DestroyableSingleton<HudManager>.Instance;
+                if (MeetingRoomManager.Instance != null)
+                    MeetingRoomManager.Instance.AssignSelf(PlayerControl.LocalPlayer, null);
+
+                MeetingHud.Instance = SpawnMeetingHudSafe();
+                if (MeetingHud.Instance != null)
+                    hud.OpenMeetingRoom(PlayerControl.LocalPlayer);
+            }
+            catch { }
+        }
+
 private static void FixSendMode(InnerNetObject obj, GameObject root)
         {
             try { if (obj != null) obj.sendMode = SendOption.Reliable; } catch { }

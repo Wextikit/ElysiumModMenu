@@ -117,7 +117,6 @@ public static class ElysiumAutoLobbyReturn
 
             private static bool ShouldAutoReturn()
             {
-                if (ElysiumModMenuGUI.BugroomGlitchFinderEnabled) return false;
                 return ElysiumModMenuGUI.AutoReturnLobbyAfterMatch || ElysiumAutoHostService.ShouldReturnAfterMatch;
             }
 

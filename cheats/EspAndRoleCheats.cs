@@ -183,6 +183,11 @@ namespace ElysiumModMenu
                     catch { }
                 }
             }
+
+            public static void ClearProtectionState()
+            {
+                protectionVisuals.Clear();
+            }
         }
 
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.SetRoleInvisibility))]
@@ -511,12 +516,38 @@ namespace ElysiumModMenu
             {
                 if (__instance.Player != PlayerControl.LocalPlayer) return;
                 if (ElysiumModMenuGUI.endlessVentTime) __instance.inVentTimeRemaining = float.MaxValue;
-                if (ElysiumModMenuGUI.noVentCooldown && __instance.cooldownSecondsRemaining > 0f)
+                if ((ElysiumModMenuGUI.noAbilityCooldown || ElysiumModMenuGUI.noVentCooldown) && __instance.cooldownSecondsRemaining > 0f)
                 {
                     __instance.cooldownSecondsRemaining = 0f;
                     var btn = DestroyableSingleton<HudManager>.Instance?.AbilityButton;
                     if (btn != null) { btn.ResetCoolDown(); btn.SetCooldownFill(0f); }
                 }
+            }
+        }
+
+[HarmonyPatch(typeof(TrackerRole), "FixedUpdate")]
+        public static class TrackerNoAbilityCooldownPatch
+        {
+            public static void Postfix(TrackerRole __instance)
+            {
+                if (!ElysiumModMenuGUI.noAbilityCooldown || __instance.Player != PlayerControl.LocalPlayer) return;
+                if (__instance.cooldownSecondsRemaining <= 0f) return;
+                __instance.cooldownSecondsRemaining = 0f;
+                var btn = DestroyableSingleton<HudManager>.Instance?.AbilityButton;
+                if (btn != null) { btn.ResetCoolDown(); btn.SetCooldownFill(0f); }
+            }
+        }
+
+[HarmonyPatch(typeof(GuardianAngelRole), "FixedUpdate")]
+        public static class GuardianAngelNoAbilityCooldownPatch
+        {
+            public static void Postfix(GuardianAngelRole __instance)
+            {
+                if (!ElysiumModMenuGUI.noAbilityCooldown || __instance.Player != PlayerControl.LocalPlayer) return;
+                if (__instance.cooldownSecondsRemaining <= 0f) return;
+                __instance.cooldownSecondsRemaining = 0f;
+                var btn = DestroyableSingleton<HudManager>.Instance?.AbilityButton;
+                if (btn != null) { btn.ResetCoolDown(); btn.SetCooldownFill(0f); }
             }
         }
 
@@ -621,6 +652,10 @@ private static bool TrySetCooldownMember(object target, float value)
                     ElysiumModMenuGUI.lastKillTimestamps[__instance.PlayerId] = Time.time;
                     float cooldown = ElysiumModMenuGUI.GetConfiguredKillCooldown();
                     if (target != null && target.protectedByGuardianId >= 0) cooldown *= 0.5f;
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost &&
+                        __instance == PlayerControl.LocalPlayer &&
+                        (ElysiumModMenuGUI.noKillCooldownHostOnly || ElysiumModMenuGUI.noAbilityCooldown))
+                        cooldown = 0f;
                     __instance.killTimer = Mathf.Max(0f, cooldown);
 
                     if (!ElysiumModMenuGUI.spamReportBodies) return;
@@ -676,7 +711,7 @@ private static bool TrySetCooldownMember(object target, float value)
             {
                 try
                 {
-                    if (!ElysiumModMenuGUI.noKillCooldownHostOnly) return;
+                    if (!ElysiumModMenuGUI.noKillCooldownHostOnly && !ElysiumModMenuGUI.noAbilityCooldown) return;
                     if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
                     if (__instance != PlayerControl.LocalPlayer) return;
                     time = 0f;
@@ -691,7 +726,7 @@ private static bool TrySetCooldownMember(object target, float value)
             public static void Postfix(ScientistRole __instance)
             {
                 if (__instance.Player != PlayerControl.LocalPlayer) return;
-                if (ElysiumModMenuGUI.noVitalsCooldown) __instance.currentCooldown = 0f;
+                if (ElysiumModMenuGUI.noAbilityCooldown || ElysiumModMenuGUI.noVitalsCooldown) __instance.currentCooldown = 0f;
                 if (ElysiumModMenuGUI.endlessBattery) __instance.currentCharge = float.MaxValue;
             }
         }
@@ -699,7 +734,28 @@ private static bool TrySetCooldownMember(object target, float value)
 [HarmonyPatch(typeof(ShapeshifterRole), "FixedUpdate")]
         public static class ShapeshifterDurationPatch
         {
-            public static void Postfix(ShapeshifterRole __instance) { if (__instance.Player == PlayerControl.LocalPlayer && ElysiumModMenuGUI.endlessSsDuration) __instance.durationSecondsRemaining = float.MaxValue; }
+            public static void Postfix(ShapeshifterRole __instance)
+            {
+                if (__instance.Player != PlayerControl.LocalPlayer) return;
+                if (ElysiumModMenuGUI.endlessSsDuration) __instance.durationSecondsRemaining = float.MaxValue;
+                if (!ElysiumModMenuGUI.noAbilityCooldown || __instance.cooldownSecondsRemaining <= 0f) return;
+                __instance.cooldownSecondsRemaining = 0f;
+                var btn = DestroyableSingleton<HudManager>.Instance?.AbilityButton;
+                if (btn != null) { btn.ResetCoolDown(); btn.SetCooldownFill(0f); }
+            }
+        }
+
+[HarmonyPatch(typeof(PhantomRole), "FixedUpdate")]
+        public static class PhantomNoAbilityCooldownPatch
+        {
+            public static void Postfix(PhantomRole __instance)
+            {
+                if (!ElysiumModMenuGUI.noAbilityCooldown || __instance.Player != PlayerControl.LocalPlayer) return;
+                if (__instance.cooldownSecondsRemaining <= 0f) return;
+                __instance.cooldownSecondsRemaining = 0f;
+                var btn = DestroyableSingleton<HudManager>.Instance?.AbilityButton;
+                if (btn != null) { btn.ResetCoolDown(); btn.SetCooldownFill(0f); }
+            }
         }
 
 [HarmonyPatch(typeof(ImpostorRole), "FindClosestTarget")]
@@ -787,6 +843,39 @@ private static bool TrySetCooldownMember(object target, float value)
             }
         }
 
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckMurder))]
+        public static class PlayerControl_CheckMurder_GlitchRoomProtection_Patch
+        {
+            public static void Prefix(PlayerControl target)
+            {
+                ProtectTarget(target);
+            }
+
+            public static void Postfix(PlayerControl target)
+            {
+                ProtectTarget(target);
+            }
+
+            private static void ProtectTarget(PlayerControl target)
+            {
+                try
+                {
+                    if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+                    if (target == null || target.Data == null || target.Data.Disconnected || target.Data.IsDead) return;
+
+                    bool godMode = ElysiumModMenuGUI.glitchRoomGodModeAll ||
+                                   (ElysiumModMenuGUI.glitchRoomGodMode && target == PlayerControl.LocalPlayer);
+                    if (!godMode && !ElysiumModMenuGUI.IsGlitchRoomProtected(target)) return;
+                    if (target.protectedByGuardianId >= 0) return;
+
+                    PlayerControl local = PlayerControl.LocalPlayer;
+                    if (local == null || local.Data == null) return;
+                    local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId);
+                }
+                catch { }
+            }
+        }
+
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CmdCheckMurder))]
         public static class PlayerControl_CmdCheckMurder_KillAnyone_Patch
         {
@@ -794,6 +883,19 @@ private static bool TrySetCooldownMember(object target, float value)
             {
                 try
                 {
+                    if (ElysiumModMenuGUI.glitchRoomBypassShield &&
+                        AmongUsClient.Instance != null &&
+                        AmongUsClient.Instance.AmHost &&
+                        __instance == PlayerControl.LocalPlayer &&
+                        target != null &&
+                        target.protectedByGuardianId >= 0 &&
+                        target.Data != null &&
+                        ElysiumModMenuGUI.IsElysiumValidKillTarget(target.Data))
+                    {
+                        __instance.RpcMurderPlayer(target, true);
+                        return false;
+                    }
+
                     if (!ElysiumModMenuGUI.killAnyone || __instance != PlayerControl.LocalPlayer) return true;
                     if (target == null || target.Data == null || !ElysiumModMenuGUI.IsElysiumValidKillTarget(target.Data)) return true;
                     if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return true;
