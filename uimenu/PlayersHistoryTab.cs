@@ -57,7 +57,17 @@ private void DrawPlayersHistoryTab()
                     GUILayout.Label($"Entries: {playerHistoryEntries.Count}", historyInfoStyle, GUILayout.MinWidth(128), GUILayout.ExpandWidth(false), GUILayout.Height(24));
             GUILayout.Label(L("File: ElysiumPlayerHistory.txt", "Файл: ElysiumPlayerHistory.txt"), historyInfoStyle, GUILayout.MinWidth(220), GUILayout.ExpandWidth(false), GUILayout.Height(24));
                     GUILayout.FlexibleSpace();
-            if (GUILayout.Button(L("Clear History", "ОЧИСТИТЬ ИСТОРИЮ"), btnStyle, GUILayout.Width(136), GUILayout.Height(24)))
+                }
+                finally { GUILayout.EndHorizontal(); }
+
+                GUILayout.BeginHorizontal();
+                try
+                {
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(L("Refresh Accounts", "ОБНОВИТЬ АККАУНТЫ"), btnStyle, GUILayout.Width(154), GUILayout.Height(24)))
+                        ClearPlayerAccountCache();
+                    GUILayout.Space(4);
+                    if (GUILayout.Button(L("Clear History", "ОЧИСТИТЬ ИСТОРИЮ"), btnStyle, GUILayout.Width(136), GUILayout.Height(24)))
                     {
                         playerHistoryEntries.Clear();
                         playerHistoryEntryLookup.Clear();
@@ -65,6 +75,7 @@ private void DrawPlayersHistoryTab()
                         playerHistoryKeysById.Clear();
                         playerHistoryKeysByClientId.Clear();
                         playerHistoryLoaded = true;
+                        ClearPlayerAccountCache();
                         InvalidatePlayerHistoryViewCache();
                         WritePlayerHistoryFile();
                     }
@@ -85,7 +96,7 @@ private void DrawPlayersHistoryTab()
 
                         int rowCount = playerHistoryViewRows.Count;
                         int firstIndex = Mathf.Clamp(Mathf.FloorToInt(playersHistoryScroll.y / PlayerHistoryRowHeight), 0, Mathf.Max(0, rowCount - 1));
-                        int visibleRows = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(180f, windowRect.height - 170f) / PlayerHistoryRowHeight) + 3, 6, 30);
+                        int visibleRows = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(180f, windowRect.height - 198f) / PlayerHistoryRowHeight) + 3, 6, 30);
                         int endIndex = Mathf.Min(rowCount, firstIndex + visibleRows);
 
                         GUILayout.Space(firstIndex * PlayerHistoryRowHeight);
@@ -100,6 +111,7 @@ private void DrawPlayersHistoryTab()
                                 GUILayout.Label(row.Times, historyLineStyle, GUILayout.Height(16));
                                 GUILayout.Label(row.Platform, historyWrapStyle, GUILayout.Height(16));
                                 GUILayout.Label(row.Rpc, historyWrapStyle, GUILayout.Height(16));
+                                GUILayout.Label(GetPlayerHistoryAccountText(row.Puid), historyWrapStyle, GUILayout.Height(16));
                             }
                             finally { GUILayout.EndVertical(); }
                             GUILayout.Space(2);

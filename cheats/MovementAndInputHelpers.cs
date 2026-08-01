@@ -122,6 +122,17 @@ private static string SanitizeSpoofFriendCode(string input)
             return string.IsNullOrWhiteSpace(input) ? "" : input.Trim();
         }
 
+        [HideFromIl2Cpp]
+        internal static bool CanSendSpoofFriendCode(string input)
+        {
+            string value = SanitizeSpoofFriendCode(input);
+            if (string.IsNullOrEmpty(value)) return false;
+
+            int hash = value.LastIndexOf('#');
+            string username = hash > 0 ? value.Substring(0, hash) : value;
+            return username.Length <= 10;
+        }
+
 private static string SanitizeHexColor(string input, string fallback)
         {
             string value = (input ?? string.Empty).Trim();

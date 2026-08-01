@@ -514,7 +514,8 @@ private static void RebuildPlayerHistoryViewCache()
                     Identity = $"Lv: {e.Level} | FC: {e.FriendCode} | PUID: {e.Puid}",
                     Times = $"Joined: {e.FirstSeenUtc:HH:mm:ss} | Left: {(e.LeftUtc.HasValue ? e.LeftUtc.Value.ToString("HH:mm:ss") : "online")}",
                     Platform = $"Platform: {FormatPlatformHistory(e)}",
-                    Rpc = $"RPC: {FormatRpcHistory(e)}"
+                    Rpc = $"RPC: {FormatRpcHistory(e)}",
+                    Puid = e.Puid
                 });
             }
 
