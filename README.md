@@ -260,7 +260,7 @@ Developed and maintained by **Meowchelo**.
 
 ## Inspiration :3
 
-- [EHR](https://github.com/Gurge44/EndlessHostRoles) — [Gurge44](https://github.com/Gurge44)
-- [MalumMenu](https://github.com/scp222thj/MalumMenu) — [scp222thj](https://github.com/scp222thj)
-- [SickoMenu](https://github.com/g0aty/SickoMenu) — [g0aty](https://github.com/g0aty)
-- [AUM](https://github.com/BitCrackers/AmongUsMenu) — [BitCrackers](https://github.com/BitCrackers)
+- [EHR](https://github.com/Gurge44/EndlessHostRoles) - [Gurge44](https://github.com/Gurge44)
+- [MalumMenu](https://github.com/scp222thj/MalumMenu) - [scp222thj](https://github.com/scp222thj)
+- [SickoMenu](https://github.com/g0aty/SickoMenu) - [g0aty](https://github.com/g0aty)
+- [AUM](https://github.com/BitCrackers/AmongUsMenu) - [BitCrackers](https://github.com/BitCrackers)
