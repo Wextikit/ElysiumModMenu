@@ -1,6 +1,6 @@
-<div align="center">
+ё<div align="center">
 
-# Elysium Mod Menu
+# Elysium Mod Menu (EMM) - Among Us
 
 **Among Us mod menu with local visual, host, lobby and moderation tools.**
 
