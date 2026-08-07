@@ -240,7 +240,7 @@ Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
 
 | Platform                             |           Status          |
 | :----------------------------------- | :-----------------------: |
-| Steam  / itch                        |        ✅ Supported        |
+| Steam  / itch.io                     |        ✅ Supported        |
 | Epic Games / xbox pc                 |        ✅ Supported        |
 | Linux / Steam Deck (Proton)          |        ✅ Supported        |
 | Cracked versions                     | ⚠️ May work (unsupported) |
