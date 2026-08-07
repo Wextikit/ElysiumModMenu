@@ -236,6 +236,25 @@ dotnet build .\ElysiumModMenu.slnx -c Release
 
 Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
 
+## Compatibility
+
+| Platform                             |           Status          |
+| :----------------------------------- | :-----------------------: |
+| Steam                                |        ✅ Supported        |
+| Epic Games                           |        ✅ Supported        |
+| Linux / Steam Deck (Proton)          |        ✅ Supported        |
+| Cracked versions                     | ⚠️ May work (unsupported) |
+| iOS / iPadOS / Android               |      ❌ Not supported      |
+| PlayStation / Xbox / Nintendo Switch |      ❌ Not supported      |
+
+## Usage
+
+Please use Elysium responsibly.
+
+* Use Elysium only in private lobbies with players who are aware that mods are being used.
+* Some features are local, while others may affect the current lobby or require host permissions.
+* If you accidentally join a public lobby, disable or unload the mod before continuing to play.
+
 ## Disclaimer
 
 Elysium Mod Menu is an unofficial third-party modification for Among Us.
