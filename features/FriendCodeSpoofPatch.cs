@@ -53,6 +53,11 @@ public static class PublicFriendCodeRegistrationPatch
 
         string value = (ElysiumModMenuGUI.spoofFriendCodeInput ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(value)) return true;
+        if (!ElysiumModMenuGUI.CanSendSpoofFriendCode(value))
+        {
+            ElysiumModMenuGUI.ShowNotification("<color=#FF4444>[SPOOF FC]</color> Server limit: 10 characters.");
+            return false;
+        }
 
         int hash = value.LastIndexOf('#');
         if (hash <= 0)
@@ -154,6 +159,11 @@ public static class PublicFriendCodeConfirmPatch
 
         string value = (ElysiumModMenuGUI.spoofFriendCodeInput ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(value)) return true;
+        if (!ElysiumModMenuGUI.CanSendSpoofFriendCode(value))
+        {
+            ElysiumModMenuGUI.ShowNotification("<color=#FF4444>[SPOOF FC]</color> Server limit: 10 characters.");
+            return false;
+        }
 
         try
         {
@@ -170,8 +180,9 @@ public static class PublicFriendCodeConfirmPatch
             mgr.SetFriendCode(value, callback);
             return false;
         }
-        catch
+        catch (Exception ex)
         {
+            Plugin.Instance?.Log?.LogWarning((object)$"[SPOOF FC] Submit failed: {ex.Message}");
             return true;
         }
     }

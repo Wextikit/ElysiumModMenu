@@ -234,6 +234,11 @@ public static string GetCachedOriginalFriendCode(NetworkedPlayerInfo data, strin
         {
             spoofFriendCodeInput = SanitizeSpoofFriendCode(spoofFriendCodeInput);
             if (string.IsNullOrEmpty(spoofFriendCodeInput)) return;
+            if (!CanSendSpoofFriendCode(spoofFriendCodeInput))
+            {
+                ShowNotification("<color=#FF4444>[SPOOF FC]</color> Server limit: 10 characters.");
+                return;
+            }
 
             try
             {
