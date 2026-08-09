@@ -241,7 +241,7 @@ Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
 | Platform                             |           Status          |
 | :----------------------------------- | :-----------------------: |
 | Steam  / itch.io                     |        ✅ Supported        |
-| Epic Games / xbox pc                 |        ✅ Supported        |
+| Epic Games/xbox pc/Microsoft store   |        ✅ Supported        |
 | Linux / Steam Deck (Proton)          |        ✅ Supported        |
 | Cracked versions                     | ⚠️ May work (unsupported) |
 | iOS / iPadOS / Android               |      ❌ Not supported      |
