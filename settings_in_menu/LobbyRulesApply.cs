@@ -92,6 +92,7 @@ private void ApplyClassicRoles()
             TrySetClassicRoleOpt((RoleTypes)9, rolePhantomCount, rolePhantomChance, "Phantom");
             TrySetClassicRoleOpt((RoleTypes)12, roleDetectiveCount, roleDetectiveChance, "Detective");
             TrySetClassicRoleOpt((RoleTypes)18, roleViperCount, roleViperChance, "Viper");
+            TrySetClassicRoleOpt((RoleTypes)19, roleJudgeCount, roleJudgeChance, "Judge");
             ApplyClassicRoleDetails();
         }
 
@@ -163,80 +164,84 @@ private static void TrySetClassicRoleOpt(RoleTypes role, int count, int chance, 
 
 private static void LoadClassicRoleDetails()
         {
-            var eng = GetRoleOpt<EngineerRoleOptionsV10>(RoleTypes.Engineer);
+            var eng = GetRoleOpt<EngineerRoleOptionsV11>(RoleTypes.Engineer);
             if (eng != null) { roleEngineerCd = eng.EngineerCooldown; roleEngineerVent = eng.EngineerInVentMaxTime; }
             if (TryGetGameFloat(out float engCd, "1300", "EngineerCooldown", "VentUseCooldown", "VentCooldown")) roleEngineerCd = engCd;
             if (TryGetGameFloat(out float engVent, "1301", "EngineerInVentMaxTime", "MaxTimeInVents", "VentDuration")) roleEngineerVent = engVent;
-            var sci = GetRoleOpt<ScientistRoleOptionsV10>(RoleTypes.Scientist);
+            var sci = GetRoleOpt<ScientistRoleOptionsV11>(RoleTypes.Scientist);
             if (sci != null) { roleScientistCd = sci.ScientistCooldown; roleScientistBattery = sci.ScientistBatteryCharge; }
             if (TryGetGameFloat(out float sciCd, "1200", "ScientistCooldown", "VitalsDisplayCooldown", "VitalsCooldown")) roleScientistCd = sciCd;
             if (TryGetGameFloat(out float sciBattery, "1201", "ScientistBatteryCharge", "BatteryDuration", "BatteryCharge")) roleScientistBattery = sciBattery;
-            var ga = GetRoleOpt<GuardianAngelRoleOptionsV10>(RoleTypes.GuardianAngel);
+            var ga = GetRoleOpt<GuardianAngelRoleOptionsV11>(RoleTypes.GuardianAngel);
             if (ga != null) { roleGuardianCd = ga.GuardianAngelCooldown; roleGuardianTime = ga.ProtectionDurationSeconds; roleGuardianImpSee = ga.ImpostorsCanSeeProtect; }
             if (TryGetGameFloat(out float gaCd, "1101", "GuardianAngelCooldown", "ProtectCooldown")) roleGuardianCd = gaCd;
             if (TryGetGameFloat(out float gaTime, "1100", "ProtectionDurationSeconds", "ProtectionDuration")) roleGuardianTime = gaTime;
             if (TryGetGameBool(out bool gaSee, "1100", "ImpostorsCanSeeProtect", "ProtectVisibleToImpostors")) roleGuardianImpSee = gaSee;
-            var ss = GetRoleOpt<ShapeshifterRoleOptionsV10>(RoleTypes.Shapeshifter);
+            var ss = GetRoleOpt<ShapeshifterRoleOptionsV11>(RoleTypes.Shapeshifter);
             if (ss != null) { roleShifterCd = ss.ShapeshifterCooldown; roleShifterTime = ss.ShapeshifterDuration; roleShifterSkin = ss.ShapeshifterLeaveSkin; }
             if (TryGetGameFloat(out float ssCd, "1000", "ShapeshifterCooldown", "ShapeshiftCooldown")) roleShifterCd = ssCd;
             if (TryGetGameFloat(out float ssTime, "1001", "ShapeshifterDuration", "ShapeshiftDuration")) roleShifterTime = ssTime;
             if (TryGetGameBool(out bool ssSkin, "1000", "ShapeshifterLeaveSkin", "LeaveShapeshiftingEvidence")) roleShifterSkin = ssSkin;
-            var nm = GetRoleOpt<NoisemakerRoleOptionsV10>((RoleTypes)8);
+            var nm = GetRoleOpt<NoisemakerRoleOptionsV11>((RoleTypes)8);
             if (nm != null) { roleNoisemakerTime = nm.NoisemakerAlertDuration; roleNoisemakerImpAlert = nm.NoisemakerImpostorAlert; }
             if (TryGetGameFloat(out float nmTime, "1600", "NoisemakerAlertDuration", "AlertDuration")) roleNoisemakerTime = nmTime;
             if (TryGetGameBool(out bool nmAlert, "1600", "NoisemakerImpostorAlert", "ImpostorAlert")) roleNoisemakerImpAlert = nmAlert;
-            var tr = GetRoleOpt<TrackerRoleOptionsV10>((RoleTypes)10);
+            var tr = GetRoleOpt<TrackerRoleOptionsV11>((RoleTypes)10);
             if (tr != null) { roleTrackerCd = tr.TrackerCooldown; roleTrackerTime = tr.TrackerDuration; roleTrackerDelay = tr.TrackerDelay; }
             if (TryGetGameFloat(out float trCd, "1550", "TrackerCooldown")) roleTrackerCd = trCd;
             if (TryGetGameFloat(out float trTime, "1551", "TrackerDuration")) roleTrackerTime = trTime;
             if (TryGetGameFloat(out float trDelay, "1552", "TrackerDelay")) roleTrackerDelay = trDelay;
-            var ph = GetRoleOpt<PhantomRoleOptionsV10>((RoleTypes)9);
+            var ph = GetRoleOpt<PhantomRoleOptionsV11>((RoleTypes)9);
             if (ph != null) { rolePhantomCd = ph.PhantomCooldown; rolePhantomTime = ph.PhantomDuration; }
             if (TryGetGameFloat(out float phCd, "1500", "PhantomCooldown")) rolePhantomCd = phCd;
             if (TryGetGameFloat(out float phTime, "1501", "PhantomDuration")) rolePhantomTime = phTime;
-            var dt = GetRoleOpt<DetectiveRoleOptionsV10>((RoleTypes)12);
+            var dt = GetRoleOpt<DetectiveRoleOptionsV11>((RoleTypes)12);
             if (dt != null) roleDetectiveLimit = dt.DetectiveSuspectLimit;
-            var vp = GetRoleOpt<ViperRoleOptionsV10>((RoleTypes)18);
-            if (vp != null) roleViperDissolve = vp.viperDissolveTime;
+            var vp = GetRoleOpt<ViperRoleOptionsV11>((RoleTypes)18);
+            if (vp != null) roleViperDissolve = vp.ViperDissolveTime;
+            var jg = GetRoleOpt<JudgeRoleOptionsV11>((RoleTypes)19);
+            if (jg != null) roleJudgeTaskPct = jg.JudgeTaskRequirementPercentage;
         }
 
 private static void ApplyClassicRoleDetails()
         {
-            var eng = GetRoleOpt<EngineerRoleOptionsV10>(RoleTypes.Engineer);
+            var eng = GetRoleOpt<EngineerRoleOptionsV11>(RoleTypes.Engineer);
             if (eng != null) { eng.EngineerCooldown = roleEngineerCd; eng.EngineerInVentMaxTime = roleEngineerVent; }
             TrySetGameFloat(roleEngineerCd, "1300", "EngineerCooldown", "VentUseCooldown", "VentCooldown");
             TrySetGameFloat(roleEngineerVent, "1301", "EngineerInVentMaxTime", "MaxTimeInVents", "VentDuration");
-            var sci = GetRoleOpt<ScientistRoleOptionsV10>(RoleTypes.Scientist);
+            var sci = GetRoleOpt<ScientistRoleOptionsV11>(RoleTypes.Scientist);
             if (sci != null) { sci.ScientistCooldown = roleScientistCd; sci.ScientistBatteryCharge = roleScientistBattery; }
             TrySetGameFloat(roleScientistCd, "1200", "ScientistCooldown", "VitalsDisplayCooldown", "VitalsCooldown");
             TrySetGameFloat(roleScientistBattery, "1201", "ScientistBatteryCharge", "BatteryDuration", "BatteryCharge");
-            var ga = GetRoleOpt<GuardianAngelRoleOptionsV10>(RoleTypes.GuardianAngel);
+            var ga = GetRoleOpt<GuardianAngelRoleOptionsV11>(RoleTypes.GuardianAngel);
             if (ga != null) { ga.GuardianAngelCooldown = roleGuardianCd; ga.ProtectionDurationSeconds = roleGuardianTime; ga.ImpostorsCanSeeProtect = roleGuardianImpSee; }
             TrySetGameFloat(roleGuardianCd, "1101", "GuardianAngelCooldown", "ProtectCooldown");
             TrySetGameFloat(roleGuardianTime, "1100", "ProtectionDurationSeconds", "ProtectionDuration");
             TrySetGameBool(roleGuardianImpSee, "1100", "ImpostorsCanSeeProtect", "ProtectVisibleToImpostors");
-            var ss = GetRoleOpt<ShapeshifterRoleOptionsV10>(RoleTypes.Shapeshifter);
+            var ss = GetRoleOpt<ShapeshifterRoleOptionsV11>(RoleTypes.Shapeshifter);
             if (ss != null) { ss.ShapeshifterCooldown = roleShifterCd; ss.ShapeshifterDuration = roleShifterTime; ss.ShapeshifterLeaveSkin = roleShifterSkin; }
             TrySetGameFloat(roleShifterCd, "1000", "ShapeshifterCooldown", "ShapeshiftCooldown");
             TrySetGameFloat(roleShifterTime, "1001", "ShapeshifterDuration", "ShapeshiftDuration");
             TrySetGameBool(roleShifterSkin, "1000", "ShapeshifterLeaveSkin", "LeaveShapeshiftingEvidence");
-            var nm = GetRoleOpt<NoisemakerRoleOptionsV10>((RoleTypes)8);
+            var nm = GetRoleOpt<NoisemakerRoleOptionsV11>((RoleTypes)8);
             if (nm != null) { nm.NoisemakerAlertDuration = roleNoisemakerTime; nm.NoisemakerImpostorAlert = roleNoisemakerImpAlert; }
             TrySetGameFloat(roleNoisemakerTime, "1600", "NoisemakerAlertDuration", "AlertDuration");
             TrySetGameBool(roleNoisemakerImpAlert, "1600", "NoisemakerImpostorAlert", "ImpostorAlert");
-            var tr = GetRoleOpt<TrackerRoleOptionsV10>((RoleTypes)10);
+            var tr = GetRoleOpt<TrackerRoleOptionsV11>((RoleTypes)10);
             if (tr != null) { tr.TrackerCooldown = roleTrackerCd; tr.TrackerDuration = roleTrackerTime; tr.TrackerDelay = roleTrackerDelay; }
             TrySetGameFloat(roleTrackerCd, "1550", "TrackerCooldown");
             TrySetGameFloat(roleTrackerTime, "1551", "TrackerDuration");
             TrySetGameFloat(roleTrackerDelay, "1552", "TrackerDelay");
-            var ph = GetRoleOpt<PhantomRoleOptionsV10>((RoleTypes)9);
+            var ph = GetRoleOpt<PhantomRoleOptionsV11>((RoleTypes)9);
             if (ph != null) { ph.PhantomCooldown = rolePhantomCd; ph.PhantomDuration = rolePhantomTime; }
             TrySetGameFloat(rolePhantomCd, "1500", "PhantomCooldown");
             TrySetGameFloat(rolePhantomTime, "1501", "PhantomDuration");
-            var dt = GetRoleOpt<DetectiveRoleOptionsV10>((RoleTypes)12);
+            var dt = GetRoleOpt<DetectiveRoleOptionsV11>((RoleTypes)12);
             if (dt != null) dt.DetectiveSuspectLimit = roleDetectiveLimit;
-            var vp = GetRoleOpt<ViperRoleOptionsV10>((RoleTypes)18);
-            if (vp != null) vp.viperDissolveTime = roleViperDissolve;
+            var vp = GetRoleOpt<ViperRoleOptionsV11>((RoleTypes)18);
+            if (vp != null) vp.ViperDissolveTime = roleViperDissolve;
+            var jg = GetRoleOpt<JudgeRoleOptionsV11>((RoleTypes)19);
+            if (jg != null) jg.JudgeTaskRequirementPercentage = roleJudgeTaskPct;
         }
 
 private static T GetRoleOpt<T>(RoleTypes role) where T : class
@@ -245,7 +250,7 @@ private static T GetRoleOpt<T>(RoleTypes role) where T : class
             if (ro == null) return null;
             try
             {
-                if (ro is RoleOptionsCollectionV10 col && col.TryGetRoleOptions<T>(role, out T opt))
+                if (ro is RoleOptionsCollectionV11 col && col.TryGetRoleOptions<T>(role, out T opt))
                     return opt;
             }
             catch { }
@@ -456,6 +461,7 @@ private static void NormalizeLobbySettings(bool hns)
                 MinNoLimitFloat(ref rolePhantomTime);
                 MinNoLimitFloat(ref roleDetectiveLimit);
                 MinNoLimitFloat(ref roleViperDissolve);
+                MinNoLimitFloat(ref roleJudgeTaskPct);
                 MinNoLimitFloat(ref hnsSetHideTime);
                 MinNoLimitFloat(ref hnsSetFinalTime);
                 MinNoLimitFloat(ref hnsSetFinalSpeed);
@@ -490,6 +496,7 @@ private static void NormalizeLobbySettings(bool hns)
             ClampRole(ref rolePhantomCount, ref rolePhantomChance);
             ClampRole(ref roleDetectiveCount, ref roleDetectiveChance);
             ClampRole(ref roleViperCount, ref roleViperChance);
+            ClampRole(ref roleJudgeCount, ref roleJudgeChance);
 
             roleEngineerCd = Mathf.Clamp(roleEngineerCd, 0f, 120f);
             roleEngineerVent = Mathf.Clamp(roleEngineerVent, 0f, 120f);
@@ -507,6 +514,7 @@ private static void NormalizeLobbySettings(bool hns)
             rolePhantomTime = Mathf.Clamp(rolePhantomTime, 0f, 120f);
             roleDetectiveLimit = Mathf.Clamp(roleDetectiveLimit, 0f, 10f);
             roleViperDissolve = Mathf.Clamp(roleViperDissolve, 0f, 120f);
+            roleJudgeTaskPct = Mathf.Clamp(roleJudgeTaskPct, 0f, 100f);
 
             hnsSetHideTime = Mathf.Clamp(hnsSetHideTime, 10f, 180f);
             hnsSetFinalTime = Mathf.Clamp(hnsSetFinalTime, 10f, 180f);

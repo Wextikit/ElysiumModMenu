@@ -12,8 +12,7 @@
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 		<AssemblyVersion>1.4.5.0</AssemblyVersion>
 		<FileVersion>1.4.5.0</FileVersion>
-		<AmongUsDir Condition="'$(AmongUsDir)' == '' and Exists('E:\AmongUs\BepInEx\interop\Assembly-CSharp.dll')">E:\AmongUs</AmongUsDir>
-		<AmongUsDir Condition="'$(AmongUsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsDir>
+		<AmongUsDir Condition="'$(AmongUsDir)' == '' and Exists('$(MSBuildThisFileDirectory)lib\BepInEx\interop\Assembly-CSharp.dll')">$(MSBuildThisFileDirectory)lib</AmongUsDir>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="AddressablesPlayAssetDelivery">

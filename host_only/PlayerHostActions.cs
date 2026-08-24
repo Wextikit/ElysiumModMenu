@@ -62,7 +62,7 @@ private void ForceGlobalEject(PlayerControl target)
 
                 var emptyStates = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<MeetingHud.VoterState>(0);
 
-                MeetingHud.Instance.RpcVotingComplete(emptyStates, target.Data, false);
+                MeetingHud.Instance.RpcVotingComplete(emptyStates, target.Data, false, false, 0);
 
                 MeetingHud.Instance.RpcClose();
 
@@ -103,7 +103,7 @@ private void ForceAllVotesTo(PlayerControl target)
                     states[i] = st;
                 }
 
-                MeetingHud.Instance.RpcVotingComplete(states, target.Data, false);
+                MeetingHud.Instance.RpcVotingComplete(states, target.Data, false, false, 0);
                 ShowNotification($"<color=#00FF00>[VOTE]</color> Votes -> <b>{target.Data.PlayerName}</b>");
             }
             catch { }
@@ -149,7 +149,7 @@ private static bool TryForceGlobalEjectViaMeeting(PlayerControl target)
                 }
 
                 var emptyStates = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<MeetingHud.VoterState>(0);
-                MeetingHud.Instance.RpcVotingComplete(emptyStates, target.Data, false);
+                MeetingHud.Instance.RpcVotingComplete(emptyStates, target.Data, false, false, 0);
                 MeetingHud.Instance.RpcClose();
                 return true;
             }

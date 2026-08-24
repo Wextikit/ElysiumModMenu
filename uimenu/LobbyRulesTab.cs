@@ -58,6 +58,7 @@ private static float rolePhantomCd = 15f;
 private static float rolePhantomTime = 10f;
 private static float roleDetectiveLimit = 1f;
 private static float roleViperDissolve = 10f;
+private static float roleJudgeTaskPct = 0f;
 private static float hnsSetHideTime = 60f;
 private static float hnsSetFinalTime = 60f;
 private static float hnsSetFinalSpeed = 1.5f;
@@ -249,6 +250,7 @@ private void LoadLobbySettingsFromGame(bool force)
             TryGetClassicRoleOpt((RoleTypes)9, out rolePhantomCount, out rolePhantomChance, "Phantom");
             TryGetClassicRoleOpt((RoleTypes)12, out roleDetectiveCount, out roleDetectiveChance, "Detective");
             TryGetClassicRoleOpt((RoleTypes)18, out roleViperCount, out roleViperChance, "Viper");
+            TryGetClassicRoleOpt((RoleTypes)19, out roleJudgeCount, out roleJudgeChance, "Judge");
             LoadClassicRoleDetails();
             if (TryGetGameFloat(out float hideTime, "TotalHideTime", "totalHideTime", "CurrentHideTime", "currentHideTime", "HidingTime", "CategorizedHidingTime", "HideTime", "HnSHidingTime")) hnsSetHideTime = hideTime;
             if (TryGetGameFloat(out float finalTime, "TotalFinalHideTime", "totalFinalHideTime", "CurrentFinalHideTime", "currentFinalHideTime", "FinalHideTime", "CategorizedFinalHideTime", "FinaleTime", "FinalTime")) hnsSetFinalTime = finalTime;
@@ -296,6 +298,7 @@ private void DrawClassicRolesSettings(float width, bool compact)
             DrawRoleSettingRow("Phantom", width, ref rolePhantomCount, ref rolePhantomChance);
                 DrawRoleSettingRow("Detective", width, ref roleDetectiveCount, ref roleDetectiveChance);
                 DrawRoleSettingRow("Viper", width, ref roleViperCount, ref roleViperChance);
+                DrawRoleSettingRow("Judge", width, ref roleJudgeCount, ref roleJudgeChance);
                 DrawClassicRoleDetails(width, true);
                 return;
             }
@@ -316,6 +319,7 @@ private void DrawClassicRolesSettings(float width, bool compact)
             DrawRoleSettingRow("Phantom", col, ref rolePhantomCount, ref rolePhantomChance);
             DrawRoleSettingRow("Detective", col, ref roleDetectiveCount, ref roleDetectiveChance);
             DrawRoleSettingRow("Viper", col, ref roleViperCount, ref roleViperChance);
+            DrawRoleSettingRow("Judge", col, ref roleJudgeCount, ref roleJudgeChance);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
             DrawClassicRoleDetails(width, false);
@@ -359,6 +363,7 @@ private void DrawClassicRoleDetails(float width, bool compact)
                 DrawLocalFloatRow("Phantom Time", width, ref rolePhantomTime, 1f);
                 DrawLocalFloatRow("Detective Limit", width, ref roleDetectiveLimit, 1f);
                 DrawLocalFloatRow("Viper Dissolve", width, ref roleViperDissolve, 1f);
+                DrawLocalFloatRow("Judge Tasks %", width, ref roleJudgeTaskPct, 5f);
                 return;
             }
 
@@ -387,6 +392,7 @@ private void DrawClassicRoleDetails(float width, bool compact)
             DrawLocalFloatRow("Phantom Time", col, ref rolePhantomTime, 1f);
             DrawLocalFloatRow("Detective Limit", col, ref roleDetectiveLimit, 1f);
             DrawLocalFloatRow("Viper Dissolve", col, ref roleViperDissolve, 1f);
+            DrawLocalFloatRow("Judge Tasks %", col, ref roleJudgeTaskPct, 5f);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }

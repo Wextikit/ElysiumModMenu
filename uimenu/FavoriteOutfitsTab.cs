@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -54,6 +54,7 @@ public void Update()
             TickLocalColorSnipe();
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
             NetworkedClones.Tick(showMenu);
+            PetControl.Tick(showMenu);
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
@@ -952,7 +953,7 @@ private static bool TryOpenGlobalChatViaNoEjectExile()
                 }
 
                 var emptyStates = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<MeetingHud.VoterState>(0);
-                MeetingHud.Instance.RpcVotingComplete(emptyStates, null, false);
+                MeetingHud.Instance.RpcVotingComplete(emptyStates, (NetworkedPlayerInfo)null, false, false, 0);
                 MeetingHud.Instance.RpcClose();
                 return true;
             }

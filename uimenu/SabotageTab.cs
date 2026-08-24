@@ -301,6 +301,8 @@ private static int roleDetectiveCount;
 private static int roleDetectiveChance;
 private static int roleViperCount;
 private static int roleViperChance;
+private static int roleJudgeCount;
+private static int roleJudgeChance;
 private static float roleEngineerCd = 10f;
 private static float roleEngineerVent = 15f;
 private static float roleScientistCd = 15f;

@@ -221,6 +221,7 @@ public void OnGUI()
             DrawVisualRadar();
             DrawVisualReplay();
             DrawEspBoxes();
+            PetControl.DrawOverlay(showMenu);
 
             if (Time.unscaledTime >= nextPlayerHistoryUpdateAt)
             {

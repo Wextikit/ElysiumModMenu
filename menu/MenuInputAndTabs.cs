@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -536,12 +536,12 @@ public static RoleTypes[] forceRoleOptions = { RoleTypes.Crewmate, RoleTypes.Imp
 
 public static RoleTypes[] roleAssignOptions = {
             RoleTypes.Crewmate, RoleTypes.Impostor, RoleTypes.Engineer, RoleTypes.Scientist, RoleTypes.Shapeshifter, RoleTypes.GuardianAngel,
-            (RoleTypes)8, (RoleTypes)9, (RoleTypes)10, (RoleTypes)12, (RoleTypes)18, RoleTypes.Crewmate, RoleTypes.Impostor
+            (RoleTypes)8, (RoleTypes)9, (RoleTypes)10, (RoleTypes)12, (RoleTypes)18, (RoleTypes)19, RoleTypes.Crewmate, RoleTypes.Impostor
         };
 
 public static string[] roleAssignNames = {
             "Crewmate", "Impostor", "Engineer", "Scientist", "Shapeshifter", "Guardian Angel",
-            "Noisemaker", "Phantom", "Tracker", "Detective", "Viper", "Ghost", "Ghost Imp"
+            "Noisemaker", "Phantom", "Tracker", "Detective", "Viper", "Judge", "Ghost", "Ghost Imp"
         };
 
 private int targetRoleAssignIdx = 0;
@@ -573,6 +573,8 @@ public static bool NoTrackingCooldown = false;
 public static bool noAbilityCooldown = false;
 
 public static bool UnlimitedInterrogateRange = false;
+
+public static bool JudgeOverruleNoTasks = false;
 
 public static bool allowTasksAsImpostor = false;
 

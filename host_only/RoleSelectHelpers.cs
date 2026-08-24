@@ -152,6 +152,9 @@ private static bool TryGetRoleOptionNames(RoleTypes role, out string[] names)
                 case 18:
                     names = new[] { "Viper" };
                     return true;
+                case 19:
+                    names = new[] { "Judge" };
+                    return true;
                 default:
                     names = null;
                     return false;

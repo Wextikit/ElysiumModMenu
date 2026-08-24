@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -306,7 +306,7 @@ namespace ElysiumModMenu
                     foreach (var state in __instance.playerStates)
                     {
                         if (state == null) continue;
-                        var data = GameData.Instance.GetPlayerById(state.TargetPlayerId);
+                        var data = GameData.Instance.GetPlayerById(state.PlayerId);
                         if (data != null && !data.Disconnected && data.DefaultOutfit != null && state.NameText != null)
                         {
                             string espName = ElysiumModMenuGUI.GetESPNameTag(data, data.DefaultOutfit.PlayerName ?? "???");
@@ -319,6 +319,7 @@ namespace ElysiumModMenu
                                 else if (roleId == 10) roleName = "Tracker";
                                 else if (roleId == 12) roleName = "Detective";
                                 else if (roleId == 18) roleName = "Viper";
+                else if (roleId == 19) roleName = "Judge";
                                 else if (roleName == "GuardianAngel") roleName = "Guardian Angel";
                                 Color customColor = ElysiumModMenuGUI.GetRoleColor(roleId, data.Role.TeamColor);
                                 string roleColor = ColorUtility.ToHtmlStringRGB(customColor);
@@ -936,6 +937,17 @@ private void teleportToPlayer(PlayerControl t)
                     return false;
                 }
                 catch { return true; }
+            }
+        }
+
+[HarmonyPatch(typeof(JudgeRole), nameof(JudgeRole.IsBlockedByTasks))]
+        public static class JudgeTasksPatch
+        {
+            public static void Postfix(JudgeRole __instance, ref bool __result)
+            {
+                if (!ElysiumModMenuGUI.JudgeOverruleNoTasks || __instance == null) return;
+                if (__instance.Player != PlayerControl.LocalPlayer) return;
+                __result = false;
             }
         }
 

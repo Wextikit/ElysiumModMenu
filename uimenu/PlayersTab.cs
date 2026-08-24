@@ -499,6 +499,10 @@ private void DrawPlayersTab()
                 GUILayout.Space(12);
                 DrawMenuSectionHeader("VENT TELEPORT");
                 DrawPlayerVentTpRow(target, playerActionContentWidth, playerActionHalfWidth, playerActionGap);
+
+                GUILayout.Space(12);
+                DrawMenuSectionHeader("PET CONTROL");
+                DrawPetControlRows(target, playerActionHalfWidth, playerActionGap);
             }
             else
             {
@@ -523,6 +527,47 @@ private void DrawPlayersTab()
             {
                 EndMultiTabContent(oldMatrix, oldColor);
             }
+        }
+
+private void DrawPetControlRows(PlayerControl target, float halfWidth, float gap)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("PET PLAYER", "ГЛАДИТЬ ИГРОКА"), PetControl.IsTarget(target.PlayerId) ? activeTabStyle : btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.Grab(target));
+            GUILayout.Space(gap);
+            if (GUILayout.Button(L("STOP", "СТОП"), btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.StopPet());
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("MANUAL", "РУЧНОЕ"), PetControl.On && PetControl.Manual ? activeTabStyle : btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.ToggleManual());
+            GUILayout.Space(gap);
+            if (GUILayout.Button(L("PAINT", "РОСПИСЬ"), PetControl.On && PetControl.Paint ? activeTabStyle : btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.TogglePaint());
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24))) PetControl.RoomStep(-1);
+            GUILayout.Label(PetControl.RoomName(), accentValueStyle, GUILayout.Height(24), GUILayout.ExpandWidth(true));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(24))) PetControl.RoomStep(1);
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("FILL ROOM", "ЗАЛИТЬ КОМНАТУ"), btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.FillRoom());
+            GUILayout.Space(gap);
+            if (GUILayout.Button(L("CLEAR", "ОЧИСТИТЬ", PetControl.PaintCount), btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
+                ShowNotification("<color=#00FF00>[PET]</color> " + PetControl.ClearPaint());
+            GUILayout.EndHorizontal();
+        }
+
+private static string L(string eng, string rus, int count)
+        {
+            return L(eng, rus) + " (" + count + ")";
         }
 
 private void ResetPlayersTabScrolls()

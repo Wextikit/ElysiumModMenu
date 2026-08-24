@@ -118,6 +118,7 @@ private static string GetLocalRoleDisplayName(RoleTypes role)
             int roleId = (int)role;
             if (roleId == 9) return "Phantom";
             if (roleId == 18) return "Viper";
+            if (roleId == 19) return "Judge";
             if (roleId == 8) return "Noisemaker";
             if (roleId == 10) return "Tracker";
             if (roleId == 12) return "Detective";
@@ -193,6 +194,10 @@ private void DrawNonHostRoleBuffs(float availableWidth, int width)
                 UnlimitedInterrogateRange = DrawCompactToggle(UnlimitedInterrogateRange, "Interrogate Reach", colWidth);
 
                 GUILayout.Space(5);
+                DrawMenuSectionHeader("JUDGE");
+                JudgeOverruleNoTasks = DrawCompactToggle(JudgeOverruleNoTasks, "Overrule No Tasks", colWidth);
+
+                GUILayout.Space(5);
                 DrawMenuSectionHeader("GLOBAL");
                 noAbilityCooldown = DrawCompactToggle(noAbilityCooldown, "No Ability Cooldown", colWidth);
                 GUILayout.Space(2);
@@ -246,6 +251,10 @@ private void DrawNonHostRoleBuffs(float availableWidth, int width)
             GUILayout.Space(5);
             DrawMenuSectionHeader("DETECTIVE");
             UnlimitedInterrogateRange = DrawCompactToggle(UnlimitedInterrogateRange, "Interrogate Reach", width);
+
+            GUILayout.Space(5);
+            DrawMenuSectionHeader("JUDGE");
+            JudgeOverruleNoTasks = DrawCompactToggle(JudgeOverruleNoTasks, "Overrule No Tasks", width);
 
             GUILayout.Space(5);
             DrawMenuSectionHeader("GLOBAL");

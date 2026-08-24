@@ -128,7 +128,7 @@ private void DrawPlayersRoles()
                 if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
                 string pName = pc.Data.PlayerName ?? "Unknown";
                 string fc = GetRoleForceKey(pc);
-                if (TryGetForcedRole(pc, out RoleTypes rowRole)) { string rShort = rowRole.ToString().Replace("9", "Pha").Replace("10", "Tra").Replace("8", "Noi").Replace("12", "Det").Replace("18", "Vip"); if (rShort.Length > 3) rShort = rShort.Substring(0, 3); pName += $" [{rShort}]"; }
+                if (TryGetForcedRole(pc, out RoleTypes rowRole)) { string rShort = rowRole.ToString().Replace("9", "Pha").Replace("10", "Tra").Replace("8", "Noi").Replace("12", "Det").Replace("18", "Vip").Replace("19", "Jud"); if (rShort.Length > 3) rShort = rShort.Substring(0, 3); pName += $" [{rShort}]"; }
                 else if (IsForcedImp(pc)) pName += " [Imp]";
                 bool isSelected = !string.IsNullOrEmpty(fc) ? selectedPreRoleFc == fc : selectedPreRoleId == pc.PlayerId;
                 try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch { }
@@ -149,7 +149,7 @@ private void DrawPlayersRoles()
                 GUILayout.Label($"<color=#aaaaaa>Selecting role for:</color> {target.Data.PlayerName}", richLabelStyle14);
                 RoleTypes currentForced = TryGetForcedRole(target, out RoleTypes targetRole) ? targetRole : RoleTypes.Crewmate;
                 bool isForced = IsForced(target);
-                string roleNameStr = currentForced.ToString().Replace("9", "Phantom").Replace("10", "Tracker").Replace("8", "Noisemaker").Replace("12", "Detective").Replace("18", "Viper");
+                string roleNameStr = currentForced.ToString().Replace("9", "Phantom").Replace("10", "Tracker").Replace("8", "Noisemaker").Replace("12", "Detective").Replace("18", "Viper").Replace("19", "Judge");
                 if (IsForcedImp(target)) roleNameStr = "Impostor";
                 string targetFc = GetRoleForceKey(target);
                 GUILayout.Label($"<color=#aaaaaa>Status:</color> {(isForced ? $"<color=#00FF00>Forced ({roleNameStr})</color>" : "<color=#FF0000>Not Forced (Random)</color>")}", richLabelStyle14);
@@ -175,6 +175,7 @@ private void DrawPlayersRoles()
             if (GUILayout.Button(L("Noisemaker", "Шумовик"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)8);
             if (GUILayout.Button(L("Guardian Angel", "Ангел-хранитель"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, RoleTypes.GuardianAngel);
             if (GUILayout.Button(L("Detective", "Детектив"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)12);
+            if (GUILayout.Button(L("Judge", "Судья"), btnStyle, GUILayout.Height(24))) SetForcedRole(target, (RoleTypes)19);
                 GUILayout.EndHorizontal();
                 GUILayout.Space(15);
             if (GUILayout.Button(L("REMOVE FORCED ROLE", "УБРАТЬ ВЫДАННУЮ РОЛЬ"), activeTabStyle, GUILayout.Height(35))) ClearForcedRole(target);

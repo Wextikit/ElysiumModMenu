@@ -324,6 +324,7 @@ public static Color GetRoleColor(int roleId, Color fallbackColor)
                 case 10: return new Color32(106, 90, 205, 255);
                 case 12: return new Color32(189, 183, 107, 255);
                 case 18: return new Color32(173, 255, 47, 255);
+                case 19: return new Color32(90, 217, 242, 255);
                 default: return fallbackColor;
             }
         }
@@ -799,6 +800,7 @@ public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName
                 else if (roleId == 10) roleName = "Tracker";
                 else if (roleId == 12) roleName = "Detective";
                 else if (roleId == 18) roleName = "Viper";
+                else if (roleId == 19) roleName = "Judge";
                 else if (roleName == "GuardianAngel") roleName = "Guardian Angel";
                 Color customColor = GetRoleColor(roleId, info.Role.TeamColor);
                 string roleColor = ColorUtility.ToHtmlStringRGB(customColor);

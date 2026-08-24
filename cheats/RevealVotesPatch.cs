@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -114,7 +114,7 @@ public static class RevealVotesPatch
 
         foreach (var state in meeting.playerStates)
         {
-            if (state == null || state.TargetPlayerId != votedForId) continue;
+            if (state == null || state.PlayerId != votedForId) continue;
             meeting.BloopAVoteIcon(voter, 0, state.transform);
             PaintVoteIcon(state.transform, voter);
             break;
@@ -164,10 +164,10 @@ public static class RevealVotesPatch
             foreach (var item in __instance.playerStates)
             {
                 if (item == null) continue;
-                var playerById = GameData.Instance.GetPlayerById(item.TargetPlayerId);
-                if (playerById == null || playerById.Disconnected || _votedPlayers.Contains(item.TargetPlayerId)) continue;
-                byte votedForId = _voteTargets.TryGetValue(item.TargetPlayerId, out byte rememberedVote) ? rememberedVote : item.VotedFor;
-                DrawVote(__instance, item.TargetPlayerId, votedForId);
+                var playerById = GameData.Instance.GetPlayerById(item.PlayerId);
+                if (playerById == null || playerById.Disconnected || _votedPlayers.Contains(item.PlayerId)) continue;
+                byte votedForId = _voteTargets.TryGetValue(item.PlayerId, out byte rememberedVote) ? rememberedVote : item.VotedForId;
+                DrawVote(__instance, item.PlayerId, votedForId);
             }
             ShowVoteSprites(__instance);
         }

@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -415,6 +415,12 @@ private void DrawRolesTab()
             GUILayout.BeginVertical(boxStyle);
             GUILayout.Label("Detective", headerStyle);
             UnlimitedInterrogateRange = DrawToggle(UnlimitedInterrogateRange, "Interrogate Reach", 160);
+            GUILayout.EndVertical();
+
+            GUILayout.Space(5);
+            GUILayout.BeginVertical(boxStyle);
+            GUILayout.Label("Judge", headerStyle);
+            JudgeOverruleNoTasks = DrawToggle(JudgeOverruleNoTasks, "Overrule No Tasks", 160);
             GUILayout.EndVertical();
 
             GUILayout.Space(5);
