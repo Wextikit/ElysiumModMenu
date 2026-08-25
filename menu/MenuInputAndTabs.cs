@@ -490,6 +490,7 @@ private sealed class PlayerHistoryViewRow
             public string Times;
             public string Platform;
             public string Rpc;
+            public string Puid;
         }
 
 private static readonly Dictionary<string, PlayerHistoryEntry> playerHistoryEntryLookup = new Dictionary<string, PlayerHistoryEntry>();
@@ -498,7 +499,7 @@ private static readonly List<PlayerHistoryViewRow> playerHistoryViewRows = new L
 
 private static bool playerHistoryViewDirty = true;
 
-private const float PlayerHistoryRowHeight = 92f;
+private const float PlayerHistoryRowHeight = 108f;
 
 private static bool playerHistoryLoaded = false;
 
