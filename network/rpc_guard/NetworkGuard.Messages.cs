@@ -623,6 +623,19 @@ private static int TryResolveOwnerFromGameDataContent(InnerNetClient client, Mes
 			if (subMsg.Position >= subMsg.Length) return -1;
 			uint netId = subMsg.ReadPackedUInt32();
 			if (netId == 0) return -1;
+
+			if (subTag == 2 && subMsg.Position < subMsg.Length)
+			{
+				byte rpcId = subMsg.ReadByte();
+				if (rpcId == (byte)RpcCalls.UpdateSystem && ShipStatus.Instance != null && netId == ShipStatus.Instance.NetId)
+				{
+					if (subMsg.Position < subMsg.Length) subMsg.ReadByte();
+					PlayerControl actor = MessageExtensions.ReadNetObject<PlayerControl>(subMsg);
+					int actorClientId = GetResponsibleClientId(actor);
+					if (actorClientId >= 0) return actorClientId;
+				}
+			}
+
 			return FindClientIdByNetId(netId);
 		}
 		catch
@@ -820,8 +833,8 @@ internal static bool CheckRpc(PlayerControl player, int callId, MessageReader re
 			{
 				clientId = GetVerifiedPlayerClientId(player);
 			}
-			if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(clientId) ||
-				ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(player))
+			if (IsProtectedNetworkClient(clientId) ||
+				ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(player))
 			{
 				return HarmonyControl.Continue;
 			}
@@ -1004,8 +1017,8 @@ internal static bool CheckShipStatusRpc(ShipStatus ship, int callId, MessageRead
 			{
 				clientId = GetResponsibleClientId(actor);
 			}
-			if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(clientId) ||
-				ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(actor))
+			if (IsProtectedNetworkClient(clientId) ||
+				ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(actor))
 			{
 				return HarmonyControl.Continue;
 			}
@@ -1048,7 +1061,7 @@ internal static bool CheckVoteKickRpc(VoteBanSystem system, int callId, MessageR
 			{
 				voterClientId = ResolveRpcSenderClientId(voterClientId, true, rpcContext);
 			}
-			if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(voterClientId))
+			if (IsProtectedNetworkClient(voterClientId))
 			{
 				return HarmonyControl.Continue;
 			}
@@ -1191,6 +1204,10 @@ internal static void UpdateJoinIntegrityChecks()
 			{
 				continue;
 			}
+			if (ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(client))
+			{
+				continue;
+			}
 
 			float joinedAt = ClientJoinTimeAt.TryGetValue(clientId, out float savedJoinAt) ? savedJoinAt : now;
 			if (!ClientIdentityReady(client))
@@ -1289,5 +1306,3 @@ private static bool ShouldBlockRpcEnvelope(PlayerControl player, byte rpcByte, i
 	}
 }
 }
-
-

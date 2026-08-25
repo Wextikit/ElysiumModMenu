@@ -201,6 +201,16 @@ private void DrawHnsSettingsTab()
             DrawLobbySettingsButtons(rowW, true);
             GUILayout.EndVertical();
 
+            GUILayout.Space(6);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(112f));
+            DrawMenuSectionHeader("H&S DRAIN");
+            hnsTaskDrain = DrawCompactToggle(hnsTaskDrain, "Drain Crew Timer", Mathf.RoundToInt(rowW));
+            GUILayout.Space(3);
+            GUILayout.Label($"Burst delay: {hnsTaskDrainStep:0.00}s | {(HnsTaskDrainFeature.Running ? "RUNNING" : "IDLE")}", toggleLabelStyle11);
+            hnsTaskDrainStep = GUILayout.HorizontalSlider(hnsTaskDrainStep, 0.15f, 1.5f,
+                sliderStyle, sliderThumbStyle, GUILayout.Width(rowW));
+            GUILayout.EndVertical();
+
             if (compact) GUILayout.EndVertical();
             else GUILayout.EndHorizontal();
         }

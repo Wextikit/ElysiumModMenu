@@ -55,6 +55,10 @@ public void Update()
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
             NetworkedClones.Tick(showMenu);
             PetControl.Tick(showMenu);
+            AutoVentAfterKillFeature.Tick();
+            SpamMeetingsFeature.Tick();
+            HnsTaskDrainFeature.Tick();
+            AutoTasksFeature.Tick();
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||

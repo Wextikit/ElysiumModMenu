@@ -178,9 +178,9 @@ public static class RevealVotesPatch
 [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.CastVote))]
 public static class RevealVotesCastVotePatch
 {
-    public static void Postfix(byte srcPlayerId, byte suspectPlayerId)
+    public static void Postfix(PlayerId srcPlayerId, PlayerId suspectPlayerId)
     {
-        RevealVotesPatch.RememberVote(srcPlayerId, suspectPlayerId);
+        RevealVotesPatch.RememberVote(srcPlayerId.Value, suspectPlayerId.Value);
     }
 }
 

@@ -44,7 +44,6 @@ namespace ElysiumModMenu
     {
 
         private static float identityCardHeight = 175f;
-        private bool completeLocalTasksRunning = false;
 
 private static string FilterHexInput(string input, int maxChars)
         {
@@ -843,7 +842,7 @@ private void DrawSelfSpoof()
             float mainWidth = contentWidth - sideWidth - 8f;
             float identityLabelWidth = Mathf.Clamp(mainWidth * 0.31f, 100f, 132f);
             const float platformCardHeight = 84f;
-            const float taskCardHeight = 85f;
+            const float taskCardHeight = 150f;
             const float sideCardGap = 6f;
 
             GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
@@ -891,7 +890,13 @@ private void DrawSelfSpoof()
 
             GUILayout.BeginVertical(compactCard, GUILayout.Width(sideWidth), GUILayout.Height(taskCardHeight));
             DrawMenuSectionHeader("TASKS");
-            GUILayout.FlexibleSpace();
+            autoTasksEnabled = DrawCompactToggle(autoTasksEnabled, "Auto Tasks", 126);
+            GUILayout.Space(3);
+            GUILayout.Label($"Delay: {autoTasksDelay:0.0}s", statusStyle, GUILayout.Height(15));
+            autoTasksDelay = GUILayout.HorizontalSlider(autoTasksDelay, 0.8f, 6f,
+                sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
+            GUILayout.Label($"Remaining: {AutoTasksFeature.RemainingTasks()}", statusStyle, GUILayout.Height(15));
+            GUILayout.Space(3);
             if (GUILayout.Button("Complete", btnStyle, GUILayout.Height(24)))
                 CompleteLocalTasks();
             GUILayout.FlexibleSpace();
@@ -916,84 +921,37 @@ private void CompleteLocalTasks()
             try
             {
                 PlayerControl local = PlayerControl.LocalPlayer;
-                AmongUsClient client = AmongUsClient.Instance;
-                if (local == null || local.myTasks == null || client == null)
+                if (local == null || local.Data == null || local.myTasks == null || ShipStatus.Instance == null)
                     return;
 
-                if (client.NetworkMode != NetworkModes.FreePlay && client.GameState != InnerNetClient.GameStates.Started)
+                if (MeetingHud.Instance != null || ExileController.Instance != null ||
+                    local.Data.IsDead || local.Data.Disconnected)
                     return;
 
-                if (completeLocalTasksRunning)
+                if (local.Data.Role != null && local.Data.Role.IsImpostor)
                 {
-                    ShowNotification("<color=#FFAA00>[TASKS]</color> Already completing tasks.");
+                    ShowNotification("<color=#FF4444>[TASKS]</color> Available to crewmates only.");
                     return;
                 }
 
-                if (client.NetworkMode != NetworkModes.FreePlay && IsLocalImpostorRole() && !allowTasksAsImpostor)
+                int completed = 0;
+                for (int i = 0; i < local.myTasks.Count; i++)
                 {
-                    ShowNotification("<color=#FF4444>[TASKS]</color> Blocked for impostor. Enable Allow Tasks (Imp).");
-                    return;
+                    PlayerTask task = local.myTasks[i];
+                    if (task == null || task.IsComplete) continue;
+                    local.RpcCompleteTask((uint)task.Id);
+                    completed++;
                 }
 
-                List<NormalPlayerTask> tasks = new List<NormalPlayerTask>();
-                foreach (var task in local.myTasks)
-                {
-                    if (task is NormalPlayerTask normal && normal.taskStep < normal.MaxStep)
-                        tasks.Add(normal);
-                }
-
-                if (tasks.Count == 0)
+                if (completed == 0)
                 {
                     ShowNotification("<color=#AAAAAA>[TASKS]</color> No incomplete tasks.");
                     return;
                 }
 
-                this.StartCoroutine(CompleteLocalTasksCoroutine(tasks).WrapToIl2Cpp());
+                ShowNotification($"<color=#00FFAA>[TASKS]</color> Completed {completed} task(s).");
             }
             catch { }
-        }
-
-private IEnumerator CompleteLocalTasksCoroutine(List<NormalPlayerTask> tasks)
-        {
-            completeLocalTasksRunning = true;
-            int done = 0;
-
-            for (int i = 0; i < tasks.Count; i++)
-            {
-                NormalPlayerTask task = tasks[i];
-                if (task != null && task.taskStep < task.MaxStep && CompleteLocalTask(task))
-                    done++;
-
-                if (i < tasks.Count - 1)
-                    yield return new WaitForSeconds(0.1f);
-            }
-
-            completeLocalTasksRunning = false;
-            if (done > 0)
-                ShowNotification($"<color=#00FFAA>[TASKS]</color> Completed {done} task(s).");
-        }
-
-private static bool CompleteLocalTask(NormalPlayerTask task)
-        {
-            if (task == null || task.taskStep >= task.MaxStep) return false;
-
-            PlayerControl local = PlayerControl.LocalPlayer;
-            AmongUsClient client = AmongUsClient.Instance;
-            if (local == null || client == null) return false;
-
-            try
-            {
-                if (client.NetworkMode != NetworkModes.FreePlay && IsLocalImpostorRole() && !allowTasksAsImpostor)
-                    return false;
-
-                local.RpcCompleteTask(task.Id);
-                while (task.taskStep < task.MaxStep)
-                    task.NextStep();
-                return true;
-            }
-            catch { }
-
-            return false;
         }
 
 private void DrawVisualsTab()
@@ -1236,10 +1194,11 @@ public static bool IsCursorOverMenu()
         {
             try
             {
-                if (!showMenu || !hardMenu) return false;
+                if (!showMenu || !blockGameClicks) return false;
                 ClampMenuWindowToScreen();
                 Vector2 guiPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
-                return windowRect.Contains(guiPos);
+                float scale = GetEffectiveMenuScale();
+                return windowRect.Contains(guiPos / scale);
             }
             catch { return false; }
         }
@@ -1251,7 +1210,8 @@ public static bool IsCursorOverVisibleMenu()
                 if (!showMenu) return false;
                 ClampMenuWindowToScreen();
                 Vector2 guiPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
-                return windowRect.Contains(guiPos);
+                float scale = GetEffectiveMenuScale();
+                return windowRect.Contains(guiPos / scale);
             }
             catch { return false; }
         }
@@ -1302,93 +1262,6 @@ private static bool IsCameraZoomScrollAllowed()
             catch { }
 
             return true;
-        }
-
-private static bool TryGetAspectDistance(object aspectPosition, out Vector3 distance)
-        {
-            distance = Vector3.zero;
-            if (aspectPosition == null) return false;
-
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            try
-            {
-                Type type = aspectPosition.GetType();
-                FieldInfo field = type.GetField("DistanceFromEdge", flags) ?? type.GetField("distanceFromEdge", flags);
-                if (field != null && field.GetValue(aspectPosition) is Vector3 fieldValue)
-                {
-                    distance = fieldValue;
-                    return true;
-                }
-
-                PropertyInfo property = type.GetProperty("DistanceFromEdge", flags) ?? type.GetProperty("distanceFromEdge", flags);
-                if (property != null && property.GetValue(aspectPosition, null) is Vector3 propertyValue)
-                {
-                    distance = propertyValue;
-                    return true;
-                }
-            }
-            catch { }
-
-            return false;
-        }
-
-private static bool TrySetAspectDistance(object aspectPosition, Vector3 distance)
-        {
-            if (aspectPosition == null) return false;
-
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            try
-            {
-                Type type = aspectPosition.GetType();
-                FieldInfo field = type.GetField("DistanceFromEdge", flags) ?? type.GetField("distanceFromEdge", flags);
-                if (field != null)
-                {
-                    field.SetValue(aspectPosition, distance);
-                    return true;
-                }
-
-                PropertyInfo property = type.GetProperty("DistanceFromEdge", flags) ?? type.GetProperty("distanceFromEdge", flags);
-                if (property != null && property.CanWrite)
-                {
-                    property.SetValue(aspectPosition, distance, null);
-                    return true;
-                }
-            }
-            catch { }
-
-            return false;
-        }
-
-private static object GetHudAspectPosition(HudManager hud)
-        {
-            if (hud == null) return null;
-
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            try
-            {
-                Type type = hud.GetType();
-                FieldInfo field = type.GetField("aspectPosition", flags) ?? type.GetField("AspectPosition", flags);
-                if (field != null) return field.GetValue(hud);
-
-                PropertyInfo property = type.GetProperty("aspectPosition", flags) ?? type.GetProperty("AspectPosition", flags);
-                if (property != null) return property.GetValue(hud, null);
-            }
-            catch { }
-
-            return null;
-        }
-
-private static void RefreshHudResolutionForZoom()
-        {
-            try
-            {
-                int w = Screen.width;
-                int h = Screen.height;
-                if (w < 320 || h < 240) return;
-
-                ResolutionManager.ResolutionChanged.Invoke((float)w / h, w, h, Screen.fullScreen);
-            }
-            catch { }
         }
 
 private static void RestoreFreecamCamera()

@@ -957,9 +957,10 @@ private static void BlockMessage(int clientId, string title, string detail)
 		BlockMessage(clientId, title, detail, null);
 	}
 
-private static void BlockMessage(int clientId, string title, string detail, string actionOverride)
+	private static void BlockMessage(int clientId, string title, string detail, string actionOverride)
 	{
 		clientId = ResolveBestActiveClientId(clientId);
+		if (IsProtectedNetworkClient(clientId)) return;
 		string action = string.IsNullOrWhiteSpace(actionOverride) ? ProtectionAction() : GuardOptions.NormalizeNetworkProtectionAction(actionOverride);
 		bool shouldNotify = ShouldShowProtectionNotice(clientId, title, detail);
 		if (shouldNotify)
@@ -975,9 +976,10 @@ private static void BlockMessage(int clientId, string title, string detail, stri
 		ApplyProtectionAction(clientId, title, detail, action);
 	}
 
-private static void BlockNetIdOverflow(int clientId, string detail)
+	private static void BlockNetIdOverflow(int clientId, string detail)
 	{
 		clientId = ResolveNetIdOverflowSenderClientId(clientId);
+		if (IsProtectedNetworkClient(clientId)) return;
 		string title = "Anticheat Overflow Ban";
 		if (clientId < 0 || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost)
 		{
@@ -1075,6 +1077,8 @@ private static void BlockRpc(PlayerControl player, int clientId, string title, s
 
 private static void BlockRpc(PlayerControl player, int clientId, string title, string detail, string actionOverride)
 	{
+		if (IsProtectedNetworkClient(clientId) ||
+			ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(player)) return;
 		int playerClientId = GetPlayerClientId(player);
 		string name = clientId >= 0 && clientId != playerClientId ? ClientName(clientId) : PlayerName(player);
 		GuardPlugin.Logger?.LogWarning((object)$"Network protection blocked RPC from {name} (client {clientId}): {title}. {detail}");
@@ -1091,6 +1095,8 @@ internal static void ReportQuickChatFlood(PlayerControl sender, int ownerId, str
 	{
 		try
 		{
+			if (IsProtectedNetworkClient(ownerId) ||
+				ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(sender)) return;
 			string action = GuardOptions.NormalizeNetworkProtectionAction(
 				GuardOptions.QuickChatAction != null ? GuardOptions.QuickChatAction.Value : "Kick");
 
@@ -1112,8 +1118,9 @@ private static void ApplyProtectionAction(int clientId, string attackType, strin
 		ApplyProtectionAction(clientId, attackType, detail, ProtectionAction());
 	}
 
-private static void ApplyProtectionAction(int clientId, string attackType, string detail, string action)
+	private static void ApplyProtectionAction(int clientId, string attackType, string detail, string action)
 	{
+		if (IsProtectedNetworkClient(clientId)) return;
 		switch (GuardOptions.NormalizeNetworkProtectionAction(action))
 		{
 			case "Ban":
@@ -1129,6 +1136,7 @@ private static void ApplyProtectionAction(int clientId, string attackType, strin
 
 internal static void ApplyMenuProtection(int clientId, string attackType, string detail)
 	{
+		if (IsProtectedNetworkClient(clientId)) return;
 		switch (ElysiumModMenu.ElysiumModMenuGUI.punishmentMode)
 		{
 			case 3:
@@ -1145,6 +1153,7 @@ internal static void ApplyMenuProtection(int clientId, string attackType, string
 
 internal static void BanClient(int clientId, string attackType, string detail)
 	{
+		if (IsProtectedNetworkClient(clientId)) return;
 		DisconnectIfHost(clientId, true, attackType, detail);
 	}
 
@@ -1166,7 +1175,7 @@ private static void DisconnectIfHost(int clientId, bool ban, string attackType, 
 			GuardPlugin.Logger?.LogWarning((object)$"Network protection refused to {(ban ? "ban" : "kick")} local/host client id {clientId}.");
 			return;
 		}
-		if (ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(clientId))
+		if (IsProtectedNetworkClient(clientId))
 		{
 			return;
 		}
@@ -1533,4 +1542,3 @@ private static void PruneClientSnapshots()
 	}
 }
 }
-

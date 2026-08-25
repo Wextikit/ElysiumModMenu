@@ -426,6 +426,14 @@ internal static void TrackInboundSender(InnerNetClient client, DataReceivedEvent
 			}
 
 			activeInboundConnectionKey = PacketConnectionKey(eventArgs) ?? string.Empty;
+			int knownConnectionClientId = ResolveConnectionClientId(activeInboundConnectionKey, client);
+			if (knownConnectionClientId >= 0 && IsProtectedNetworkClient(knownConnectionClientId))
+			{
+				SetActiveInboundSender(knownConnectionClientId);
+				HostRateDropByKey.Remove(activeInboundConnectionKey);
+				FloodDropConnectionUntil.Remove(activeInboundConnectionKey);
+				return;
+			}
 
 			if (!string.IsNullOrWhiteSpace(activeInboundConnectionKey))
 			{
@@ -503,8 +511,20 @@ internal static void TrackInboundSender(InnerNetClient client, DataReceivedEvent
 		}
 	}
 
+internal static bool IsActiveInboundSenderProtected()
+	{
+		try
+		{
+			int clientId = ResolveBestActiveClientId(GetActiveInboundSenderClientId());
+			return IsProtectedNetworkClient(clientId);
+		}
+		catch { return false; }
+	}
+
 internal static bool CheckMessage(InnerNetClient client, MessageReader reader, SendOption sendOption)
 	{
+		if (IsActiveInboundSenderProtected()) return HarmonyControl.Continue;
+
 		if (!Enabled())
 		{
 			if (NetIdOverflowProtectionEnabled() && client != null && client.AmHost)
@@ -752,7 +772,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 					senderClientId = contentId;
 				}
 			}
-			if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(senderClientId))
+			if (IsProtectedNetworkClient(senderClientId))
 			{
 				return HarmonyControl.Continue;
 			}
@@ -793,7 +813,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 			{
 				CaptureJoinEnvelope(reader);
 				senderClientId = GetActiveInboundSenderClientId();
-				if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(senderClientId))
+				if (IsProtectedNetworkClient(senderClientId))
 				{
 					return HarmonyControl.Continue;
 				}
@@ -811,7 +831,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 
 				CaptureGameDataEnvelope(reader, tag, sendOption);
 				senderClientId = ResolveBestActiveClientId(GetActiveInboundSenderClientId());
-				if (ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(senderClientId))
+				if (IsProtectedNetworkClient(senderClientId))
 				{
 					return HarmonyControl.Continue;
 				}
@@ -865,6 +885,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 		}
 		catch (Exception error)
 		{
+			if (IsActiveInboundSenderProtected()) return HarmonyControl.Continue;
 			GuardPlugin.Logger?.LogWarning((object)$"Network protection blocked a malformed message: {error.Message}");
 			BlockMessage(GetActiveInboundSenderClientId(), "Network packet blocked", "Packet validation failed.");
 			return HarmonyControl.SkipOriginal;
@@ -899,6 +920,7 @@ private static bool ShouldDropInboundFlood(int senderClientId)
 		PruneFloodDrops();
 		float now = Time.realtimeSinceStartup;
 		senderClientId = ResolveBestActiveClientId(senderClientId);
+		if (IsProtectedNetworkClient(senderClientId)) return false;
 		if (senderClientId >= 0 && FloodDropClientUntil.TryGetValue(senderClientId, out float clientUntil))
 		{
 			if (now <= clientUntil)
@@ -943,6 +965,8 @@ private static void RegisterInboundFloodDrop(int clientId)
 		{
 			clientId = TryResolveRecentSingleFloodCandidate();
 		}
+
+		if (IsProtectedNetworkClient(clientId)) return;
 
 		float until = Time.realtimeSinceStartup + FloodConnectionDropSeconds;
 		if (clientId >= 0)
@@ -1298,4 +1322,3 @@ private static bool SpawnShouldDrop(MessageReader part)
 	}
 }
 }
-

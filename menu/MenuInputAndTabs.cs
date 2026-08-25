@@ -189,7 +189,7 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["Disable Map Safe Mode"] = "Отключить safe mode карты",
             ["TP To Cursor"] = "ТП к курсору",
             ["Drag To Cursor"] = "Тащить к курсору",
-            ["True NoClip"] = "Настоящий NoClip",
+            ["Noclip"] = "Noclip",
             ["Kill Reach"] = "Дальность килла",
             ["Kill Anyone"] = "Килл любого",
             ["Kill Aura"] = "Аура килла",
@@ -410,6 +410,18 @@ public static bool noClip = false;
 public static bool tpToCursor = false;
 
 public static bool dragToCursor = false;
+
+public static bool autoVentAfterKill = false;
+
+public static bool impTrap = false;
+
+public static bool hnsTaskDrain = false;
+
+public static float hnsTaskDrainStep = 0.25f;
+
+public static bool autoTasksEnabled = false;
+
+public static float autoTasksDelay = 1.5f;
 
 private const float CursorMoveRpcIntervalSeconds = 0.2f;
 
@@ -664,6 +676,10 @@ public static float menuScale = 1f;
 
 public static bool enableMenuScaleInput = true;
 
+private const float minMenuScale = 0.75f;
+
+private const float maxMenuScale = 2.5f;
+
 public static bool freecam = false;
 
 private static bool _freecamActive = false;
@@ -671,12 +687,6 @@ private static bool _freecamActive = false;
 public static bool cameraZoom = false;
 
 public static bool RevealVotesEnabled = false;
-
-private static bool hudZoomBaseCaptured = false;
-
-private static Vector3 hudZoomBaseDistance = Vector3.zero;
-
-private static bool zoomResolutionRefreshNeeded = false;
 
 public static Color currentAccentColor = new Color(1f, 0.549f, 0f, 1f);
 
@@ -694,7 +704,7 @@ public static bool enableBackground = false;
 
 public static bool enableMenuCharacter = false;
 
-public static bool hardMenu = false;
+public static bool blockGameClicks = false;
 
 public static Texture2D customMenuBg = null;
 
@@ -778,7 +788,7 @@ private float customChatSpamTimer = 0f;
 
 public static float autoMeetingTimer = 0f;
 
-private static readonly string[] tabNames = { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ") }
+private static readonly string[] tabNames = { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ"), "PET HAND" }
 
 ;
 
@@ -851,7 +861,12 @@ public static bool FlippedSkeld
             {
                 if (__instance == null || __instance.freeChatField == null || __instance.freeChatField.textArea == null) return;
 
-                if (ElysiumModMenuGUI.enableFastChat && __instance.timeSinceLastMessage < 0.9f)
+                const float vanillaSafeCooldown = 3.15f;
+                if (ElysiumModMenuGUI.chatNoCooldown && __instance.timeSinceLastMessage < vanillaSafeCooldown - 0.1f)
+                {
+                    __instance.timeSinceLastMessage = vanillaSafeCooldown - 0.1f;
+                }
+                else if (ElysiumModMenuGUI.enableFastChat && __instance.timeSinceLastMessage < 0.9f)
                 {
                     __instance.timeSinceLastMessage = 0.9f;
                 }
@@ -895,9 +910,12 @@ public static bool FlippedSkeld
 
                 if (!ElysiumModMenuGUI.allowLinksAndSymbols) return true;
 
+                if (__instance.timeSinceLastMessage < 3f) return true;
+
                 if (!string.IsNullOrWhiteSpace(text))
                 {
                     PlayerControl.LocalPlayer.RpcSendChat(text);
+                    __instance.timeSinceLastMessage = 0f;
                     __instance.freeChatField.textArea.SetText(string.Empty, string.Empty);
                 }
 

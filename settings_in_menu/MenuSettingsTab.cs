@@ -62,6 +62,33 @@ private void DrawMenuTab()
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("MENU CUSTOMIZATION", "РћР¤РћР РњР›Р•РќРР• РњР•РќР®"));
 
+            bool previousAutoMenuScale = enableMenuScaleInput;
+            enableMenuScaleInput = DrawToggle(enableMenuScaleInput, "Auto High-Resolution Scale", 280);
+            if (previousAutoMenuScale != enableMenuScaleInput)
+            {
+                if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
+                menuPrefsChanged = true;
+            }
+            GUILayout.Space(5);
+
+            float previousMenuScale = menuScale;
+            if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Menu Scale: <color=#{GetMenuAccentHex(false)}>{menuScale:F2}x</color>", toggleLabelStyle, GUILayout.Width(160), GUILayout.Height(25));
+            GUI.enabled = !enableMenuScaleInput;
+            menuScale = GUILayout.HorizontalSlider(menuScale, minMenuScale, maxMenuScale, sliderStyle, sliderThumbStyle, GUILayout.Width(220));
+            GUI.enabled = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (Mathf.Abs(previousMenuScale - menuScale) > 0.001f)
+            {
+                menuScale = Mathf.Clamp(menuScale, minMenuScale, maxMenuScale);
+                ClampMenuWindowToScreen();
+                menuPrefsChanged = true;
+            }
+            GUILayout.Label(L("Keeps the menu readable on WQXGA and 4K displays. Disable Auto to set a custom scale.", "Автоматически увеличивает меню на WQXGA и 4K. Отключите Auto для ручного масштаба."), menuDescStyle);
+            GUILayout.Space(10);
+
             bool prevRgb = rgbMenuMode;
             rgbMenuMode = DrawToggle(rgbMenuMode, "RGB Menu Mode", 260);
             if (prevRgb && !rgbMenuMode) UpdateAccentColor(menuColors[currentMenuColorIndex]);
@@ -146,10 +173,10 @@ private void DrawMenuTab()
             GUILayout.Label(L("Shows only PING / FPS / Host when watermark is off.", "Показывает только PING / FPS / хоста, когда вотермарк выключен."), menuDescStyle);
             GUILayout.Space(8);
 
-            bool prevHardMenu = hardMenu;
-            hardMenu = DrawToggle(hardMenu, L("Solid Menu (block game clicks)", "РўРІРµСЂРґРѕРµ РјРµРЅСЋ (Р±Р»РѕРє РєР»РёРєРѕРІ РїРѕ РёРіСЂРµ)"), 260);
-            if (prevHardMenu != hardMenu) menuPrefsChanged = true;
-            GUILayout.Label(L("When on, clicks over the menu stay in the menu so you can't misclick the game behind it.", "РљРѕРіРґР° РІРєР»СЋС‡РµРЅРѕ, РєР»РёРєРё РїРѕ РјРµРЅСЋ РѕСЃС‚Р°СЋС‚СЃСЏ РІ РјРµРЅСЋ вЂ” РІС‹ РЅРµ РїСЂРѕРјР°С…РЅС‘С‚РµСЃСЊ РїРѕ РёРіСЂРµ Р·Р° РЅРёРј."), menuDescStyle);
+            bool previousBlockGameClicks = blockGameClicks;
+            blockGameClicks = DrawToggle(blockGameClicks, L("Block Game Clicks", "Блокировать клики по игре"), 260);
+            if (previousBlockGameClicks != blockGameClicks) menuPrefsChanged = true;
+            GUILayout.Label(L("Prevents clicks over the menu from reaching the game behind it.", "Не позволяет кликам по меню попадать в игру за ним."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevAutoCopyCode = autoCopyCodeAndLeave;
@@ -293,7 +320,8 @@ private void DrawMenuTab()
             GUILayout.Space(8);
             float spoofRowWidth = GetMenuWorkWidth(160f, 360f);
             float spoofNameWidth = Mathf.Clamp(spoofRowWidth - 76f, 150f, 260f);
-            GUILayout.Label(L("Fake Name", "РџРѕРґРґРµР»СЊРЅРѕРµ РёРјСЏ"), toggleLabelStyle, GUILayout.Height(16), GUILayout.ExpandWidth(false));
+            GUILayout.Label(L("Fake Name", "РџРѕРґРґРµР»СЊРЅРѕРµ РёРјСЏ"), toggleLabelStyle, GUILayout.Height(20), GUILayout.ExpandWidth(false));
+            GUILayout.Space(3);
             GUILayout.BeginHorizontal(GUILayout.Width(spoofNameWidth + 68f));
             GUI.enabled = SpoofMenuEnabled;
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(25))) { selectedSpoofMenuIndex--; if (selectedSpoofMenuIndex < 0) selectedSpoofMenuIndex = spoofMenuNames.Length - 1; customSpoofRpcInputFocused = selectedSpoofMenuIndex == spoofMenuNames.Length - 1 && customSpoofRpcInputFocused; menuPrefsChanged = true; }
@@ -316,6 +344,7 @@ private void DrawMenuTab()
             GUI.enabled = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+            GUILayout.Space(4);
             DrawCustomRpcValidationInfo();
             GUILayout.Space(6);
             GUILayout.Label(L("Fake RPC sends the selected non-vanilla CallRpc as your local player. Custom RPC accepts only IDs outside the vanilla RPC list.",
@@ -495,6 +524,9 @@ private void ResetSlidersToDefault()
             AutoHostFastStartDelaySeconds = 5f;
             punishmentMode = 0;
 
+            enableMenuScaleInput = true;
+            menuScale = GetRecommendedMenuScale();
+
             showPlayerInfo = false;
             showEspBoxes = false;
             espShimmerMode = false;
@@ -520,6 +552,12 @@ private void ResetSlidersToDefault()
             noClip = false;
             tpToCursor = false;
             dragToCursor = false;
+            autoVentAfterKill = false;
+            impTrap = false;
+            hnsTaskDrain = false;
+            hnsTaskDrainStep = 0.25f;
+            autoTasksEnabled = false;
+            autoTasksDelay = 1.5f;
             autoFollowCursor = false;
             freecam = false;
             cameraZoom = false;
@@ -551,6 +589,7 @@ private void ResetSlidersToDefault()
             readGhostChat = false;
             enableExtendedChat = true;
             enableFastChat = true;
+            chatNoCooldown = false;
             allowLinksAndSymbols = false;
             enableChatHistory = true;
             enableClipboard = true;
@@ -580,6 +619,7 @@ private void ResetSlidersToDefault()
             noTaskMode = false;
             noMapCooldowns = false;
             autoRepairSabotage = false;
+            spamMeetings = false;
             autoBreakSabotage = false;
             allowTasksAsImpostor = false;
             hostAutoKillRandom = false;
@@ -648,7 +688,7 @@ private void ResetSlidersToDefault()
             enableBackground = false;
             showWatermark = true;
             showWatermarkInfo = true;
-            hardMenu = false;
+            blockGameClicks = false;
             rgbMenuText = false;
             boldMenuText = true;
             EnableCustomNotifs = true;

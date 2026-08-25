@@ -252,6 +252,8 @@ private void DrawChatSettingsCompact(float columnWidth)
                 enableExtendedChat = DrawCompactToggle(enableExtendedChat, "Extended Chat", toggleWidth);
                 GUILayout.Space(1);
                 enableFastChat = DrawCompactToggle(enableFastChat, "Fast Chat", toggleWidth);
+                GUILayout.Space(1);
+                chatNoCooldown = DrawCompactToggle(chatNoCooldown, "Chat No CD (0.1s)", toggleWidth);
                 GUILayout.Space(7);
                 enableChatHistory = DrawCompactToggle(enableChatHistory, "Chat History", toggleWidth);
                 GUILayout.Space(6);
@@ -283,7 +285,7 @@ private void DrawChatSettingsCompact(float columnWidth)
 
             DrawChatBlock("FILTER", () =>
             {
-                allowLinksAndSymbols = DrawCompactToggle(allowLinksAndSymbols, "Bypass URL Block", toggleWidth);
+                allowLinksAndSymbols = DrawCompactToggle(allowLinksAndSymbols, "All Symbols / URLs", toggleWidth);
                 GUILayout.Space(1);
                 enableSpellCheck = DrawCompactToggle(enableSpellCheck, "Spell Check", toggleWidth);
                 GUILayout.Space(1);

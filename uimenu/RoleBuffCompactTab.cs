@@ -68,7 +68,15 @@ private void DrawPlayerMovementCompact(float columnWidth)
             GUILayout.Space(1);
             autoFollowCursor = DrawCompactToggle(autoFollowCursor, $"Magnet Cursor ({bindMagnetCursor})", controlWidth);
             GUILayout.Space(1);
-            noClip = DrawCompactToggle(noClip, "True NoClip", controlWidth);
+            noClip = DrawCompactToggle(noClip, "Noclip", controlWidth);
+            GUILayout.Space(1);
+            autoVentAfterKill = DrawCompactToggle(autoVentAfterKill, "Auto Vent After Kill", controlWidth);
+            GUILayout.Space(1);
+            impTrap = DrawCompactToggle(impTrap, "Imp Trap", controlWidth);
+
+            GUILayout.Space(6);
+            if (GUILayout.Button("MEETING FREE ROAM", btnStyle, GUILayout.Width(controlWidth), GUILayout.Height(24)))
+                ShowNotification("<color=#66DDFF>[MOVEMENT]</color> " + MeetingFreeRoamFeature.Activate());
 
             GUILayout.EndVertical();
         }

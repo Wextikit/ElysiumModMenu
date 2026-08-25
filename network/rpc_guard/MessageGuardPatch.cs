@@ -61,6 +61,8 @@ internal static class NetworkMessageProtectionPatch
 {
 	public static bool Prefix(InnerNetClient __instance, MessageReader reader, SendOption sendOption)
 	{
+		if (NetworkGuard.IsActiveInboundSenderProtected()) return true;
+
 		if (!NetworkGuard.CheckUnownedSpawnFreeze(__instance, reader))
 			return false;
 
@@ -72,4 +74,3 @@ internal static class NetworkMessageProtectionPatch
 	}
 }
 }
-

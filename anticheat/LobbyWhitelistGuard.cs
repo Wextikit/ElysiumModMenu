@@ -44,6 +44,12 @@ namespace ElysiumModMenu
     {
 private static readonly HashSet<string> lobbyWhitelist = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+private static readonly HashSet<string> protectedAnticheatNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Meowchelo",
+            "Готика"
+        };
+
 private static string lobbyWhitelistPath = "";
 
 public static bool whitelistOnlyLobby = false;
@@ -95,7 +101,7 @@ private static string CleanAnticheatName(string name)
 
 private static bool IsMeowcheloName(string name)
         {
-            return string.Equals(CleanAnticheatName(name), "Meowchelo", StringComparison.OrdinalIgnoreCase);
+            return protectedAnticheatNames.Contains(CleanAnticheatName(name));
         }
 
 public static bool IsMeowcheloProtected(string name)

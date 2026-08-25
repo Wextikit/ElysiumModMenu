@@ -23,6 +23,8 @@ namespace ElysiumModMenu
         private static float anim;
         private static byte target = 255;
         private static bool drag;
+        private static Vector2 arrowJoy;
+        private static float arrowJoyUntil;
 
         private static readonly List<Vector2> pts = new List<Vector2>();
         private static int pi;
@@ -89,6 +91,40 @@ namespace ElysiumModMenu
             return "Manual: on";
         }
 
+        internal static bool SetArrowInput(Vector2 direction)
+        {
+            if (!HasPet(PlayerControl.LocalPlayer)) return false;
+
+            if (!On || !Manual)
+            {
+                Manual = true;
+                Paint = false;
+                On = true;
+                hand = Vector2.zero;
+                anim = 0f;
+            }
+
+            arrowJoy = Vector2.ClampMagnitude(direction, 1f);
+            arrowJoyUntil = Time.unscaledTime + 0.12f;
+            return true;
+        }
+
+        internal static bool CenterManual()
+        {
+            if (!HasPet(PlayerControl.LocalPlayer)) return false;
+            if (!On || !Manual)
+            {
+                Manual = true;
+                Paint = false;
+                On = true;
+            }
+
+            hand = Vector2.zero;
+            arrowJoy = Vector2.zero;
+            arrowJoyUntil = 0f;
+            return true;
+        }
+
         internal static string StopPet()
         {
             Stop();
@@ -152,6 +188,8 @@ namespace ElysiumModMenu
             hand = Vector2.zero;
             target = 255;
             Joy = Vector2.zero;
+            arrowJoy = Vector2.zero;
+            arrowJoyUntil = 0f;
             anim = 0f;
 
             PlayerControl me = PlayerControl.LocalPlayer;
@@ -183,7 +221,8 @@ namespace ElysiumModMenu
             else if (Manual)
             {
                 me.moveable = true;
-                hand += Joy * Speed * Time.deltaTime;
+                Vector2 input = Time.unscaledTime <= arrowJoyUntil ? arrowJoy : Joy;
+                hand += input * Speed * Time.deltaTime;
                 petPos = (Vector2)me.transform.position + hand;
             }
             else

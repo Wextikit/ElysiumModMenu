@@ -54,10 +54,13 @@ private static readonly Dictionary<int, AntiCheatDisconnectNotice> pendingAntiCh
 
 private static readonly HashSet<int> ventExploitBannedOwners = new HashSet<int>();
 
+private static float trustedVentKickUntil = -1f;
+
 public static void RegisterAntiCheatDisconnectNotice(int clientId, string playerName, string reason, bool ban)
         {
             try
             {
+                if (IsProtectedFromAnticheat(clientId)) return;
                 PruneAntiCheatDisconnectNotices();
 
                 string cleanName = string.IsNullOrWhiteSpace(playerName) ? $"Client {clientId}" : playerName;
@@ -205,7 +208,9 @@ public static class ElysiumAnticheat
         {
             public static bool Prefix(PlayerPhysics __instance)
             {
+                if (Time.realtimeSinceStartup <= trustedVentKickUntil) return true;
                 if (!ElysiumModMenuGUI.blockSpoofRPC) return true;
+                if (ElysiumModMenuGUI.IsProtectedFromAnticheat(PlayerControl.LocalPlayer)) return true;
 
                 try
                 {
@@ -225,6 +230,7 @@ public static class ElysiumAnticheat
             {
                 if (!ElysiumModMenuGUI.blockServerTeleports) return true;
                 if (callId != (byte)RpcCalls.SnapTo) return true;
+                if (ElysiumModMenuGUI.IsProtectedFromAnticheat(PlayerControl.LocalPlayer)) return true;
                 try
                 {
                     if (__instance != null && __instance.myPlayer == PlayerControl.LocalPlayer)
@@ -249,7 +255,12 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
                 PlayerControl plr = copy.ReadNetObject<PlayerControl>();
                 if (system != SystemTypes.Ventilation) return false;
 
-                if (!AmongUsClient.Instance.AmHost)
+                int owner = ElysiumNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
+                if (owner < 0 && plr != null && plr.Data != null) owner = plr.Data.ClientId;
+                if (owner < 0 && plr != null) owner = plr.OwnerId;
+                bool trustedVentKickSender = IsProtectedFromAnticheat(owner) || IsProtectedFromAnticheat(plr);
+
+                if (!AmongUsClient.Instance.AmHost && !trustedVentKickSender)
                 {
                     string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
                     ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
@@ -261,15 +272,19 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
                 copy.ReadUInt16();
                 VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
                 copy.ReadByte();
+
+                if (trustedVentKickSender)
+                {
+                    if (op == VentilationSystem.Operation.BootImpostors)
+                        trustedVentKickUntil = Time.realtimeSinceStartup + 1f;
+                    return false;
+                }
+
                 if (op != VentilationSystem.Operation.BootImpostors) return false;
 
-                int owner = ElysiumNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
-                if (owner < 0 && plr.Data != null) owner = plr.Data.ClientId;
-                if (owner < 0) owner = plr.OwnerId;
                 if (owner < 0) return true;
 
-                if (!IsProtectedFromAnticheat(owner))
-                    BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
+                BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
 
                 return true;
             }
@@ -389,6 +404,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     !ElysiumModMenuGUI.blockChatFloodRpc &&
                     !ElysiumModMenuGUI.blockMeetingFloodRpc) return true;
                 if (__instance == null || __instance == PlayerControl.LocalPlayer || __instance.Data == null) return true;
+                if (ElysiumModMenuGUI.IsProtectedFromAnticheat(__instance)) return true;
 
                 if (ElysiumModMenuGUI.blockMeetingFloodRpc &&
                     (callId == (byte)RpcCalls.StartMeeting || callId == (byte)RpcCalls.ReportDeadBody) &&
@@ -449,9 +465,6 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                             {
                                 try
                                 {
-                                    if (ElysiumModMenuGUI.IsProtectedFromAnticheat(__instance))
-                                        return false;
-
                                     bool qcBan = ElysiumModMenuGUI.banQuickChatEmptySpammer;
                                     string qcName = (__instance.Data != null && !string.IsNullOrEmpty(__instance.Data.PlayerName))
                                         ? __instance.Data.PlayerName : $"Client {__instance.OwnerId}";
@@ -597,6 +610,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
 
                 if (isCheat && sender != null && sender != PlayerControl.LocalPlayer)
                 {
+                    if (ElysiumModMenuGUI.IsProtectedFromAnticheat(sender)) return true;
                     ElysiumAnticheat.Flag(sender, cheatReason);
                     return false;
                 }

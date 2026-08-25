@@ -447,29 +447,6 @@ namespace ElysiumModMenu
                     if (!hudModalActive && ElysiumModMenuGUI.alwaysChat && __instance.Chat != null && __instance.Chat.gameObject != null)
                         __instance.Chat.gameObject.SetActive(true);
 
-                    object aspectPosition = ElysiumModMenuGUI.GetHudAspectPosition(__instance);
-                    if (aspectPosition != null)
-                    {
-                        float camSize = Camera.main != null ? Camera.main.orthographicSize : 3f;
-                        if ((!ElysiumModMenuGUI.hudZoomBaseCaptured || (!ElysiumModMenuGUI.zoomOwnsCamera && camSize <= 3.05f)) &&
-                            ElysiumModMenuGUI.TryGetAspectDistance(aspectPosition, out Vector3 currentDistance))
-                        {
-                            ElysiumModMenuGUI.hudZoomBaseDistance = currentDistance;
-                            ElysiumModMenuGUI.hudZoomBaseCaptured = true;
-                        }
-
-                        if (!hudModalActive && ElysiumModMenuGUI.zoomOwnsCamera && ElysiumModMenuGUI.hudZoomBaseCaptured)
-                        {
-                            Vector3 distance = ElysiumModMenuGUI.hudZoomBaseDistance;
-                            distance.y = ElysiumModMenuGUI.hudZoomBaseDistance.y + 3f * (camSize - 3f);
-                            ElysiumModMenuGUI.TrySetAspectDistance(aspectPosition, distance);
-                        }
-                        else if (hudModalActive && ElysiumModMenuGUI.hudZoomBaseCaptured)
-                        {
-                            ElysiumModMenuGUI.TrySetAspectDistance(aspectPosition, ElysiumModMenuGUI.hudZoomBaseDistance);
-                        }
-                    }
-
                     if (!hudModalActive && ElysiumModMenuGUI.zoomOwnsCamera && __instance.TaskPanel != null && __instance.TaskPanel.gameObject != null && ShipStatus.Instance != null && MeetingHud.Instance == null)
                         __instance.TaskPanel.gameObject.SetActive(true);
                 }

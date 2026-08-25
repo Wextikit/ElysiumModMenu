@@ -46,7 +46,6 @@ private static bool zoomOwnsCamera = false;
 private static float zoomBaseMainSize = 3f;
 private static float zoomBaseUiSize = 3f;
 private static float zoomLastMainSize = 3f;
-private static float zoomLastUiSize = 3f;
 
 private static void ApplyCameraZoomTick()
         {
@@ -62,13 +61,10 @@ private static void ApplyCameraZoomTick()
 
                     if (Mathf.Abs(mainCamera.orthographicSize - zoomLastMainSize) <= 0.01f)
                         mainCamera.orthographicSize = zoomBaseMainSize;
-                    if (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - zoomLastUiSize) <= 0.01f)
+                    if (uiCamera != null)
                         uiCamera.orthographicSize = zoomBaseUiSize;
 
                     zoomOwnsCamera = false;
-                    if (zoomResolutionRefreshNeeded)
-                        RefreshHudResolutionForZoom();
-                    zoomResolutionRefreshNeeded = false;
 
                     return;
                 }
@@ -76,14 +72,12 @@ private static void ApplyCameraZoomTick()
                 float scrollWheel = Input.GetAxis("Mouse ScrollWheel");
                 if (Mathf.Abs(scrollWheel) <= 0.0001f)
                 {
-                    if (zoomOwnsCamera &&
-                        (Mathf.Abs(mainCamera.orthographicSize - zoomLastMainSize) > 0.01f ||
-                         (uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - zoomLastUiSize) > 0.01f)))
+                    if (zoomOwnsCamera && uiCamera != null && Mathf.Abs(uiCamera.orthographicSize - zoomBaseUiSize) > 0.01f)
+                        uiCamera.orthographicSize = zoomBaseUiSize;
+
+                    if (zoomOwnsCamera && Mathf.Abs(mainCamera.orthographicSize - zoomLastMainSize) > 0.01f)
                     {
                         zoomOwnsCamera = false;
-                        if (zoomResolutionRefreshNeeded)
-                            RefreshHudResolutionForZoom();
-                        zoomResolutionRefreshNeeded = false;
                     }
                     return;
                 }
@@ -100,20 +94,14 @@ private static void ApplyCameraZoomTick()
                 if (scrollWheel < 0f)
                 {
                     mainCamera.orthographicSize += 1f;
-                    if (uiCamera != null) uiCamera.orthographicSize += 1f;
+                    if (uiCamera != null) uiCamera.orthographicSize = zoomBaseUiSize;
                     zoomLastMainSize = mainCamera.orthographicSize;
-                    zoomLastUiSize = uiCamera != null ? uiCamera.orthographicSize : zoomBaseUiSize;
-                    zoomResolutionRefreshNeeded = true;
-                    RefreshHudResolutionForZoom();
                 }
                 else if (scrollWheel > 0f && mainCamera.orthographicSize > 3f)
                 {
                     mainCamera.orthographicSize -= 1f;
-                    if (uiCamera != null) uiCamera.orthographicSize = Mathf.Max(3f, uiCamera.orthographicSize - 1f);
+                    if (uiCamera != null) uiCamera.orthographicSize = zoomBaseUiSize;
                     zoomLastMainSize = mainCamera.orthographicSize;
-                    zoomLastUiSize = uiCamera != null ? uiCamera.orthographicSize : zoomBaseUiSize;
-                    zoomResolutionRefreshNeeded = true;
-                    RefreshHudResolutionForZoom();
                 }
             }
             catch { }

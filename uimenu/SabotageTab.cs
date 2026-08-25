@@ -112,7 +112,7 @@ private void DrawSabotagesTab()
             float doorPairWidth = Mathf.Floor((doorInnerWidth - 6f) * 0.5f);
             int ventToggleWidth = Mathf.RoundToInt(Mathf.Max(compactLayout ? 48f : 70f, (sabotageInnerWidth - 6f) * 0.5f));
             float actionH = 24f;
-            float criticalH = 110f;
+            float criticalH = 138f;
             float systemsH = 142f;
             float doorActionsH = 102f;
             bool hasDoors = ShipStatus.Instance != null && ShipStatus.Instance.AllDoors != null;
@@ -157,6 +157,8 @@ private void DrawSabotagesTab()
                 settingsDirty = true;
             }
             GUILayout.EndHorizontal();
+            GUILayout.Space(3);
+            spamMeetings = DrawCompactToggle(spamMeetings, "Spam Meetings", Mathf.RoundToInt(sabotageInnerWidth));
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
 

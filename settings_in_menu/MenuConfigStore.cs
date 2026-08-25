@@ -181,6 +181,7 @@ private void LoadConfig()
                 readGhostChat = LoadBool("M_ReadGhostChat", readGhostChat);
                 enableExtendedChat = LoadBool("M_EnableExtendedChat", enableExtendedChat);
                 enableFastChat = LoadBool("M_EnableFastChat", enableFastChat);
+                chatNoCooldown = LoadBool("M_ChatNoCooldown", chatNoCooldown);
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
                 chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 300);
@@ -201,6 +202,12 @@ private void LoadConfig()
                 noClip = LoadBool("M_NoClip", noClip);
                 tpToCursor = LoadBool("M_TpToCursor", tpToCursor);
                 dragToCursor = LoadBool("M_DragToCursor", dragToCursor);
+                autoVentAfterKill = LoadBool("M_AutoVentAfterKill", autoVentAfterKill);
+                impTrap = LoadBool("M_ImpTrap", impTrap);
+                hnsTaskDrain = LoadBool("M_HnsTaskDrain", hnsTaskDrain);
+                hnsTaskDrainStep = Mathf.Clamp(LoadFloat("M_HnsTaskDrainStep", hnsTaskDrainStep), 0.15f, 1.5f);
+                autoTasksEnabled = LoadBool("M_AutoTasksEnabled", autoTasksEnabled);
+                autoTasksDelay = Mathf.Clamp(LoadFloat("M_AutoTasksDelay", autoTasksDelay), 0.8f, 6f);
                 autoFollowCursor = LoadBool("M_AutoFollowCursor", autoFollowCursor);
                 freecam = LoadBool("M_Freecam", freecam);
                 cameraZoom = LoadBool("M_CameraZoom", cameraZoom);
@@ -235,6 +242,7 @@ private void LoadConfig()
                 unlockVents = LoadBool("M_UnlockVents", unlockVents);
                 walkInVents = LoadBool("M_WalkInVents", walkInVents);
                 autoRepairSabotage = LoadBool("M_AutoRepairSabotage", autoRepairSabotage);
+                spamMeetings = LoadBool("M_SpamMeetings", spamMeetings);
                 autoBreakSabotage = LoadBool("M_AutoBreakSabotage", autoBreakSabotage);
                 allowTasksAsImpostor = LoadBool("M_AllowTasksAsImpostor", allowTasksAsImpostor);
                 hostAutoKillRandom = LoadBool("M_HostAutoKillRandom", hostAutoKillRandom);
@@ -314,11 +322,18 @@ private void LoadConfig()
                     favoriteOutfitSlots[i] = PlayerPrefs.GetString($"M_FavoriteOutfit_{i}", string.Empty);
                 enableBackground = LoadBool("M_EnableBackground", enableBackground);
                 enableMenuCharacter = LoadBool("M_EnableMenuCharacter", enableMenuCharacter);
-                hardMenu = LoadBool("M_HardMenu", hardMenu);
+                blockGameClicks = PlayerPrefs.HasKey("M_BlockGameClicks")
+                    ? LoadBool("M_BlockGameClicks", blockGameClicks)
+                    : LoadBool("M_HardMenu", blockGameClicks);
                 EnableCustomNotifs = LoadBool("M_EnableCustomNotifs", EnableCustomNotifs);
                 LogAllRPCs = LoadBool("M_LogAllRPCs", LogAllRPCs);
                 discordRpcEnabled = LoadBool("M_DiscordRpcEnabled", discordRpcEnabled);
                 selectedSpoofMenuIndex = Mathf.Clamp(LoadInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex), 0, spoofMenuNames.Length - 1);
+                enableMenuScaleInput = LoadBool("M_EnableMenuScaleInput", true);
+                menuScale = PlayerPrefs.HasKey("M_MenuScale")
+                    ? Mathf.Clamp(PlayerPrefs.GetFloat("M_MenuScale"), minMenuScale, maxMenuScale)
+                    : GetRecommendedMenuScale();
+                if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
                 windowRect = new Rect(
                     LoadFloat("M_MenuWindowX", windowRect.x),
                     LoadFloat("M_MenuWindowY", windowRect.y),

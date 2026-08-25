@@ -190,35 +190,6 @@ private void DrawPlayersTab()
 
                 GUILayout.BeginHorizontal();
 
-                if (DrawFixedMenuButton(L("TP HERE", "ТП К СЕБЕ"), btnStyle, playerActionHalfWidth, playerActionButtonHeight))
-                {
-                    if (PlayerControl.LocalPlayer != null && SendPlayerSnapTo(target, PlayerControl.LocalPlayer.transform.position))
-                        ShowNotification($"<color=#00FF00>[TELEPORT]</color> <b>{target.Data.PlayerName}</b> -> you");
-                    else if (HasServerAnticheat())
-                        ShowNotification("<color=#FF0000>[TELEPORT]</color> Remote TP is unsafe on this server.");
-                    else
-                        ShowNotification("<color=#FF0000>[TELEPORT]</color> Failed.");
-                }
-
-                GUILayout.Space(playerActionGap);
-
-                if (DrawFixedMenuButton(L("TP ALL", "ТП ВСЕХ"), btnStyle, playerActionHalfWidth, playerActionButtonHeight))
-                {
-                    int count = SendAllPlayersSnapTo(target.transform.position);
-                    if (count > 0)
-                        ShowNotification($"<color=#00FF00>[TELEPORT]</color> All -> <b>{target.Data.PlayerName}</b> ({count})");
-                    else if (HasServerAnticheat())
-                        ShowNotification("<color=#FF0000>[TELEPORT]</color> Remote TP is unsafe on this server.");
-                    else
-                        ShowNotification("<color=#FF0000>[TELEPORT]</color> Failed.");
-                }
-
-                GUILayout.EndHorizontal();
-
-                GUILayout.Space(5);
-
-                GUILayout.BeginHorizontal();
-
                 GUI.backgroundColor = new Color(0.75f, 0.15f, 0.15f, 1f);
                 if (DrawFixedMenuButton("TELEKILL", btnStyle, playerActionHalfWidth, playerActionButtonHeight))
                 {
@@ -500,9 +471,7 @@ private void DrawPlayersTab()
                 DrawMenuSectionHeader("VENT TELEPORT");
                 DrawPlayerVentTpRow(target, playerActionContentWidth, playerActionHalfWidth, playerActionGap);
 
-                GUILayout.Space(12);
-                DrawMenuSectionHeader("PET CONTROL");
-                DrawPetControlRows(target, playerActionHalfWidth, playerActionGap);
+                DrawTargetVisionControls(target, playerActionContentWidth);
             }
             else
             {
@@ -582,4 +551,3 @@ private void ResetPlayersTabScrolls()
 
     }
 }
-

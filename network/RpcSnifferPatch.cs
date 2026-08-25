@@ -111,12 +111,11 @@ public static class RPCSniffer_Patch
             if (clientId < 0 && __instance.Data != null) clientId = __instance.Data.ClientId;
             if (clientId < 0) clientId = __instance.OwnerId;
 
-            if (clientId >= 0 && !ElysiumModMenuGUI.IsProtectedFromAnticheat(clientId) &&
-                !ElysiumModMenuGUI.IsProtectedFromAnticheat(__instance))
-            {
-                string rpcName = KnownMods.TryGetValue(callId, out var modInfo) ? modInfo.Name : "Unknown";
-                ElysiumNetGuard.NetworkGuard.ApplyMenuProtection(clientId, "Custom RPC", $"{rpcName} ({callId})");
-            }
+            if (ElysiumModMenuGUI.IsProtectedFromAnticheat(clientId) ||
+                ElysiumModMenuGUI.IsProtectedFromAnticheat(__instance)) return true;
+
+            string rpcName = KnownMods.TryGetValue(callId, out var modInfo) ? modInfo.Name : "Unknown";
+            ElysiumNetGuard.NetworkGuard.ApplyMenuProtection(clientId, "Custom RPC", $"{rpcName} ({callId})");
 
             return false;
         }

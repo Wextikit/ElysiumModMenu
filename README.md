@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
   <img src="https://img.shields.io/badge/IL2CPP-BepInEx-374151?style=flat-square" alt="BepInEx IL2CPP">
   <img src="https://img.shields.io/badge/C%23-.NET%206-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/Version-1.4.5-a855f7?style=flat-square" alt="Version 1.4.5">
+  <img src="https://img.shields.io/badge/Version-1.4.6-a855f7?style=flat-square" alt="Version 1.4.6">
   <img src="https://img.shields.io/github/downloads/Wextikit/ElysiumModMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
 </p>
 

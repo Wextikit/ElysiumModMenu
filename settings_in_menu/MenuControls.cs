@@ -950,7 +950,7 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
                 DrawKeybindRow("End: Imp Disconnect:", ref bindEndImpDC, ref isWaitBindEndImpDC);
                 DrawKeybindRow("End: H&S Disconnect:", ref bindEndHnsDC, ref isWaitBindEndHnsDC);
                 DrawKeybindRow("Toggle Tracers:", ref bindToggleTracers, ref isWaitBindToggleTracers);
-                DrawKeybindRow("Toggle NoClip:", ref bindToggleNoClip, ref isWaitBindToggleNoClip);
+                DrawKeybindRow("Toggle Noclip:", ref bindToggleNoClip, ref isWaitBindToggleNoClip);
                 DrawKeybindRow("Toggle Freecam:", ref bindToggleFreecam, ref isWaitBindToggleFreecam);
                 DrawKeybindRow("Toggle Camera Zoom:", ref bindToggleCameraZoom, ref isWaitBindToggleCameraZoom);
                 DrawKeybindRow("Toggle Player Info:", ref bindTogglePlayerInfo, ref isWaitBindTogglePlayerInfo);

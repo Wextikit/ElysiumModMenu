@@ -170,6 +170,7 @@ public class ModPlayer : MonoBehaviour
             public bool RpcCheck(byte callId, int targetClientId, SendOption sendOption, int numData)
             {
                 if (PlayerControl.LocalPlayer == null) return true;
+                if (ElysiumModMenuGUI.IsProtectedFromAnticheat(player)) return true;
                 RpcCalls b = (RpcCalls)callId;
                 if (!CheckSpam(callId))
                 {

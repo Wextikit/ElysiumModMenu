@@ -72,6 +72,7 @@ internal static class CntPositionSanityPatch
 			}
 
 			PlayerControl pl = __instance.myPlayer;
+			if (ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(pl)) return;
 			Transform t = pl != null ? ((Component)pl).transform : ((Component)__instance).transform;
 			if (t == null)
 			{
@@ -100,4 +101,3 @@ internal static class CntPositionSanityPatch
 	}
 }
 }
-

@@ -66,19 +66,19 @@ private void DrawCustomRpcValidationInfo()
             if (!int.TryParse(filtered, out int rpcId))
             {
                 statusStyle.normal.textColor = new Color(1f, 0.35f, 0.35f, 1f);
-                GUILayout.Label(L("Enter RPC ID.", "Р’РІРµРґРёС‚Рµ ID RPC."), statusStyle);
+                GUILayout.Label(L("Enter RPC ID.", "Р’РІРµРґРёС‚Рµ ID RPC."), statusStyle, GUILayout.Height(18f));
                 return;
             }
 
             if (VanillaRpcIds.Contains((byte)rpcId))
             {
                 statusStyle.normal.textColor = new Color(1f, 0.35f, 0.35f, 1f);
-                GUILayout.Label(L($"RPC {rpcId} is vanilla. It will not be sent.", $"RPC {rpcId} РІР°РЅРёР»СЊРЅС‹Р№. РћРЅ РЅРµ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅ."), statusStyle);
+                GUILayout.Label(L($"RPC {rpcId} is vanilla. It will not be sent.", $"RPC {rpcId} РІР°РЅРёР»СЊРЅС‹Р№. РћРЅ РЅРµ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅ."), statusStyle, GUILayout.Height(18f));
                 return;
             }
 
             statusStyle.normal.textColor = new Color(0.35f, 0.95f, 0.55f, 1f);
-            GUILayout.Label(L($"RPC {rpcId} is custom. Sending is allowed.", $"RPC {rpcId} РєР°СЃС‚РѕРјРЅС‹Р№. РћС‚РїСЂР°РІРєР° СЂР°Р·СЂРµС€РµРЅР°."), statusStyle);
+            GUILayout.Label(L($"RPC {rpcId} is custom. Sending is allowed.", $"RPC {rpcId} РєР°СЃС‚РѕРјРЅС‹Р№. РћС‚РїСЂР°РІРєР° СЂР°Р·СЂРµС€РµРЅР°."), statusStyle, GUILayout.Height(18f));
         }
 
 private bool DrawCustomRpcInputButton(float width)
@@ -96,13 +96,12 @@ private bool DrawCustomRpcInputButton(float width)
             style.wordWrap = false;
             style.fontStyle = FontStyle.Bold;
             style.fontSize = 12;
-            style.margin = CreateRectOffset(0, 0, 0, 0);
             style.padding = CreateRectOffset(10, 10, 3, 3);
             style.fixedHeight = 25f;
 
-            Rect rect = GUILayoutUtility.GetRect(width, 25f, GUILayout.Width(width), GUILayout.Height(25f));
             string preview = FormatInputPreview(customSpoofRpcInput, customSpoofRpcInputFocused, 12);
-            bool clicked = GUI.Button(rect, GUIContent.none, style);
+            bool clicked = GUILayout.Button(GUIContent.none, style, GUILayout.Width(width), GUILayout.Height(25f));
+            Rect rect = GUILayoutUtility.GetLastRect();
 
             GUIStyle textStyle = new GUIStyle(style);
             textStyle.normal.background = null;

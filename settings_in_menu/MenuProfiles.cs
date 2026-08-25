@@ -50,7 +50,7 @@ private float menuProfileStatusUntil = 0f;
 
 private static readonly string[] menuProfileBoolKeys = {
             "M_ActivateCompletedCosmicubes", "M_AllowDuplicateColors", "M_AllowLinksAndSymbols", "M_AllowTasksAsImpostor",
-            "M_AlwaysChat", "M_AlwaysShowLobbyTimer", "M_AntiPasosHostBan", "M_AntiPasosLocalBan",
+            "M_AlwaysChat", "M_AlwaysShowLobbyTimer", "M_AntiPasosHostBan", "M_AntiPasosLocalBan", "M_ChatNoCooldown",
             "M_AutoBanEnabled", "M_AutoBanPlatformSpoof", "M_AutoBreakSabotage", "M_AutoClearClonesBeforeGame", "M_AutoCopyCodeAndLeave",
             "M_AutoFollowCursor", "M_AutoGhostAfterStart", "M_AutoHostAutoRunEnabled", "M_AutoHostCancelBelowMin",
             "M_AutoHostEnabled", "M_AutoHostForceLastMinute", "M_AutoHostInstantStart", "M_AutoHostNotifications",
@@ -67,7 +67,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_EnableClipboard", "M_EnableColorCommand", "M_EnableCustomNotifs", "M_EnableExtendedChat",
             "M_EnableFastChat", "M_EnableLevelSpoof", "M_EnableMenuScaleInput", "M_EspShimmerMode",
             "M_ExtendedLobby", "M_Freecam", "M_FullBright", "M_GuestExtraFeatures",
-            "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
+            "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_BlockGameClicks", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
             "M_KillWhileVanishedHostOnly", "M_LimitFps", "M_LobbyAllColor", "M_LobbyRainbowAll",
             "M_LocalAlwaysRed", "M_LocalFakeFCEnabled", "M_LocalFortegreen", "M_LocalNameSpoof", "M_LocalSnipeColor", "M_LockRadar", "M_LogAllRPCs",
             "M_MalformedPacketGuard", "M_MoreLobbyInfo", "M_NeverEndGame", "M_NoClip",
@@ -76,7 +76,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_ReadGhostChat", "M_RemovePenalty", "M_ReplayDrawIcons", "M_ReplayOnlyLastSeconds",
             "M_RevealMeetingRoles", "M_RevealVotes", "M_RgbMenuText", "M_RgbTaskBar",
             "M_RoleBuffImmortality", "M_SeeGhosts", "M_SeeKillCooldown", "M_SeePhantoms",
-            "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowCrewmateTracers",
+            "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowCrewmateTracers", "M_SpamMeetings",
             "M_ShowDeadTracers", "M_ShowEspBoxes", "M_ShowEspVoteKicks", "M_ShowImpostorTracers",
             "M_ShowPlayerInfo", "M_ShowRadar", "M_ShowRadarDeadBodies", "M_ShowRadarGhosts",
             "M_ShowReplay", "M_ShowTracers", "M_ShowWatermarkInfo", "M_SkipKillAnimation",

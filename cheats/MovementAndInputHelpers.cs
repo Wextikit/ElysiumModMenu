@@ -88,7 +88,7 @@ private void DrawPlayerMovement()
                 try
                 {
                     autoFollowCursor = DrawToggle(autoFollowCursor, $"Magnet Cursor ({bindMagnetCursor})", 160);
-                    noClip = DrawToggle(noClip, "True NoClip", 160);
+                    noClip = DrawToggle(noClip, "Noclip", 160);
                     GUILayout.FlexibleSpace();
                 }
                 finally { GUILayout.EndHorizontal(); }

@@ -33,6 +33,8 @@ internal static partial class NetworkGuard
 
 	internal static bool CheckUnownedSpawnFreeze(InnerNetClient client, MessageReader reader)
 	{
+		if (IsActiveInboundSenderProtected()) return true;
+
 		if (!ElysiumModMenuGUI.enableUnownedSpawnGuard || client == null || reader == null ||
 			(reader.Tag != 5 && reader.Tag != 6))
 		{

@@ -43,7 +43,7 @@ namespace ElysiumModMenu
     [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.4.5";
+        public const string PluginVersion = "1.4.6";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;
@@ -163,7 +163,43 @@ namespace ElysiumModMenu
             modClass = AddComponent<ModPlayer>();
 
             var harmony = new Harmony("com.elysiummodmenu.harmony");
-            harmony.PatchAll();
+            PatchAllSafely(harmony);
+        }
+
+        private void PatchAllSafely(Harmony harmony)
+        {
+            int patchedTypes = 0;
+            int failedTypes = 0;
+
+            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                bool hasHarmonyPatch = Attribute.IsDefined(type, typeof(HarmonyPatch), true);
+                if (!hasHarmonyPatch)
+                {
+                    try
+                    {
+                        hasHarmonyPatch = type
+                            .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
+                            .Any(method => Attribute.IsDefined(method, typeof(HarmonyPatch), true));
+                    }
+                    catch { }
+                }
+
+                if (!hasHarmonyPatch) continue;
+
+                try
+                {
+                    harmony.CreateClassProcessor(type).Patch();
+                    patchedTypes++;
+                }
+                catch (Exception error)
+                {
+                    failedTypes++;
+                    Log.LogError((object)$"Harmony patch failed for {type.FullName}: {error}");
+                }
+            }
+
+            Log.LogInfo((object)$"Harmony patches loaded: {patchedTypes}, failed: {failedTypes}");
         }
 
         private static void MigratePlatformSpoofKey(string path)
@@ -236,4 +272,3 @@ namespace ElysiumModMenu
         }
     }
 }
-

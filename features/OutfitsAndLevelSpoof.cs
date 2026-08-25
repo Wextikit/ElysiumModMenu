@@ -676,6 +676,8 @@ public static bool enableChatLog = true;
 
 public static bool enableFastChat = true;
 
+public static bool chatNoCooldown = false;
+
 public static bool allowLinksAndSymbols = false;
 
 public static bool spoofAprilFoolsDate = false;

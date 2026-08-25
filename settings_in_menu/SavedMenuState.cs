@@ -738,7 +738,7 @@ private void SaveConfig()
                 SaveBool("M_DetailedLogsEnabled", detailedLogsEnabled);
                 SaveBool("M_EnableBackground", enableBackground);
                 SaveBool("M_EnableMenuCharacter", enableMenuCharacter);
-                SaveBool("M_HardMenu", hardMenu);
+                SaveBool("M_BlockGameClicks", blockGameClicks);
                 SaveBool("M_AutoCopyCodeAndLeave", autoCopyCodeAndLeave);
                 SaveBool("M_BlockInnerslothTelemetry", blockInnerslothTelemetry);
                 SaveBool("M_EnableCustomNotifs", EnableCustomNotifs);
@@ -749,7 +749,7 @@ private void SaveConfig()
                 PlayerPrefs.SetFloat("M_MenuWindowY", windowRect.y);
                 PlayerPrefs.SetFloat("M_MenuWindowW", windowRect.width);
                 PlayerPrefs.SetFloat("M_MenuWindowH", windowRect.height);
-                PlayerPrefs.SetFloat("M_MenuScale", Mathf.Clamp(menuScale, 0.65f, 1.75f));
+                PlayerPrefs.SetFloat("M_MenuScale", Mathf.Clamp(menuScale, minMenuScale, maxMenuScale));
                 SaveBool("M_EnableMenuScaleInput", enableMenuScaleInput);
                 PlayerPrefs.SetInt("M_CurrentTab", currentTab);
                 PlayerPrefs.SetInt("M_TargetTab", targetTabIndex);
@@ -805,6 +805,7 @@ private void SaveConfig()
                 SaveBool("M_ReadGhostChat", readGhostChat);
                 SaveBool("M_EnableExtendedChat", enableExtendedChat);
                 SaveBool("M_EnableFastChat", enableFastChat);
+                SaveBool("M_ChatNoCooldown", chatNoCooldown);
                 SaveBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 SaveBool("M_EnableChatHistory", enableChatHistory);
                 PlayerPrefs.SetInt("M_ChatHistoryLimit", chatHistoryLimit);
@@ -822,6 +823,12 @@ private void SaveConfig()
                 SaveBool("M_NoClip", noClip);
                 SaveBool("M_TpToCursor", tpToCursor);
                 SaveBool("M_DragToCursor", dragToCursor);
+                SaveBool("M_AutoVentAfterKill", autoVentAfterKill);
+                SaveBool("M_ImpTrap", impTrap);
+                SaveBool("M_HnsTaskDrain", hnsTaskDrain);
+                PlayerPrefs.SetFloat("M_HnsTaskDrainStep", Mathf.Clamp(hnsTaskDrainStep, 0.15f, 1.5f));
+                SaveBool("M_AutoTasksEnabled", autoTasksEnabled);
+                PlayerPrefs.SetFloat("M_AutoTasksDelay", Mathf.Clamp(autoTasksDelay, 0.8f, 6f));
                 SaveBool("M_AutoFollowCursor", autoFollowCursor);
                 SaveBool("M_Freecam", freecam);
                 SaveBool("M_CameraZoom", cameraZoom);
@@ -850,6 +857,7 @@ private void SaveConfig()
                 SaveBool("M_UnlockVents", unlockVents);
                 SaveBool("M_WalkInVents", walkInVents);
                 SaveBool("M_AutoRepairSabotage", autoRepairSabotage);
+                SaveBool("M_SpamMeetings", spamMeetings);
                 SaveBool("M_AutoBreakSabotage", autoBreakSabotage);
                 SaveBool("M_AllowTasksAsImpostor", allowTasksAsImpostor);
                 SaveBool("M_HostAutoKillRandom", hostAutoKillRandom);

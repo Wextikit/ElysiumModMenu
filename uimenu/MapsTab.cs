@@ -1029,6 +1029,18 @@ private static bool TryHostVentTp(PlayerControl player, int ventId)
             catch { return false; }
         }
 
+internal static bool SendImpTrapPlayerToVent(PlayerControl player, int ventId)
+        {
+            try
+            {
+                if (player == null || player.Data == null || AmongUsClient.Instance == null) return false;
+                if (AmongUsClient.Instance.AmHost) return TryHostVentTp(player, ventId);
+                SendVentTpUpdate(player, ventId);
+                return true;
+            }
+            catch { return false; }
+        }
+
 private static bool TryGetVentSys(out SystemTypes sys)
         {
             sys = SystemTypes.Ventilation;
@@ -1097,4 +1109,3 @@ private bool tabHighlightReady = false;
 private Vector2 scrollPosition = Vector2.zero;
 }
 }
-

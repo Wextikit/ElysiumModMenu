@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## v1.4.6 — 2026-08-25
+
+### Added
+
+- Added the new gameplay, chat, task, sabotage, target-player, and Pet Hand controls.
+
+### Changed
+
+- Improved task completion and updated the related menu layouts.
+- Removed the `TP HERE` and `TP ALL` target-player buttons.
+- Fixed alignment in the `SPOOF MENU IDENTITY` card.
+
 ## v1.4.5 — 2026-07-29
 
 ### Changed

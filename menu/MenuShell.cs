@@ -48,6 +48,34 @@ private string menuTitleText;
 
 private int menuTitleFrame = -1;
 
+private static int menuScaleScreenWidth = -1;
+
+private static int menuScaleScreenHeight = -1;
+
+private static float recommendedMenuScale = 1f;
+
+private static float GetRecommendedMenuScale()
+        {
+            if (menuScaleScreenWidth == Screen.width && menuScaleScreenHeight == Screen.height)
+                return recommendedMenuScale;
+
+            menuScaleScreenWidth = Screen.width;
+            menuScaleScreenHeight = Screen.height;
+            float heightScale = Mathf.Max(1f, Screen.height) / 900f;
+            float widthScale = Mathf.Max(1f, Screen.width) / 1440f;
+            recommendedMenuScale = Mathf.Clamp(Mathf.Min(heightScale, widthScale), 1f, maxMenuScale);
+            return recommendedMenuScale;
+        }
+
+private static float GetEffectiveMenuScale()
+        {
+            if (enableMenuScaleInput)
+                menuScale = GetRecommendedMenuScale();
+
+            menuScale = Mathf.Clamp(menuScale, minMenuScale, maxMenuScale);
+            return menuScale;
+        }
+
 public void OnGUI()
         {
             if (isPanicked) return;
@@ -217,7 +245,8 @@ public void OnGUI()
             }
 
             DrawMenuWindowIfVisible();
-            TickVisualReplay();
+            if (e != null && e.type == EventType.Layout)
+                TickVisualReplay();
             DrawVisualRadar();
             DrawVisualReplay();
             DrawEspBoxes();
@@ -410,6 +439,9 @@ private void DrawMenuWindowIfVisible()
             if (!stylesInited) InitStyles();
             ClampMenuWindowToScreen();
 
+            float scale = GetEffectiveMenuScale();
+            Matrix4x4 oldMatrix = GUI.matrix;
+
             FontStyle oldLabelFont = GUI.skin.label.fontStyle;
             FontStyle oldBoxFont = GUI.skin.box.fontStyle;
             FontStyle oldButtonFont = GUI.skin.button.fontStyle;
@@ -427,11 +459,13 @@ private void DrawMenuWindowIfVisible()
                 if (RgbMenuTextActive())
                     GUI.contentColor = GetMenuAccentColor();
 
+                GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f)) * oldMatrix;
                 if (drawMenuWindow == null) drawMenuWindow = DrawElysiumModMenu;
                 windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
             }
             finally
             {
+                GUI.matrix = oldMatrix;
                 GUI.skin.label.fontStyle = oldLabelFont;
                 GUI.skin.box.fontStyle = oldBoxFont;
                 GUI.skin.button.fontStyle = oldButtonFont;
@@ -445,8 +479,9 @@ private void DrawMenuWindowIfVisible()
 
 private static void ClampMenuWindowToScreen()
         {
-            float screenWidth = Mathf.Max(1f, Screen.width);
-            float screenHeight = Mathf.Max(1f, Screen.height);
+            float scale = GetEffectiveMenuScale();
+            float screenWidth = Mathf.Max(1f, Screen.width / scale);
+            float screenHeight = Mathf.Max(1f, Screen.height / scale);
             float maxWidth = Mathf.Max(320f, screenWidth - 20f);
             float maxHeight = Mathf.Max(260f, screenHeight - 20f);
 
@@ -468,7 +503,7 @@ private static float GetMenuSidebarWidth()
 
 private static float GetMenuVisibleWidth()
         {
-            try { return Mathf.Max(80f, Mathf.Min(windowRect.width, Screen.width - windowRect.x)); }
+            try { return Mathf.Max(80f, Mathf.Min(windowRect.width, Screen.width / GetEffectiveMenuScale() - windowRect.x)); }
             catch { return windowRect.width; }
         }
 
@@ -685,6 +720,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                             else if (tabToDraw == 5) DrawHostOnlyTab();
                             else if (tabToDraw == 6) DrawVotekickTab();
                             else if (tabToDraw == 7) DrawMenuTab();
+                            else if (tabToDraw == 8) DrawPetHandTab();
                         }
                         finally { GUILayout.EndVertical(); }
 

@@ -416,7 +416,7 @@ public static void AddToBanList(string friendCode, string puid, string name, str
         {
             try
             {
-                if (IsMeowcheloProtected(name)) return;
+                if (IsProtectedFromAnticheat(name, friendCode, puid)) return;
 
                 string fc = string.IsNullOrWhiteSpace(friendCode) ? "Unknown" : friendCode.Trim();
                 string productId = string.IsNullOrWhiteSpace(puid) ? "Unknown" : puid.Trim();
@@ -667,6 +667,8 @@ public static bool neverEndGame = false;
 public static bool autoRepairSabotage = false;
 
 private static float nextAutoRepairSabotageAt = 0f;
+
+public static bool spamMeetings = false;
 
 public static bool autoBreakSabotage = false;
 

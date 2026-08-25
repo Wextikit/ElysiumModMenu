@@ -139,6 +139,45 @@ private static bool TryGetSnapshotIdentity(int clientId, out ClientIdentity iden
 		return true;
 	}
 
+private static bool IsProtectedNetworkClient(int clientId)
+	{
+		clientId = ResolveBestActiveClientId(clientId);
+		bool isProtected = ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(clientId) ||
+			ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(clientId);
+		if (!isProtected && clientId >= 0 && TryGetSnapshotIdentity(clientId, out ClientIdentity identity))
+		{
+			isProtected = ElysiumModMenu.ElysiumModMenuGUI.IsMeowcheloProtected(identity.PlayerName) ||
+				ElysiumModMenu.ElysiumModMenuGUI.IsProtectedFromAnticheat(
+				identity.PlayerName,
+				identity.FriendCode,
+				identity.ProductUserId);
+		}
+
+		if (isProtected)
+		{
+			ClearProtectedInboundDropState(clientId);
+		}
+
+		return isProtected;
+	}
+
+private static void ClearProtectedInboundDropState(int clientId)
+	{
+		if (clientId >= 0)
+		{
+			FloodDropClientUntil.Remove(clientId);
+			LastClientActionAt.Remove(clientId);
+			NetIdOverflowActionUntilByClient.Remove(clientId);
+		}
+
+		if (string.IsNullOrWhiteSpace(activeInboundConnectionKey)) return;
+
+		FloodDropConnectionUntil.Remove(activeInboundConnectionKey);
+		FloodDropClientByConnectionKey.Remove(activeInboundConnectionKey);
+		HostRateDropByKey.Remove(activeInboundConnectionKey);
+		NetIdOverflowActionUntilByConnection.Remove(activeInboundConnectionKey);
+	}
+
 private static string SnapshotDisplayName(int clientId)
 	{
 		if (TryGetClientSnapshot(clientId, out ClientSnapshot snapshot) && !string.IsNullOrWhiteSpace(snapshot.PlayerName))
@@ -1470,4 +1509,3 @@ internal static void FlagLobbyTeleport(PlayerControl player, int clientId, float
 	}
 }
 }
-

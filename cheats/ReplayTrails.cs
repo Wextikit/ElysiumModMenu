@@ -20,8 +20,11 @@ namespace ElysiumModMenu
         private static GUIStyle replayWinStyle;
         private static readonly Action<int> drawReplayWindow = DrawReplayWindow;
         private static float replayNextSampleAt;
+        private static bool replaySessionWasActive;
+        private static int replaySessionFrame = -1;
+        private static bool replaySessionActive;
 
-        private sealed class ReplayPoint
+        private struct ReplayPoint
         {
             public Vector2 pos;
             public float t;
@@ -60,9 +63,18 @@ namespace ElysiumModMenu
 
         private static void TickVisualReplay()
         {
+            bool sessionActive = IsVisualReplaySessionActive();
+            if (!sessionActive)
+            {
+                if (replaySessionWasActive || replayPaths.Count > 0 || replayPlayers.Count > 0)
+                    ClearVisualReplay();
+                replaySessionWasActive = false;
+                return;
+            }
+
+            replaySessionWasActive = true;
             if (!showReplay)
             {
-                if (replayPaths.Count > 0 && AmongUsClient.Instance == null) ClearVisualReplay();
                 return;
             }
             if (Time.unscaledTime < replayNextSampleAt) return;
@@ -85,24 +97,45 @@ namespace ElysiumModMenu
                 if (pts.Count == 0 || Vector2.Distance(pts[pts.Count - 1].pos, pos) > 0.04f)
                     pts.Add(new ReplayPoint { pos = pos, t = now });
 
-                while (pts.Count > 0 && now - pts[0].t > 900f)
-                    pts.RemoveAt(0);
+                int expiredCount = 0;
+                while (expiredCount < pts.Count && now - pts[expiredCount].t > 900f)
+                    expiredCount++;
+                if (expiredCount > 0)
+                    pts.RemoveRange(0, expiredCount);
 
-                replayPlayers[id] = new ReplayPlayerState
+                if (!replayPlayers.TryGetValue(id, out ReplayPlayerState state))
                 {
-                    pos = pos,
-                    color = GetReplayPlayerColor(pc),
-                    roleColor = GetReplayRoleColor(pc),
-                    dead = pc.Data.IsDead,
-                    imp = IsReplayImp(pc),
-                    lastAt = now
-                };
+                    state = new ReplayPlayerState();
+                    replayPlayers[id] = state;
+                }
+                state.pos = pos;
+                state.color = GetReplayPlayerColor(pc);
+                state.roleColor = GetReplayRoleColor(pc);
+                state.dead = pc.Data.IsDead;
+                state.imp = IsReplayImp(pc);
+                state.lastAt = now;
             }
+        }
+
+        private static bool IsVisualReplaySessionActive()
+        {
+            if (replaySessionFrame == Time.frameCount) return replaySessionActive;
+            replaySessionFrame = Time.frameCount;
+            try
+            {
+                replaySessionActive = AmongUsClient.Instance != null &&
+                                      AmongUsClient.Instance.IsGameStarted &&
+                                      ShipStatus.Instance != null &&
+                                      GameData.Instance != null &&
+                                      PlayerControl.LocalPlayer != null;
+            }
+            catch { replaySessionActive = false; }
+            return replaySessionActive;
         }
 
         private static void DrawVisualReplay()
         {
-            if (!showReplay) return;
+            if (!showReplay || !IsVisualReplaySessionActive()) return;
             ReplayMap map = GetReplayMap();
             if (map == null) return;
 
@@ -133,6 +166,7 @@ namespace ElysiumModMenu
         {
             replayPaths.Clear();
             replayPlayers.Clear();
+            replayNextSampleAt = 0f;
         }
 
         private static void DrawReplayWindow(int id)
@@ -172,7 +206,8 @@ namespace ElysiumModMenu
                 Vector2 prev = Vector2.zero;
                 bool hasPrev = false;
 
-                for (int i = 0; i < pts.Count; i++)
+                int startIndex = FindReplayStartIndex(pts, min);
+                for (int i = startIndex; i < pts.Count; i++)
                 {
                     ReplayPoint rp = pts[i];
                     if (rp.t < min) { hasPrev = false; continue; }
@@ -183,6 +218,21 @@ namespace ElysiumModMenu
                     hasPrev = true;
                 }
             }
+        }
+
+        private static int FindReplayStartIndex(List<ReplayPoint> points, float minTime)
+        {
+            if (!replayOnlyLastSeconds || points == null || points.Count == 0) return 0;
+
+            int low = 0;
+            int high = points.Count;
+            while (low < high)
+            {
+                int mid = low + ((high - low) >> 1);
+                if (points[mid].t < minTime) low = mid + 1;
+                else high = mid;
+            }
+            return Mathf.Max(0, low - 1);
         }
 
         private static void DrawReplayPlayers(ReplayMap map, float ox, float oy)
