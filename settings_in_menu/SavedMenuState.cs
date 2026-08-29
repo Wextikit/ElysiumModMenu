@@ -346,11 +346,23 @@ private void ForceMeetingAsPlayer(PlayerControl target)
 
 private void KillAll()
         {
+            KillAll(0);
+        }
+
+private void KillAll(int mode)
+        {
             if (PlayerControl.LocalPlayer == null || PlayerControl.AllPlayerControls == null) return;
             if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
             {
                 foreach (var player in PlayerControl.AllPlayerControls.ToArray())
                 {
+                    if (player == null || player == PlayerControl.LocalPlayer || player.Data == null || player.Data.IsDead || player.Data.Disconnected) continue;
+
+                    bool isImpostor = RoleManager.IsImpostorRole(player.Data.RoleType) ||
+                                      (player.Data.Role != null && player.Data.Role.IsImpostor);
+                    if (mode == 1 && isImpostor) continue;
+                    if (mode == 2 && !isImpostor) continue;
+
                     TryHostElysiumMurderPlayer(player);
                 }
                 return;
@@ -360,8 +372,13 @@ private void KillAll()
             var targets = PlayerControl.AllPlayerControls.ToArray();
             foreach (var t in targets)
             {
-                if (t != null && t != PlayerControl.LocalPlayer && !t.Data.IsDead && !t.Data.Disconnected)
+                if (t != null && t != PlayerControl.LocalPlayer && t.Data != null && !t.Data.IsDead && !t.Data.Disconnected)
                 {
+                    bool isImpostor = RoleManager.IsImpostorRole(t.Data.RoleType) ||
+                                      (t.Data.Role != null && t.Data.Role.IsImpostor);
+                    if (mode == 1 && isImpostor) continue;
+                    if (mode == 2 && !isImpostor) continue;
+
                     PlayerControl.LocalPlayer.NetTransform.RpcSnapTo(t.transform.position);
                     PlayerControl.LocalPlayer.CmdCheckMurder(t);
                 }
@@ -783,6 +800,7 @@ private void SaveConfig()
                 SaveBool("M_ShowPlayerInfo", showPlayerInfo);
                 SaveBool("M_ShowEspBoxes", showEspBoxes);
                 SaveBool("M_EspShimmerMode", espShimmerMode);
+                SaveBool("M_ShowTaskArrows", showTaskArrows);
                 SaveBool("M_ShowEspVoteKicks", showEspVoteKicks);
                 SaveBool("M_SeeGhosts", seeGhosts);
                 SaveBool("M_SeePhantoms", seePhantoms);
@@ -808,7 +826,7 @@ private void SaveConfig()
                 SaveBool("M_ChatNoCooldown", chatNoCooldown);
                 SaveBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 SaveBool("M_EnableChatHistory", enableChatHistory);
-                PlayerPrefs.SetInt("M_ChatHistoryLimit", chatHistoryLimit);
+                PlayerPrefs.SetInt("M_ChatHistoryLimit", 20);
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -921,6 +939,24 @@ private void SaveConfig()
                 SaveBool("M_AutoHostInstantStart", AutoHostInstantStart);
                 SaveBool("M_AutoHostAutoRunEnabled", AutoHostAutoRunEnabled);
                 SaveBool("M_AutoClearClonesBeforeGame", NetworkedClones.AutoClearBeforeGame);
+                PlayerPrefs.SetInt("M_CloneFormationIdx", cloneFormationIdx);
+                PlayerPrefs.SetInt("M_CloneFormationCount", cloneFormationCount);
+                PlayerPrefs.SetFloat("M_CloneFormationWidth", cloneFormationWidth);
+                SaveBool("M_AnimShields", AnimShieldsEnabled);
+                SaveBool("M_AnimAsteroids", AnimAsteroidsEnabled);
+                SaveBool("M_AnimCamsInUse", AnimCamsInUseEnabled);
+                SaveBool("M_AnimEmptyGarbage", AnimEmptyGarbageEnabled);
+                SaveBool("M_SkipShhhAnim", skipShhhAnim);
+                SaveBool("M_ManualMapSpawn", isManualMapSpawn);
+                SaveBool("M_FlipSkeld", flipSkeld);
+                SaveBool("M_SeePlayersInVent", SeePlayersInVent);
+                SaveBool("M_BanBotsEnabled", banBotsEnabled);
+                SaveBool("M_OldAntiCheatVersion", oldAntiCheatVersion);
+                SaveBool("M_EnableSpellCheck", enableSpellCheck);
+                SaveBool("M_PreGameRoleForce", enablePreGameRoleForce);
+                SaveBool("M_AutoTwoImpostors", autoTwoImpostors);
+                SaveBool("M_ForceFourImpostors", forceFourImpostors);
+                SaveBool("M_CustomChatSpam", customChatSpamEnabled);
                 PlayerPrefs.SetFloat("M_AutoHostAutoRunDelaySeconds", Mathf.Clamp(AutoHostAutoRunDelaySeconds, 0.25f, 10f));
                 SaveBool("M_BugroomScoutEnabled", BugroomScoutEnabled);
                 SaveBool("M_AutoGhostAfterStart", autoGhostAfterStart);

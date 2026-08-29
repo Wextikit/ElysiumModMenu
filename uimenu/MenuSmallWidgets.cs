@@ -192,8 +192,8 @@ private string BuildUpdateStatusText()
                     return $"<b><color=#FF4444>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("failed", "РѕС€РёР±РєР°")} ({error})";
                 default:
                     if (!string.IsNullOrEmpty(ElysiumUpdater.LatestVersion))
-                        return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version is up to date", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ Р°РєС‚СѓР°Р»СЊРЅР°")} ({Plugin.PluginVersion})";
-                    return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ")} {Plugin.PluginVersion}";
+                        return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version is up to date", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ Р°РєС‚СѓР°Р»СЊРЅР°")} ({Plugin.PluginDisplayVersion})";
+                    return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ")} {Plugin.PluginDisplayVersion}";
             }
         }
     }

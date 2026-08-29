@@ -147,7 +147,13 @@ private void DrawPlayersTab()
                 float playerActionHalfWidth = Mathf.Floor((playerActionContentWidth - playerActionGap) / 2f);
                 float playerActionButtonHeight = 23f;
 
-                GUILayout.Label($"<color=#aaaaaa>Selected:</color> {target.Data.PlayerName}", richLabelStyle12);
+                GUILayout.BeginHorizontal();
+                if (DrawFixedMenuButton("<", btnStyle, 26f, playerActionButtonHeight)) CycleSelectedPlayer(-1);
+                GUILayout.Space(4f);
+                GUILayout.Label($"<color=#aaaaaa>Selected:</color> {target.Data.PlayerName}", richLabelStyle12, GUILayout.Height(playerActionButtonHeight), GUILayout.ExpandWidth(true));
+                GUILayout.Space(4f);
+                if (DrawFixedMenuButton(">", btnStyle, 26f, playerActionButtonHeight)) CycleSelectedPlayer(1);
+                GUILayout.EndHorizontal();
                 GUILayout.Space(5);
                 GUILayout.BeginHorizontal();
 
@@ -263,7 +269,55 @@ private void DrawPlayersTab()
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(7);
-                DrawMenuSectionHeader("TARGET ROLE CONTROL");
+                DrawMenuSectionHeader("ZIPLINE");
+                bool zipTarget = ZiplineControl.IsTarget(target.PlayerId);
+                if (DrawFixedMenuButton(zipTarget ? "REMOVE FROM ZIPLINE" : "ADD TO ZIPLINE", zipTarget ? activeTabStyle : btnStyle, playerActionContentWidth, playerActionButtonHeight))
+                    ZiplineControl.ToggleTarget(target.PlayerId);
+
+                GUILayout.Space(4);
+                GUILayout.BeginHorizontal();
+                if (DrawFixedMenuButton("RIDE DOWN", btnStyle, playerActionHalfWidth, playerActionButtonHeight))
+                {
+                    ShowNotification(ZiplineControl.Ride(target, true)
+                        ? $"<color=#00FF00>[ZIPLINE]</color> Down: {target.Data.PlayerName}"
+                        : "<color=#FF0000>[ZIPLINE]</color> Fungle map required or failed");
+                }
+                GUILayout.Space(playerActionGap);
+                if (DrawFixedMenuButton("RIDE UP", btnStyle, playerActionHalfWidth, playerActionButtonHeight))
+                {
+                    ShowNotification(ZiplineControl.Ride(target, false)
+                        ? $"<color=#00FF00>[ZIPLINE]</color> Up: {target.Data.PlayerName}"
+                        : "<color=#FF0000>[ZIPLINE]</color> Fungle map required or failed");
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.Space(4);
+                bool zipLoop = ZiplineControl.IsLooping(target.PlayerId);
+                GUILayout.BeginHorizontal();
+                if (DrawFixedMenuButton("START LOOP DOWN", zipLoop ? activeTabStyle : btnStyle, playerActionHalfWidth, playerActionButtonHeight))
+                {
+                    ShowNotification(ZiplineControl.StartLoop(target, true)
+                        ? $"<color=#00FF00>[ZIPLINE]</color> Loop: {target.Data.PlayerName}"
+                        : "<color=#FF0000>[ZIPLINE]</color> Fungle map required or failed");
+                }
+                GUILayout.Space(playerActionGap);
+                if (DrawFixedMenuButton("START LOOP UP", zipLoop ? activeTabStyle : btnStyle, playerActionHalfWidth, playerActionButtonHeight))
+                {
+                    ShowNotification(ZiplineControl.StartLoop(target, false)
+                        ? $"<color=#00FF00>[ZIPLINE]</color> Loop: {target.Data.PlayerName}"
+                        : "<color=#FF0000>[ZIPLINE]</color> Fungle map required or failed");
+                }
+                GUILayout.EndHorizontal();
+
+                if (zipLoop)
+                {
+                    GUILayout.Space(4);
+                    if (DrawFixedMenuButton("STOP LOOP", btnStyle, playerActionContentWidth, playerActionButtonHeight))
+                        ZiplineControl.StopLoop(target);
+                }
+
+                GUILayout.Space(7);
+                DrawMenuSectionHeader("ROLE CONTROL");
 
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(22)))
@@ -547,6 +601,24 @@ private void ResetPlayersTabScrolls()
             playersHistoryScroll = Vector2.zero;
             playersClonesScroll = Vector2.zero;
             cloneTargetScroll = Vector2.zero;
+        }
+
+        private void CycleSelectedPlayer(int direction)
+        {
+            List<PlayerControl> players = new List<PlayerControl>();
+            for (int i = 0; i < lockedPlayersList.Count; i++)
+            {
+                PlayerControl player = lockedPlayersList[i];
+                if (player != null && player.Data != null && !player.Data.Disconnected && player.PlayerId < 100)
+                    players.Add(player);
+            }
+
+            if (players.Count == 0) return;
+
+            int index = players.FindIndex(player => player.PlayerId == selectedAntiCheatPlayerId);
+            if (index < 0) index = direction < 0 ? 0 : -1;
+            index = (index + direction + players.Count) % players.Count;
+            selectedAntiCheatPlayerId = players[index].PlayerId;
         }
 
     }

@@ -43,6 +43,7 @@ namespace ElysiumModMenu
     internal static class NetworkedClones
     {
         internal const int MaxCloneCount = 9999;
+        private const int GlyphBase = 11;
         private const int Owner = -2;
 
         private sealed class Clone { public PlayerControl Pc; public Vector2 At; public int Batch; }
@@ -65,7 +66,7 @@ namespace ElysiumModMenu
         {
             if (pc == null) return false;
             try { if (cloneNetIds.Contains(pc.NetId)) return true; } catch { }
-            try { if ((int)pc.OwnerId == Owner) return true; } catch { }
+            try { return (int)pc.OwnerId == Owner; } catch { }
             try
             {
                 InnerNetObject obj = pc.Cast<InnerNetObject>();
@@ -121,6 +122,8 @@ namespace ElysiumModMenu
             width = Mathf.Clamp(width, 0.25f, 5f);
             if (idx == 9 || idx == 10)
                 return TextFormation(idx == 9 ? "NETWORK" : "ELYSIUM", src, width);
+            if (idx >= GlyphBase)
+                return GlyphFormation(idx - GlyphBase, src, width);
 
             int n = Mathf.Clamp(count, 1, MaxCloneCount - live.Count - pend.Count);
             if (n <= 0) return "Clone limit.";
@@ -298,6 +301,47 @@ namespace ElysiumModMenu
                 made++;
             }
             return text + " queued: " + made;
+        }
+
+        private static string GlyphFormation(int glyph, PlayerControl src, float width)
+        {
+            string[] rows = CloneGlyphs.Rows(glyph);
+            if (rows == null) return "No pattern.";
+            int room = MaxCloneCount - live.Count - pend.Count;
+            if (room <= 0) return "Clone limit.";
+            List<Vector2> pts = GlyphPoints(rows, src.transform.position, width);
+            int made = 0;
+            int batch = NewBatch();
+            for (int i = 0; i < pts.Count && made < room; i++)
+            {
+                pend.Enqueue(new CloneJob { Src = src.PlayerId, At = pts[i], Batch = batch });
+                made++;
+            }
+            return CloneGlyphs.Names[glyph] + " queued: " + made;
+        }
+
+        private static List<Vector2> GlyphPoints(string[] rows, Vector3 c, float widthScale)
+        {
+            List<Vector2> pts = new List<Vector2>();
+            int cols = 0;
+            for (int y = 0; y < rows.Length; y++)
+                if (rows[y].Length > cols) cols = rows[y].Length;
+
+            float scale = 0.34f;
+            float ox = c.x - cols * scale * 0.5f;
+            float oy = c.y + rows.Length * scale * 0.5f;
+
+            for (int y = 0; y < rows.Length; y++)
+            {
+                string row = rows[y];
+                for (int x = 0; x < row.Length; x++)
+                {
+                    if (row[x] != '1') continue;
+                    float px = ox + x * scale;
+                    pts.Add(new Vector2(c.x + (px - c.x) * widthScale, oy - y * scale));
+                }
+            }
+            return pts;
         }
 
         private static int NewBatch()

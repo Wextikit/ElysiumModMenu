@@ -54,13 +54,14 @@ public void Update()
             TickLocalColorSnipe();
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
             NetworkedClones.Tick(showMenu);
+            ZiplineControl.Tick();
             PetControl.Tick(showMenu);
             AutoVentAfterKillFeature.Tick();
             SpamMeetingsFeature.Tick();
             HnsTaskDrainFeature.Tick();
             AutoTasksFeature.Tick();
 
-            bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
+            bool isTypingOrBinding = IsMenuInputActive() ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
                                      isWaitBindDespawnLobby || isWaitBindCloseMeeting || isWaitBindInstaStart ||
                                      isWaitBindEndCrew || isWaitBindEndImp || isWaitBindEndImpDC || isWaitBindEndHnsDC ||

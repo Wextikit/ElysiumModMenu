@@ -106,6 +106,14 @@ public static class InvertControls_Patch
 
         try
         {
+            if (__instance.AmOwner && (ElysiumModMenuGUI.showMenu || ElysiumModMenuGUI.IsMenuInputActive()) && __instance.body != null)
+            {
+                __instance.body.velocity = Vector2.zero;
+                SeePlayerVent(__instance);
+                ElysiumModMenuGUI.PlayerControl_SetRoleInvisibility_SeePhantoms_Patch.ApplyVisiblePhantom(__instance.myPlayer);
+                return;
+            }
+
             if (__instance.AmOwner && ElysiumModMenuGUI.invertControls && __instance.body != null)
                 __instance.body.velocity = -__instance.body.velocity;
 

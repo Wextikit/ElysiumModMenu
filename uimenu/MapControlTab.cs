@@ -92,40 +92,6 @@ private void DrawMapsTab()
             if (GUILayout.Button(L("Despawn Map", "Удалить карту"), btnStyle, GUILayout.Height(30))) DespawnCurrentMap();
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(15);
-
-            DrawMenuSectionHeader(L("ROOM TELEPORTS (IN-GAME)", "ТЕЛЕПОРТЫ ПО КОМНАТАМ (В ИГРЕ)"));
-            if (ShipStatus.Instance != null && PlayerControl.LocalPlayer != null)
-            {
-                mapsScrollPos = GUILayout.BeginScrollView(mapsScrollPos, GUILayout.Height(160));
-                var locations = GetTeleportLocations();
-                int columns = 3;
-                int count = 0;
-
-                GUILayout.BeginHorizontal();
-                foreach (var loc in locations)
-                {
-                    if (GUILayout.Button(loc.Key, btnStyle, GUILayout.Width(135), GUILayout.Height(30)))
-                    {
-                        TeleportTo(loc.Value);
-                        ShowNotification($"<color=#00FF00>[TELEPORT]</color> Moved to: <b>{loc.Key}</b>");
-                    }
-
-                    count++;
-                    if (count % columns == 0)
-                    {
-                        GUILayout.EndHorizontal();
-                        GUILayout.BeginHorizontal();
-                    }
-                }
-                GUILayout.EndHorizontal();
-                GUILayout.EndScrollView();
-            }
-            else
-            {
-                GUILayout.Label($"<color=#777777>{L("Teleports are only available when you are on a map.", "Телепорты доступны только когда вы находитесь на карте.")}</color>", centeredRichLabelStyle);
-            }
-
             GUILayout.EndVertical();
         }
     }

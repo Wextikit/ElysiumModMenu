@@ -43,9 +43,10 @@ namespace ElysiumModMenu
 {
     public partial class ElysiumModMenuGUI : MonoBehaviour
     {
-private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), "LOBBY SETTINGS", "H&S", L("ANIMATIONS", "АНИМАЦИИ"), L("MAPS", "КАРТЫ") };
+private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), L("TASKS", "ТАСКИ"), L("ANIMATIONS", "АНИМАЦИИ"), L("MAPS", "КАРТЫ") };
 
 private readonly List<SystemTypes> doorRooms = new List<SystemTypes>();
+private Vector2 taskPlayersScrollPos;
 
 private void UpdateDoorRooms()
         {
@@ -81,15 +82,94 @@ private void DrawSabotageAnimationTab()
             try
             {
                 if (currentSabotageSubTab == 0) DrawSabotagesTab();
-                else if (currentSabotageSubTab == 1) DrawLobbySettingsTab();
-                else if (currentSabotageSubTab == 2) DrawHnsSettingsTab();
-                else if (currentSabotageSubTab == 3) DrawAnimationsTab();
+                else if (currentSabotageSubTab == 1) DrawTasksTab();
+                else if (currentSabotageSubTab == 2) DrawAnimationsTab();
                 else DrawMapsTab();
             }
             finally
             {
                 EndMultiTabContent(oldMatrix, oldColor);
             }
+        }
+
+private void DrawTasksTab()
+        {
+            float w = Mathf.Floor(Mathf.Max(240f, GetMenuWorkWidth(260f, 760f) - 44f));
+            float gap = 10f;
+            bool compact = w < 540f;
+            float colW = compact ? w : Mathf.Floor((w - gap) * 0.5f);
+            float rowW = Mathf.Max(180f, colW - 34f);
+
+            if (compact) GUILayout.BeginVertical(GUILayout.Width(w));
+            else GUILayout.BeginHorizontal(GUILayout.Width(w));
+
+            GUILayout.BeginVertical(GUILayout.Width(colW));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(122f));
+            DrawMenuSectionHeader("H&S TASK DRAIN");
+            hnsTaskDrain = DrawCompactToggle(hnsTaskDrain, "Drain Crew Timer", Mathf.RoundToInt(rowW));
+            GUILayout.Space(3);
+            GUILayout.Label($"Burst delay: {hnsTaskDrainStep:0.00}s | {(HnsTaskDrainFeature.Running ? "RUNNING" : "IDLE")}", toggleLabelStyle11);
+            hnsTaskDrainStep = GUILayout.HorizontalSlider(hnsTaskDrainStep, 0.15f, 1.5f,
+                sliderStyle, sliderThumbStyle, GUILayout.Width(rowW));
+            GUILayout.EndVertical();
+
+            GUILayout.Space(6);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(132f));
+            DrawMenuSectionHeader("AUTO TASKS");
+            autoTasksEnabled = DrawCompactToggle(autoTasksEnabled, "Complete Tasks Automatically", Mathf.RoundToInt(rowW));
+            GUILayout.Space(3);
+            GUILayout.Label($"Remaining: {AutoTasksFeature.RemainingTasks()}", toggleLabelStyle11);
+            GUILayout.Label($"Delay: {autoTasksDelay:0.0}s", toggleLabelStyle11);
+            autoTasksDelay = GUILayout.HorizontalSlider(autoTasksDelay, 0.8f, 6f,
+                sliderStyle, sliderThumbStyle, GUILayout.Width(rowW));
+            GUILayout.EndVertical();
+
+            GUILayout.EndVertical();
+
+            if (compact) GUILayout.Space(6); else GUILayout.Space(gap);
+
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(colW), GUILayout.Height(360f));
+            DrawMenuSectionHeader("HOST TASKS");
+            GUILayout.Label("Clear, restore or flood tasks for players.", toggleLabelStyle11);
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal(GUILayout.Width(rowW));
+            if (GUILayout.Button("FLOOD ALL", btnStyle, GUILayout.Width(Mathf.Floor((rowW - 4f) * 0.5f)), GUILayout.Height(24f))) FloodAllPlayersWithTasks();
+            GUILayout.Space(4);
+            if (GUILayout.Button("CLEAR ALL", btnStyle, GUILayout.Width(Mathf.Floor((rowW - 4f) * 0.5f)), GUILayout.Height(24f))) DeleteAllPlayerTasks();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(6);
+
+            taskPlayersScrollPos = GUILayout.BeginScrollView(taskPlayersScrollPos, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUIStyle.none,
+                GUILayout.Width(rowW + 8f), GUILayout.Height(292f));
+            try
+            {
+                if (PlayerControl.AllPlayerControls == null)
+                {
+                    GUILayout.Label("No players.", toggleLabelStyle11);
+                }
+                else
+                {
+                    foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+                    {
+                        if (player == null || player == PlayerControl.LocalPlayer || player.Data == null || player.Data.Disconnected) continue;
+
+                        GUILayout.BeginHorizontal(boxStyle, GUILayout.Width(rowW), GUILayout.Height(28f));
+                        GUILayout.Label(player.Data.PlayerName, toggleLabelStyle11, GUILayout.Width(Mathf.Max(70f, rowW - 184f)), GUILayout.Height(24f));
+                        if (GUILayout.Button("CLEAR", btnStyle, GUILayout.Width(54f), GUILayout.Height(22f))) DeletePlayerTasks(player);
+                        GUILayout.Space(2);
+                        if (GUILayout.Button("NORMAL", btnStyle, GUILayout.Width(60f), GUILayout.Height(22f))) ChangePlayerTasks(player);
+                        GUILayout.Space(2);
+                        if (GUILayout.Button("FLOOD", btnStyle, GUILayout.Width(54f), GUILayout.Height(22f))) FloodPlayerWithTasks(player);
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(3);
+                    }
+                }
+            }
+            finally { GUILayout.EndScrollView(); }
+            GUILayout.EndVertical();
+
+            if (compact) GUILayout.EndVertical();
+            else GUILayout.EndHorizontal();
         }
 
 private void DrawSabotagesTab()
@@ -197,6 +277,7 @@ private void DrawSabotagesTab()
             walkInVents = DrawCompactToggle(walkInVents, "Walk In Vents", Mathf.RoundToInt(sabotageInnerWidth));
             GUILayout.FlexibleSpace();
             GUILayout.EndVertical();
+
             GUILayout.EndVertical();
 
             GUILayout.Space(columnGap);
@@ -251,6 +332,61 @@ private void DrawSabotagesTab()
                 GUILayout.Label("<color=#777777>You are not in a game or this map has no doors.</color>", centeredRichLabelStyle);
                 GUILayout.FlexibleSpace();
             }
+            GUILayout.EndVertical();
+
+            GUILayout.Space(6);
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(doorColumnWidth), GUILayout.Height(268f));
+            DrawMenuSectionHeader("ZIPLINE");
+            GUILayout.Label(ZiplineControl.OnMap ? $"Selected: {ZiplineControl.TargetCount}   Loops: {ZiplineControl.LoopCount}" : "Fungle map only", toggleLabelStyle11);
+            GUILayout.Space(3);
+            PlayerControl zipTarget = ZiplineControl.CurrentTarget;
+            string zipTargetName = zipTarget != null && zipTarget.Data != null ? zipTarget.Data.PlayerName : "No target";
+            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(24f), GUILayout.Height(actionH))) ZiplineControl.CycleTarget(-1);
+            GUILayout.Label(zipTargetName, accentValueStyle, GUILayout.Height(actionH), GUILayout.ExpandWidth(true));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(24f), GUILayout.Height(actionH))) ZiplineControl.CycleTarget(1);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
+            bool markedZipTarget = zipTarget != null && ZiplineControl.IsTarget(zipTarget.PlayerId);
+            if (GUILayout.Button(markedZipTarget ? "REMOVE" : "ADD", markedZipTarget ? activeTabStyle : btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)) && zipTarget != null)
+                ZiplineControl.ToggleTarget(zipTarget.PlayerId);
+            GUILayout.Space(6);
+            if (GUILayout.Button("SELECT ALL", btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH))) ZiplineControl.SelectAll();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+            if (GUILayout.Button("CLEAR TARGETS", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH))) ZiplineControl.ClearTargets();
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
+            if (GUILayout.Button("SEND MARKED DOWN", btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            {
+                int count = ZiplineControl.RideSelected(true);
+                ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Down: {count}");
+            }
+            GUILayout.Space(6);
+            if (GUILayout.Button("SEND MARKED UP", btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            {
+                int count = ZiplineControl.RideSelected(false);
+                ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Up: {count}");
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
+            if (GUILayout.Button("START ALL DOWN", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            {
+                int count = ZiplineControl.StartAll(true);
+                ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Loop all: {count}");
+            }
+            GUILayout.Space(6);
+            if (GUILayout.Button("START ALL UP", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            {
+                int count = ZiplineControl.StartAll(false);
+                ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Loop all: {count}");
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+            if (GUILayout.Button($"STOP ALL LOOPS ({ZiplineControl.LoopCount})", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
+                ZiplineControl.StopAllLoops();
             GUILayout.EndVertical();
             GUILayout.EndVertical();
 

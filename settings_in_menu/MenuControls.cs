@@ -50,9 +50,21 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
                 : GetThemeAccentColor(GetStableMenuAccentSource());
         }
 
+        private static readonly Color[] accentHexSrc = new Color[2];
+        private static readonly string[] accentHexText = new string[2];
+        private static Color controlHexSrc;
+        private static string controlHexText;
+
         public static string GetMenuAccentHex(bool allowRgbText = true)
         {
-            return ColorUtility.ToHtmlStringRGB(GetMenuAccentColor(allowRgbText));
+            int slot = allowRgbText ? 1 : 0;
+            Color col = GetMenuAccentColor(allowRgbText);
+            if (accentHexText[slot] == null || col != accentHexSrc[slot])
+            {
+                accentHexSrc[slot] = col;
+                accentHexText[slot] = ColorUtility.ToHtmlStringRGB(col);
+            }
+            return accentHexText[slot];
         }
 
         public static Color GetMenuControlAccentColor()
@@ -64,7 +76,13 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
 
         public static string GetMenuControlAccentHex()
         {
-            return ColorUtility.ToHtmlStringRGB(GetMenuControlAccentColor());
+            Color col = GetMenuControlAccentColor();
+            if (controlHexText == null || col != controlHexSrc)
+            {
+                controlHexSrc = col;
+                controlHexText = ColorUtility.ToHtmlStringRGB(col);
+            }
+            return controlHexText;
         }
 
         private Color GetStableControlAccentColor(Color fallback)

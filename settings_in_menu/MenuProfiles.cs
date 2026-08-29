@@ -77,7 +77,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_RevealMeetingRoles", "M_RevealVotes", "M_RgbMenuText", "M_RgbTaskBar",
             "M_RoleBuffImmortality", "M_SeeGhosts", "M_SeeKillCooldown", "M_SeePhantoms",
             "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowCrewmateTracers", "M_SpamMeetings",
-            "M_ShowDeadTracers", "M_ShowEspBoxes", "M_ShowEspVoteKicks", "M_ShowImpostorTracers",
+            "M_ShowDeadTracers", "M_ShowEspBoxes", "M_ShowEspVoteKicks", "M_ShowImpostorTracers", "M_ShowTaskArrows",
             "M_ShowPlayerInfo", "M_ShowRadar", "M_ShowRadarDeadBodies", "M_ShowRadarGhosts",
             "M_ShowReplay", "M_ShowTracers", "M_ShowWatermarkInfo", "M_SkipKillAnimation",
             "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofGuestAccount", "M_SpoofMenuEnabled", "M_TpToCursor",

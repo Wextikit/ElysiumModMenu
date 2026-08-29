@@ -182,15 +182,14 @@ namespace ElysiumModMenu
         private static bool TryParseVersion(string value, out Version version)
         {
             version = null;
-            try
-            {
-                version = new Version(value);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(value)) return false;
+
+            string normalized = value.Trim().TrimStart('v', 'V');
+            int prereleaseIndex = normalized.IndexOfAny(new[] { '-', ' ' });
+            if (prereleaseIndex >= 0)
+                normalized = normalized.Substring(0, prereleaseIndex);
+
+            return Version.TryParse(normalized, out version);
         }
 
         internal static string BuildTagOnlyJson(string tag)

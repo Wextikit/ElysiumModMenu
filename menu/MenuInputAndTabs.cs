@@ -666,19 +666,32 @@ public static Color hostChatColorValue = new Color32(0, 128, 128, 255);
 
 public static bool showMenu = false;
 
+public static bool IsMenuInputActive()
+        {
+            return menuSearchInputFocused || isEditingFakeStart || isEditingName || isEditingLevel ||
+                   isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId ||
+                   isEditingGhostChatColor || isEditingBan || isEditingFpsLimit ||
+                   isEditingBugRoomTimedAutoRun || isEditingPortableChat || customChatInputFocused ||
+                   customSpoofRpcInputFocused || !string.IsNullOrEmpty(lobbySetEditKey);
+        }
+
 private const float defaultMenuWidth = 750f;
 
 private const float defaultMenuHeight = 480f;
 
+private const float defaultMenuScale = 1f;
+
+private static readonly float[] menuScaleValues = { 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f };
+
 public static Rect windowRect = new Rect(100, 100, defaultMenuWidth, defaultMenuHeight);
 
-public static float menuScale = 1f;
+public static float menuScale = defaultMenuScale;
 
-public static bool enableMenuScaleInput = true;
+public static bool enableMenuScaleInput = false;
 
-private const float minMenuScale = 0.75f;
+private const float minMenuScale = 0.5f;
 
-private const float maxMenuScale = 2.5f;
+private const float maxMenuScale = 1.75f;
 
 public static bool freecam = false;
 
@@ -788,7 +801,7 @@ private float customChatSpamTimer = 0f;
 
 public static float autoMeetingTimer = 0f;
 
-private static readonly string[] tabNames = { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ"), "PET HAND" }
+private static readonly string[] tabNames = { L("GENERAL", "ОБЩИЕ"), L("SELF", "ИГРОК"), L("VISUALS", "ВИЗУАЛ"), L("PLAYERS", "ИГРОКИ"), L("SABOTAGES", "САБОТАЖИ"), L("HOST ONLY", "ХОСТ"), L("VOTEKICK", "КИК"), L("MENU", "МЕНЮ"), "PET HAND", L("ANTI CHEAT", "АНТИ-ЧИТ") }
 
 ;
 
@@ -802,11 +815,13 @@ public static float speedMultiplier = 1f;
 
 public static bool noSettingLimit = false;
 
+public static bool forceFourImpostors = false;
+
 public static float globalRoomColorId = 0f;
 
 private int currentHostOnlySubTab = 0;
 
-private static readonly string[] hostOnlySubTabs = { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("ANTI CHEAT", "АНТИ-ЧИТ"), L("AUTO HOST", "АВТО ХОСТ"), L("GLITCH ROOM", "ГЛИТЧ-КОМНАТА") }
+private static readonly string[] hostOnlySubTabs = { L("LOBBY CONTROLS", "КОНТРОЛЬ ЛОББИ"), L("ROLE MANAGER", "МЕНЕДЖЕР РОЛЕЙ"), L("AUTO HOST", "АВТО ХОСТ"), L("GLITCH ROOM", "ГЛИТЧ-КОМНАТА"), L("LOBBY SETTINGS", "НАСТРОЙКИ ЛОББИ"), L("H&S", "H&S") }
 
 ;
 

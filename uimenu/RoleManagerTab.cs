@@ -48,7 +48,7 @@ private void DrawPlayersRoles()
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader("PRE-GAME ROLE MANAGER");
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Height(25))) enablePreGameRoleForce = !enablePreGameRoleForce;
+            if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Height(25))) { enablePreGameRoleForce = !enablePreGameRoleForce; settingsDirty = true; }
             if (GUILayout.Button(L("Random 2 Imps", "2 СЛУЧАЙНЫХ ИМПОСТЕРА"), btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
             {
                 autoTwoImpostorPlayerIds.Clear();
@@ -58,6 +58,7 @@ private void DrawPlayersRoles()
             if (GUILayout.Button(autoTwoImpostors ? "Auto 2 Imps: ON" : "Auto 2 Imps", autoTwoImpostors ? activeTabStyle : btnStyle, GUILayout.Width(120), GUILayout.Height(25)))
             {
                 autoTwoImpostors = !autoTwoImpostors;
+                settingsDirty = true;
                 if (autoTwoImpostors)
                 {
                     autoTwoImpostorsNeedsGameStartRoll = true;
@@ -69,6 +70,11 @@ private void DrawPlayersRoles()
                     ClearAutoTwoImpostorSelection();
                     autoTwoImpostorsLastLobbyFingerprint = 0;
                 }
+            }
+            if (GUILayout.Button(forceFourImpostors ? "4 Imps: ON" : "4 Imps (9+)", forceFourImpostors ? activeTabStyle : btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
+            {
+                forceFourImpostors = !forceFourImpostors;
+                settingsDirty = true;
             }
             if (GUILayout.Button(L("Clear All Roles", "ОЧИСТИТЬ ВСЕ РОЛИ"), btnStyle, GUILayout.Width(110), GUILayout.Height(25))) { autoTwoImpostors = false; autoTwoImpostorPlayerIds.Clear(); autoTwoImpostorsLastLobbyFingerprint = 0; forcedPreGameRoles.Clear(); forcedImpostors.Clear(); forcedPreGameRoleFcs.Clear(); forcedImpostorFcs.Clear(); }
             GUILayout.FlexibleSpace();

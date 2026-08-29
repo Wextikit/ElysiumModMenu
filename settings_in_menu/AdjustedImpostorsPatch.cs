@@ -46,10 +46,37 @@ public static class IGameOptionsExtensions_GetAdjustedNumImpostors_Patch
     {
         try
         {
+            if (ElysiumModMenuGUI.forceFourImpostors && HasNinePlayers() && !IsHideAndSeek())
+            {
+                __result = 4;
+                return false;
+            }
+
             if (!ElysiumModMenuGUI.noSettingLimit) return true;
             __result = __instance.NumImpostors;
             return false;
         }
         catch { return true; }
+    }
+
+    private static bool HasNinePlayers()
+    {
+        int count = 0;
+        if (PlayerControl.AllPlayerControls == null) return false;
+
+        foreach (PlayerControl player in PlayerControl.AllPlayerControls)
+        {
+            if (player != null && player.Data != null && !player.Data.Disconnected)
+                count++;
+        }
+
+        return count >= 9;
+    }
+
+    private static bool IsHideAndSeek()
+    {
+        if (GameManager.Instance != null && GameManager.Instance.IsHideAndSeek()) return true;
+        return GameOptionsManager.Instance != null && GameOptionsManager.Instance.CurrentGameOptions != null &&
+               GameOptionsManager.Instance.CurrentGameOptions.GameMode == GameModes.HideNSeek;
     }
 }

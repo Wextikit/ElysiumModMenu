@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -43,7 +43,8 @@ namespace ElysiumModMenu
     [BepInPlugin("com.elysiummodmenu.menu", "ElysiumModMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.4.6";
+        public const string PluginVersion = "1.4.7-pre-release";
+        public const string PluginDisplayVersion = "v1.4.7 pre-release";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;

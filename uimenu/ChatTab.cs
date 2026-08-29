@@ -138,12 +138,6 @@ private void DrawChatSettingsContent()
             GUILayout.Space(6);
             enableChatHistory = DrawToggle(enableChatHistory, L("Chat History (Up/Down)", "История чата (Стрелочки)"), 280);
             GUILayout.Space(2);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label($"{L("History size:", "Размер истории:")} <color=#{hexColor}>{chatHistoryLimit}</color>", toggleLabelStyle, GUILayout.Height(22), GUILayout.Width(130));
-            chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 300f, sliderStyle, sliderThumbStyle, GUILayout.Width(145)), 5, 300);
-            TrimChatHistoryToLimit();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(2);
             enableClipboard = DrawToggle(enableClipboard, L("Chat Input Hotkeys (Ctrl+C/X/A/V)", "Горячие клавиши ввода (Ctrl+C/X/A/V)"), 280);
             GUILayout.Space(2);
             enableChatBubbleCopy = DrawToggle(enableChatBubbleCopy, L("Copy Message by Double Click", "Копировать сообщение двойным кликом"), 280);
@@ -241,7 +235,10 @@ private void DrawChatSettingsContent()
             GUILayout.Space(10);
             string spamBtnText = customChatSpamEnabled ? L("Spam: ON", "Спам: ВКЛ") : L("Spam: OFF", "Спам: ВЫКЛ");
             if (GUILayout.Button(spamBtnText, customChatSpamEnabled ? activeTabStyle : btnStyle, GUILayout.Width(150), GUILayout.Height(30)))
+            {
                 customChatSpamEnabled = !customChatSpamEnabled;
+                settingsDirty = true;
+            }
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();

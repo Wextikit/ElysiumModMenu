@@ -159,6 +159,7 @@ private void LoadConfig()
                 showPlayerInfo = LoadBool("M_ShowPlayerInfo", showPlayerInfo);
                 showEspBoxes = LoadBool("M_ShowEspBoxes", showEspBoxes);
                 espShimmerMode = LoadBool("M_EspShimmerMode", espShimmerMode);
+                showTaskArrows = LoadBool("M_ShowTaskArrows", showTaskArrows);
                 showEspVoteKicks = LoadBool("M_ShowEspVoteKicks", showEspVoteKicks);
                 seeGhosts = LoadBool("M_SeeGhosts", seeGhosts);
                 seePhantoms = LoadBool("M_SeePhantoms", seePhantoms);
@@ -184,9 +185,7 @@ private void LoadConfig()
                 chatNoCooldown = LoadBool("M_ChatNoCooldown", chatNoCooldown);
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
-                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 300);
-                if (chatHistoryLimit <= 20)
-                    chatHistoryLimit = 80;
+                chatHistoryLimit = 20;
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -329,11 +328,10 @@ private void LoadConfig()
                 LogAllRPCs = LoadBool("M_LogAllRPCs", LogAllRPCs);
                 discordRpcEnabled = LoadBool("M_DiscordRpcEnabled", discordRpcEnabled);
                 selectedSpoofMenuIndex = Mathf.Clamp(LoadInt("M_SelectedSpoofMenuIndex", selectedSpoofMenuIndex), 0, spoofMenuNames.Length - 1);
-                enableMenuScaleInput = LoadBool("M_EnableMenuScaleInput", true);
+                enableMenuScaleInput = false;
                 menuScale = PlayerPrefs.HasKey("M_MenuScale")
-                    ? Mathf.Clamp(PlayerPrefs.GetFloat("M_MenuScale"), minMenuScale, maxMenuScale)
-                    : GetRecommendedMenuScale();
-                if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
+                    ? NormalizeMenuScale(PlayerPrefs.GetFloat("M_MenuScale"))
+                    : defaultMenuScale;
                 windowRect = new Rect(
                     LoadFloat("M_MenuWindowX", windowRect.x),
                     LoadFloat("M_MenuWindowY", windowRect.y),
@@ -347,7 +345,25 @@ private void LoadConfig()
                 currentVisualsSubTab = Mathf.Clamp(LoadInt("M_CurrentVisualsSubTab", currentVisualsSubTab), 0, visualsSubTabs.Length - 1);
                 currentPlayersSubTab = Mathf.Clamp(LoadInt("M_CurrentPlayersSubTab", currentPlayersSubTab), 0, playersSubTabs.Length - 1);
                 NetworkedClones.AutoClearBeforeGame = LoadBool("M_AutoClearClonesBeforeGame", NetworkedClones.AutoClearBeforeGame);
-                currentSabotageSubTab = Mathf.Clamp(LoadInt("M_CurrentSabotageSubTab", currentSabotageSubTab), 0, 4);
+                cloneFormationIdx = Mathf.Clamp(LoadInt("M_CloneFormationIdx", cloneFormationIdx), 0, cloneFormations.Length - 1);
+                cloneFormationCount = Mathf.Clamp(LoadInt("M_CloneFormationCount", cloneFormationCount), 1, NetworkedClones.MaxCloneCount);
+                cloneFormationWidth = Mathf.Clamp(LoadFloat("M_CloneFormationWidth", cloneFormationWidth), 0.25f, 5f);
+                AnimShieldsEnabled = LoadBool("M_AnimShields", AnimShieldsEnabled);
+                AnimAsteroidsEnabled = LoadBool("M_AnimAsteroids", AnimAsteroidsEnabled);
+                AnimCamsInUseEnabled = LoadBool("M_AnimCamsInUse", AnimCamsInUseEnabled);
+                AnimEmptyGarbageEnabled = LoadBool("M_AnimEmptyGarbage", AnimEmptyGarbageEnabled);
+                skipShhhAnim = LoadBool("M_SkipShhhAnim", skipShhhAnim);
+                isManualMapSpawn = LoadBool("M_ManualMapSpawn", isManualMapSpawn);
+                flipSkeld = LoadBool("M_FlipSkeld", flipSkeld);
+                SeePlayersInVent = LoadBool("M_SeePlayersInVent", SeePlayersInVent);
+                banBotsEnabled = LoadBool("M_BanBotsEnabled", banBotsEnabled);
+                oldAntiCheatVersion = LoadBool("M_OldAntiCheatVersion", oldAntiCheatVersion);
+                enableSpellCheck = LoadBool("M_EnableSpellCheck", enableSpellCheck);
+                enablePreGameRoleForce = LoadBool("M_PreGameRoleForce", enablePreGameRoleForce);
+                autoTwoImpostors = LoadBool("M_AutoTwoImpostors", autoTwoImpostors);
+                forceFourImpostors = LoadBool("M_ForceFourImpostors", forceFourImpostors);
+                customChatSpamEnabled = LoadBool("M_CustomChatSpam", customChatSpamEnabled);
+                currentSabotageSubTab = Mathf.Clamp(LoadInt("M_CurrentSabotageSubTab", currentSabotageSubTab), 0, sabotageMenuTabs.Length - 1);
                 currentHostOnlySubTab = Mathf.Clamp(LoadInt("M_CurrentHostOnlySubTab", currentHostOnlySubTab), 0, hostOnlySubTabs.Length - 1);
                 currentAutoHostSubTab = Mathf.Clamp(LoadInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab), 0, autoHostSubTabs.Length - 1);
                 tabTransitionProgress = 1f;
@@ -381,7 +397,7 @@ private static void TrimChatHistoryToLimit()
         {
             try
             {
-                chatHistoryLimit = Mathf.Clamp(chatHistoryLimit, 5, 300);
+                chatHistoryLimit = 20;
                 while (ChatHistory.sentMessages.Count > chatHistoryLimit)
                     ChatHistory.sentMessages.RemoveAt(0);
 

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -48,32 +48,26 @@ private string menuTitleText;
 
 private int menuTitleFrame = -1;
 
-private static int menuScaleScreenWidth = -1;
-
-private static int menuScaleScreenHeight = -1;
-
-private static float recommendedMenuScale = 1f;
-
-private static float GetRecommendedMenuScale()
-        {
-            if (menuScaleScreenWidth == Screen.width && menuScaleScreenHeight == Screen.height)
-                return recommendedMenuScale;
-
-            menuScaleScreenWidth = Screen.width;
-            menuScaleScreenHeight = Screen.height;
-            float heightScale = Mathf.Max(1f, Screen.height) / 900f;
-            float widthScale = Mathf.Max(1f, Screen.width) / 1440f;
-            recommendedMenuScale = Mathf.Clamp(Mathf.Min(heightScale, widthScale), 1f, maxMenuScale);
-            return recommendedMenuScale;
-        }
-
 private static float GetEffectiveMenuScale()
         {
-            if (enableMenuScaleInput)
-                menuScale = GetRecommendedMenuScale();
-
-            menuScale = Mathf.Clamp(menuScale, minMenuScale, maxMenuScale);
+            menuScale = NormalizeMenuScale(menuScale);
             return menuScale;
+        }
+
+        private static float NormalizeMenuScale(float value)
+        {
+            float closest = menuScaleValues[0];
+            float distance = Mathf.Abs(value - closest);
+            for (int i = 1; i < menuScaleValues.Length; i++)
+            {
+                float currentDistance = Mathf.Abs(value - menuScaleValues[i]);
+                if (currentDistance < distance)
+                {
+                    closest = menuScaleValues[i];
+                    distance = currentDistance;
+                }
+            }
+            return closest;
         }
 
 public void OnGUI()
@@ -102,18 +96,26 @@ public void OnGUI()
             {
                 if (e.keyCode == KeyCode.Escape)
                 {
-                    if (isEditingFpsLimit)
+                    if (menuSearchInputFocused)
                     {
-                        ApplyFpsLimitInput();
+                        menuSearchInputFocused = false;
+                        e.Use();
                     }
-                    if (isEditingBugRoomTimedAutoRun)
+                    else
                     {
-                        ApplyBugRoomTimedAutoRunInput();
+                        if (isEditingFpsLimit)
+                        {
+                            ApplyFpsLimitInput();
+                        }
+                        if (isEditingBugRoomTimedAutoRun)
+                        {
+                            ApplyBugRoomTimedAutoRunInput();
+                        }
+                        isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = false;
+                        customSpoofRpcInputFocused = false;
+                        ResetAllBindWaits();
+                        e.Use();
                     }
-                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = false;
-                    customSpoofRpcInputFocused = false;
-                    ResetAllBindWaits();
-                    e.Use();
                 }
                 else if (isBinding && e.keyCode != KeyCode.None)
                 {
@@ -501,10 +503,21 @@ private static float GetMenuSidebarWidth()
             return 130f;
         }
 
+private static int visibleWidthFrame = -1;
+        private static float visibleWidthCache;
+
 private static float GetMenuVisibleWidth()
         {
-            try { return Mathf.Max(80f, Mathf.Min(windowRect.width, Screen.width / GetEffectiveMenuScale() - windowRect.x)); }
-            catch { return windowRect.width; }
+            int frame = Time.frameCount;
+            if (frame == visibleWidthFrame) return visibleWidthCache;
+
+            float w;
+            try { w = Mathf.Max(80f, Mathf.Min(windowRect.width, Screen.width / GetEffectiveMenuScale() - windowRect.x)); }
+            catch { w = windowRect.width; }
+
+            visibleWidthFrame = frame;
+            visibleWidthCache = w;
+            return w;
         }
 
 private static float GetMenuBodyX()
@@ -638,12 +651,15 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
             if (sideW > 0f)
             {
+                float searchW = Mathf.Max(60f, sideW - 8f);
                 GUILayout.BeginArea(new Rect(0f, 31f, sideW, windowRect.height - 31f));
                 try
                 {
                     GUILayout.BeginVertical(sidebarStyle, GUILayout.ExpandHeight(true));
                     try
                     {
+                        GUILayout.Space(5);
+                        DrawMenuSearchBar(searchW);
                         GUILayout.Space(5);
                         for (int i = 0; i < tabNames.Length; i++)
                         {
@@ -667,17 +683,26 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 float topW = GetMenuVisibleWidth() - 8f;
                 float btnW = Mathf.Max(18f, Mathf.Floor((topW - 6f) / 4f));
 
-                GUILayout.BeginArea(new Rect(4f, 32f, topW, 45f));
+                int topRows = Mathf.CeilToInt((tabNames.Length + 1) / 4f);
+                GUILayout.BeginArea(new Rect(4f, 32f, topW, topRows * 22f + 3f));
                 try
                 {
-                    for (int row = 0; row < 2; row++)
+                    for (int row = 0; row < topRows; row++)
                     {
-                        GUILayout.BeginHorizontal(GUILayout.Height(20f));
+                        GUILayout.BeginHorizontal(GUILayout.Height(22f));
                         try
                         {
                             for (int col = 0; col < 4; col++)
                             {
-                                int i = row * 4 + col;
+                                int slot = row * 4 + col;
+                                if (slot == 3)
+                                {
+                                    DrawMenuSearchBar(btnW);
+                                    if (col < 3) GUILayout.Space(2f);
+                                    continue;
+                                }
+
+                                int i = slot < 3 ? slot : slot - 1;
                                 if (i >= tabNames.Length) break;
                                 string nm = tabNames[i];
                                 if (nm.Length > 4) nm = nm.Substring(0, 4);
@@ -691,8 +716,8 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 }
                 finally { GUILayout.EndArea(); }
 
-                bodyY = 80f + ((1f - tabEase) * 6f);
-                bodyH = windowRect.height - 88f;
+                bodyY = 59f + Mathf.Max(0, topRows - 1) * 22f + ((1f - tabEase) * 6f);
+                bodyH = windowRect.height - bodyY - 8f;
             }
 
             DrawMenuCharacter(bodyX, bodyY, bodyW, bodyH, bodyAlpha);
@@ -708,11 +733,12 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                     try
                     {
                         GUILayout.BeginVertical();
-                        try
-                        {
-                            int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
+                            try
+                            {
+                                int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
 
-                            if (tabToDraw == 0) DrawGeneralTab();
+                            if (!string.IsNullOrWhiteSpace(menuSearchQuery)) DrawMenuSearchResults(bodyW);
+                            else if (tabToDraw == 0) DrawGeneralTab();
                             else if (tabToDraw == 1) DrawSelfTab();
                             else if (tabToDraw == 2) DrawVisualsTab();
                             else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
@@ -721,6 +747,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                             else if (tabToDraw == 6) DrawVotekickTab();
                             else if (tabToDraw == 7) DrawMenuTab();
                             else if (tabToDraw == 8) DrawPetHandTab();
+                            else if (tabToDraw == 9) DrawAntiCheatTab();
                         }
                         finally { GUILayout.EndVertical(); }
 

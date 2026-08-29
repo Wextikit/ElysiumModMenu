@@ -1,6 +1,6 @@
-﻿# Changelog
+# Changelog
 
-## v1.4.6 — 2026-08-25
+## v1.4.7 pre-release — 2026-08-25
 
 ### Added
 

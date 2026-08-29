@@ -114,7 +114,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
     [HideFromIl2Cpp]
     private void Push()
     {
-        string details = "ElysiumModMenu · v" + Plugin.PluginVersion;
+        string details = "ElysiumModMenu · " + Plugin.PluginDisplayVersion;
         string state = Scene();
         string large = LargeText();
         var party = Party();

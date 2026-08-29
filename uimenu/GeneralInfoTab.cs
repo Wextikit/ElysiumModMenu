@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -80,7 +80,7 @@ private void DrawGeneralInfoTab()
             string contributorHex = rgbText ? accentHex : ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(109, 138, 255, 255)) : new Color32(109, 138, 255, 255));
             string dangerHex = rgbText ? accentHex : ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(231, 76, 60, 255)) : new Color32(231, 76, 60, 255));
             string safeHex = rgbText ? accentHex : ColorUtility.ToHtmlStringRGB(whiteMenuTheme ? GetThemeAccentColor(new Color32(57, 255, 20, 255)) : new Color32(57, 255, 20, 255));
-            string versionText = Plugin.PluginVersion;
+            string versionText = Plugin.PluginDisplayVersion;
 
             GUIStyle textStyle = richWrapLabelStyle12;
             textStyle.normal.textColor = whiteMenuTheme ? new Color(0.16f, 0.16f, 0.16f, 1f) : new Color(0.85f, 0.85f, 0.85f, 1f);
@@ -90,7 +90,7 @@ private void DrawGeneralInfoTab()
                 GUILayout.BeginVertical(boxStyle);
                 GUILayout.Label(
                     $"{L("Welcome to", "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ")} <b><color=#{accentHex}>ElysiumModMenu</color></b> " +
-                    $"<b><color=#{goldHex}>v{versionText}</color></b> {L("by", "РѕС‚")} <b><color=#{leadHex}>Meowchelo</color></b>!",
+                    $"<b><color=#{goldHex}>{versionText}</color></b> {L("by", "РѕС‚")} <b><color=#{leadHex}>Meowchelo</color></b>!",
                     textStyle);
                 GUILayout.Space(4);
                 GUILayout.Label(L(

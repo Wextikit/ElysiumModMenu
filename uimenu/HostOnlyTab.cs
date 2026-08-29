@@ -175,7 +175,7 @@ public static bool isEditingFpsLimit = false;
 
 public static bool limitFps = true;
 
-public static int chatHistoryLimit = 80;
+public static int chatHistoryLimit = 20;
 
 public static int currentPlatformIndex = 1;
 
@@ -626,6 +626,8 @@ public static bool showEspBoxes = false;
 
 public static bool espShimmerMode = false;
 
+public static bool showTaskArrows = false;
+
 public static bool showEspVoteKicks = false;
 
 public static bool revealMeetingRoles = false;
@@ -997,7 +999,7 @@ private GUIStyle topSidebarStyle, activeTopSidebarStyle, microMenuHintStyle, com
 
 private GUIStyle hostSubTabStyle10, activeHostSubTabStyle10, hostSubTabStyle11, activeHostSubTabStyle11;
 
-private readonly float[] hostSubTabWidths = new float[5];
+private readonly float[] hostSubTabWidths = new float[6];
 
 private float hostSubTabLayoutWidth = -1f;
 
@@ -1084,9 +1086,10 @@ private void DrawHostOnlyTab()
             {
                 if (currentHostOnlySubTab == 0) DrawLobbyControls();
                 else if (currentHostOnlySubTab == 1) DrawPlayersRoles();
-                else if (currentHostOnlySubTab == 2) DrawAntiCheatTab();
-                else if (currentHostOnlySubTab == 3) DrawAutoHostTab();
-                else if (currentHostOnlySubTab == 4) DrawBugRoomTab();
+                else if (currentHostOnlySubTab == 2) DrawAutoHostTab();
+                else if (currentHostOnlySubTab == 3) DrawBugRoomTab();
+                else if (currentHostOnlySubTab == 4) DrawLobbySettingsTab();
+                else DrawHnsSettingsTab();
             }
             finally
             {
@@ -1134,6 +1137,12 @@ private void DrawVisualsInGame()
 
             GUILayout.BeginHorizontal();
             showEspVoteKicks = DrawToggle(showEspVoteKicks, "Vote Kicks ESP", 210);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            showTaskArrows = DrawToggle(showTaskArrows, L("Task Arrows", "Стрелки к таскам"), 210);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);

@@ -93,22 +93,6 @@ private void DrawChatSettingsCompact(float columnWidth)
                 GUILayout.EndVertical();
             }
 
-            void DrawHistorySizeRow()
-            {
-                GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(20));
-                GUILayout.Label("History Size", smallLabel, GUILayout.Width(76), GUILayout.Height(20));
-                GUILayout.Label($"{chatHistoryLimit}", smallLabel, GUILayout.Width(22), GUILayout.Height(20));
-                GUILayout.Space(5);
-                int prevLimit = chatHistoryLimit;
-                chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 300f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true)), 5, 300);
-                if (prevLimit != chatHistoryLimit)
-                {
-                    TrimChatHistoryToLimit();
-                    settingsDirty = true;
-                }
-                GUILayout.EndHorizontal();
-            }
-
             void DrawSendBlock()
             {
                 GUILayout.BeginVertical(compactCard, GUILayout.Width(blockWidth), GUILayout.Height(blockHeight));
@@ -170,7 +154,10 @@ private void DrawChatSettingsCompact(float columnWidth)
                 GUILayout.Space(5);
                 string spamBtnText = customChatSpamEnabled ? L("Spam ON", "РЎРїР°Рј Р’РљР›") : L("Spam OFF", "РЎРїР°Рј Р’Р«РљР›");
                 if (GUILayout.Button(spamBtnText, customChatSpamEnabled ? activeTabStyle : btnStyle, GUILayout.Height(22)))
+                {
                     customChatSpamEnabled = !customChatSpamEnabled;
+                    settingsDirty = true;
+                }
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(3);
@@ -256,8 +243,6 @@ private void DrawChatSettingsCompact(float columnWidth)
                 chatNoCooldown = DrawCompactToggle(chatNoCooldown, "Chat No CD (0.1s)", toggleWidth);
                 GUILayout.Space(7);
                 enableChatHistory = DrawCompactToggle(enableChatHistory, "Chat History", toggleWidth);
-                GUILayout.Space(6);
-                DrawHistorySizeRow();
             });
 
             GUILayout.Space(gap);

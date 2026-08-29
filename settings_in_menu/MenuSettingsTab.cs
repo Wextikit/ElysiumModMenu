@@ -62,31 +62,19 @@ private void DrawMenuTab()
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("MENU CUSTOMIZATION", "РћР¤РћР РњР›Р•РќРР• РњР•РќР®"));
 
-            bool previousAutoMenuScale = enableMenuScaleInput;
-            enableMenuScaleInput = DrawToggle(enableMenuScaleInput, "Auto High-Resolution Scale", 280);
-            if (previousAutoMenuScale != enableMenuScaleInput)
-            {
-                if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
-                menuPrefsChanged = true;
-            }
-            GUILayout.Space(5);
-
             float previousMenuScale = menuScale;
-            if (enableMenuScaleInput) menuScale = GetRecommendedMenuScale();
             GUILayout.BeginHorizontal();
-            GUILayout.Label($"Menu Scale: <color=#{GetMenuAccentHex(false)}>{menuScale:F2}x</color>", toggleLabelStyle, GUILayout.Width(160), GUILayout.Height(25));
-            GUI.enabled = !enableMenuScaleInput;
-            menuScale = GUILayout.HorizontalSlider(menuScale, minMenuScale, maxMenuScale, sliderStyle, sliderThumbStyle, GUILayout.Width(220));
-            GUI.enabled = true;
+            GUILayout.Label($"Menu Scale: <color=#{GetMenuAccentHex(false)}>{Mathf.RoundToInt(menuScale * 100f)}%</color>", toggleLabelStyle, GUILayout.Width(160), GUILayout.Height(25));
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(28f), GUILayout.Height(25f))) ChangeMenuScale(-1);
+            GUILayout.Label($"{Mathf.RoundToInt(menuScale * 100f)}%", accentValueStyle, GUILayout.Width(58f), GUILayout.Height(25f));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(28f), GUILayout.Height(25f))) ChangeMenuScale(1);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             if (Mathf.Abs(previousMenuScale - menuScale) > 0.001f)
             {
-                menuScale = Mathf.Clamp(menuScale, minMenuScale, maxMenuScale);
                 ClampMenuWindowToScreen();
                 menuPrefsChanged = true;
             }
-            GUILayout.Label(L("Keeps the menu readable on WQXGA and 4K displays. Disable Auto to set a custom scale.", "Автоматически увеличивает меню на WQXGA и 4K. Отключите Auto для ручного масштаба."), menuDescStyle);
             GUILayout.Space(10);
 
             bool prevRgb = rgbMenuMode;
@@ -423,11 +411,19 @@ private void DrawMenuTab()
             DrawMenuSectionHeader(L("RESET SETTINGS", "РЎР‘Р РћРЎ РќРђРЎРўР РћР•Рљ"));
             GUILayout.Label(L("Resets all sliders back to their default values.", "РЎР±СЂР°СЃС‹РІР°РµС‚ РІСЃРµ РїРѕР»Р·СѓРЅРєРё РґРѕ Р·РЅР°С‡РµРЅРёР№ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ."), menuDescStyle);
             GUILayout.Space(6);
-            if (GUILayout.Button(L("Reset Sliders to Default", "РЎР±СЂРѕСЃРёС‚СЊ РїРѕР»Р·СѓРЅРєРё РґРѕ РґРµС„РѕР»С‚Р°"), activeTabStyle, GUILayout.Height(30)))
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("Reset Sliders to Default", "РЎР±СЂРѕСЃРёС‚СЊ РїРѕР»Р·СѓРЅРєРё РґРѕ РґРµС„РѕР»С‚Р°"), activeTabStyle, GUILayout.Height(30), GUILayout.ExpandWidth(true)))
             {
                 ResetSlidersToDefault();
                 menuPrefsChanged = true;
             }
+            GUILayout.Space(6);
+            if (GUILayout.Button(L("Reset Menu Size", "РЎР±СЂРѕСЃРёС‚СЊ СЂР°Р·РјРµСЂ РјРµРЅСЋ"), btnStyle, GUILayout.Height(30), GUILayout.ExpandWidth(true)))
+            {
+                ResetMenuSize();
+                menuPrefsChanged = true;
+            }
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             if (menuPrefsChanged) SaveConfig();
@@ -492,10 +488,38 @@ private bool DrawFpsLimitInput()
             return GUI.Button(rect, string.IsNullOrEmpty(fpsLimitInput) ? (isEditingFpsLimit ? "|" : fpsLimit.ToString()) : fpsLimitInput, style);
         }
 
+        private void ResetMenuSize()
+        {
+            windowRect.width = defaultMenuWidth;
+            windowRect.height = defaultMenuHeight;
+            enableMenuScaleInput = false;
+            menuScale = defaultMenuScale;
+            ClampMenuWindowToScreen();
+        }
+
+        private void ChangeMenuScale(int direction)
+        {
+            int index = 0;
+            float distance = Mathf.Abs(menuScale - menuScaleValues[0]);
+            for (int i = 1; i < menuScaleValues.Length; i++)
+            {
+                float currentDistance = Mathf.Abs(menuScale - menuScaleValues[i]);
+                if (currentDistance < distance)
+                {
+                    index = i;
+                    distance = currentDistance;
+                }
+            }
+
+            index = Mathf.Clamp(index + direction, 0, menuScaleValues.Length - 1);
+            enableMenuScaleInput = false;
+            menuScale = menuScaleValues[index];
+        }
+
 private void ResetSlidersToDefault()
         {
             selectedMapSpawnIdx = 0f;
-            chatHistoryLimit = 80;
+            chatHistoryLimit = 20;
             customChatSpamDelay = 2.1f;
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
@@ -524,12 +548,13 @@ private void ResetSlidersToDefault()
             AutoHostFastStartDelaySeconds = 5f;
             punishmentMode = 0;
 
-            enableMenuScaleInput = true;
-            menuScale = GetRecommendedMenuScale();
+            enableMenuScaleInput = false;
+            menuScale = defaultMenuScale;
 
             showPlayerInfo = false;
             showEspBoxes = false;
             espShimmerMode = false;
+            showTaskArrows = false;
             showEspVoteKicks = false;
             seeGhosts = false;
             seePhantoms = false;

@@ -536,7 +536,7 @@ private void DrawLobbyControls()
             const float hostActionButtonHeight = 24f;
             const float hostActionGap = 4f;
             const float topTileHeight = 220f;
-            const float bottomTileHeight = 220f;
+            const float bottomTileHeight = 248f;
             const float lobbyActionsWidthOffset = 20f;
             float lobbyColumnWidth = Mathf.Floor(Mathf.Max(190f, (outerContentWidth - columnGap) / 2f));
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
@@ -643,6 +643,15 @@ private void DrawLobbyControls()
             if (GUILayout.Button(L("Kick All", "Кикнуть всех"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KickAll();
             GUILayout.Space(hostActionGap);
             if (GUILayout.Button(L("Mass Morph", "Масс-морф"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) this.StartCoroutine(MassMorphCoroutine().WrapToIl2Cpp());
+            GUILayout.EndHorizontal();
+            GUILayout.Space(hostActionGap);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("All", "Все"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KillAll(0);
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button(L("Crewmates", "Мирные"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KillAll(1);
+            GUILayout.Space(hostActionGap);
+            if (GUILayout.Button(L("Impostors", "Предатели"), btnStyle, GUILayout.Width(threeButtonWidth), GUILayout.Height(hostActionButtonHeight))) KillAll(2);
             GUILayout.EndHorizontal();
             GUILayout.Space(hostActionGap);
 
@@ -1010,7 +1019,7 @@ public static void InitializeKillCooldownOnRoundStart()
                 }
 
                 ver.text.fontStyle |= FontStyles.Bold;
-                string title = "<b>" + ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu " + Plugin.PluginVersion) + "</b>";
+                string title = "<b>" + ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu " + Plugin.PluginDisplayVersion) + "</b>";
                 ver.text.text = string.IsNullOrWhiteSpace(gameVersion)
                     ? title
                     : title + " <color=#FFFFFF>|</color> " + gameVersion;
@@ -1046,7 +1055,7 @@ public static void InitializeKillCooldownOnRoundStart()
                     string finalString = $"<color=#FFFFFF>PING:</color> <color={pingColor}>{_smoothPing} ms</color>{separator}<color=#FFFFFF>FPS:</color> <color=#FFFFFF>{num}</color>";
                     if (ElysiumModMenuGUI.showWatermark)
                     {
-                        string shimmerTitle = "<b>" + ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu " + Plugin.PluginVersion) + "</b>";
+                        string shimmerTitle = "<b>" + ElysiumModMenuGUI.ApplyMenuShimmer("ElysiumModMenu " + Plugin.PluginDisplayVersion) + "</b>";
                         finalString = $"{shimmerTitle}{separator}" + finalString;
                     }
 

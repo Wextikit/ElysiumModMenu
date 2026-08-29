@@ -97,9 +97,7 @@ public static class ChatHistory
             {
                 if (!enableChatHistory) return;
                 if (string.IsNullOrWhiteSpace(message)) return;
-                ElysiumModMenuGUI.chatHistoryLimit = Mathf.Clamp(ElysiumModMenuGUI.chatHistoryLimit, 5, 300);
-                if (ElysiumModMenuGUI.chatHistoryLimit <= 20)
-                    ElysiumModMenuGUI.chatHistoryLimit = 80;
+                ElysiumModMenuGUI.chatHistoryLimit = 20;
                 bool isNewEntry = sentMessages.Count == 0 || sentMessages[sentMessages.Count - 1] != message;
                 if (isNewEntry)
                 {
