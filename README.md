@@ -1,4 +1,4 @@
-ё<div align="center">
+<div align="center">
 
 # Elysium Mod Menu (EMM) - Among Us
 

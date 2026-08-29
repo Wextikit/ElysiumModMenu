@@ -104,7 +104,7 @@ private static void ApplyCameraZoomTick()
                     zoomLastMainSize = mainCamera.orthographicSize;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught28) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught28); }
         }
 
 [HarmonyPatch(typeof(PassiveButton), nameof(PassiveButton.ReceiveClickDown))]

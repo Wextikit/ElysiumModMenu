@@ -77,16 +77,17 @@ private bool DrawCompactToggle(bool value, string text, int width = 0)
         {
             text = MenuText(text);
             int finalWidth = width > 0 ? Mathf.Max(width, 44) : 168;
-            GUILayout.BeginHorizontal(GUILayout.Width(finalWidth), GUILayout.Height(17));
+            GUILayout.BeginHorizontal(GUILayout.Width(finalWidth), GUILayout.Height(22));
 
-            Rect animSwitchRect = GUILayoutUtility.GetRect(28f, 14f, GUILayout.Width(28f), GUILayout.Height(14f));
+            Rect switchSlot = GUILayoutUtility.GetRect(30f, 22f, GUILayout.Width(30f), GUILayout.Height(22f));
+            Rect animSwitchRect = new Rect(switchSlot.x, switchSlot.y + 3f, 30f, 16f);
             bool clickedBox = GUI.Button(animSwitchRect, "", value ? trackOnStyle : trackOffStyle);
             DrawAnimatedSwitch(animSwitchRect, value, text);
 
             GUILayout.Space(4);
 
-            float textWidth = Mathf.Max(42f, finalWidth - 36f);
-            Rect textRect = GUILayoutUtility.GetRect(textWidth, 16f, GUILayout.Width(textWidth), GUILayout.Height(16f));
+            float textWidth = Mathf.Max(42f, finalWidth - 38f);
+            Rect textRect = GUILayoutUtility.GetRect(textWidth, 22f, GUILayout.Width(textWidth), GUILayout.Height(22f));
             GUI.Label(textRect, text, compactToggleTextStyle);
 
             bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
@@ -144,7 +145,7 @@ private void DrawUpdateActionButton()
                     if (hasAsset) ElysiumUpdaterDriver.Instance?.BeginDownload();
                     else
                     {
-                        try { GUIUtility.systemCopyBuffer = ElysiumUpdater.ReleasesUrl; } catch { }
+                        try { GUIUtility.systemCopyBuffer = ElysiumUpdater.ReleasesUrl; } catch (global::System.Exception __elysiumCaught529) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught529); }
                         OpenExternalLink(ElysiumUpdater.ReleasesUrl, "Releases");
                     }
                 }
@@ -179,21 +180,21 @@ private string BuildUpdateStatusText()
             switch (ElysiumUpdater.State)
             {
                 case ElysiumUpdateState.Checking:
-                    return $"<b><color=#FFBB36>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("checking GitHub releases...", "РїСЂРѕРІРµСЂСЏСЋ GitHub releases...")}";
+                    return $"<b><color=#FFBB36>{L("Update", "Обновление")}</color></b>: {L("checking GitHub releases...", "проверка GitHub releases...")}";
                 case ElysiumUpdateState.Available:
                     string asset = string.IsNullOrWhiteSpace(ElysiumUpdater.AssetName) ? "release page" : ElysiumUpdater.AssetName;
-                    return $"<b><color=#FFBB36>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("available", "РґРѕСЃС‚СѓРїРЅРѕ")} <b>v{ElysiumUpdater.LatestVersion}</b> ({asset})";
+                    return $"<b><color=#FFBB36>{L("Update", "Обновление")}</color></b>: {L("available", "доступно")} <b>v{ElysiumUpdater.LatestVersion}</b> ({asset})";
                 case ElysiumUpdateState.Downloading:
-                    return $"<b><color=#FFBB36>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("downloading and installing...", "СЃРєР°С‡РёРІР°РЅРёРµ Рё СѓСЃС‚Р°РЅРѕРІРєР°...")}";
+                    return $"<b><color=#FFBB36>{L("Update", "Обновление")}</color></b>: {L("downloading and installing...", "скачивание и установка...")}";
                 case ElysiumUpdateState.Done:
-                    return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("installed. Restart the game.", "СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ. РџРµСЂРµР·Р°РїСѓСЃС‚Рё РёРіСЂСѓ.")}";
+                    return $"<b><color=#00FFAA>{L("Update", "Обновление")}</color></b>: {L("installed. Restart the game.", "установлено. Перезапустите игру.")}";
                 case ElysiumUpdateState.Failed:
                     string error = string.IsNullOrWhiteSpace(ElysiumUpdater.LastError) ? "unknown" : ElysiumUpdater.LastError;
-                    return $"<b><color=#FF4444>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("failed", "РѕС€РёР±РєР°")} ({error})";
+                    return $"<b><color=#FF4444>{L("Update", "Обновление")}</color></b>: {L("failed", "ошибка")} ({error})";
                 default:
                     if (!string.IsNullOrEmpty(ElysiumUpdater.LatestVersion))
-                        return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version is up to date", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ Р°РєС‚СѓР°Р»СЊРЅР°")} ({Plugin.PluginDisplayVersion})";
-                    return $"<b><color=#00FFAA>{L("Update", "РћР±РЅРѕРІР»РµРЅРёРµ")}</color></b>: {L("current version", "С‚РµРєСѓС‰Р°СЏ РІРµСЂСЃРёСЏ")} {Plugin.PluginDisplayVersion}";
+                        return $"<b><color=#00FFAA>{L("Update", "Обновление")}</color></b>: {L("current version is up to date", "текущая версия актуальна")} ({Plugin.PluginDisplayVersion})";
+                    return $"<b><color=#00FFAA>{L("Update", "Обновление")}</color></b>: {L("current version", "текущая версия")} {Plugin.PluginDisplayVersion}";
             }
         }
     }

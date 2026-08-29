@@ -95,7 +95,7 @@ public static class PublicFriendCodeRegistrationPatch
                                 return;
                             }
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught217) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught217); }
                         finally
                         {
                             fallbackRequest = false;
@@ -128,7 +128,7 @@ public static class PublicFriendCodeScreenPatch
             for (int i = 0; i < buttons.Count; i++)
                 buttons[i]?.SetButtonEnableState(true);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught218) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught218); }
     }
 }
 
@@ -189,6 +189,6 @@ public static class PublicFriendCodeButtonPatch
             if (__instance.GetComponentInParent<EditAccountUsername>() != null)
                 enable = true;
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught219) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught219); }
     }
 }

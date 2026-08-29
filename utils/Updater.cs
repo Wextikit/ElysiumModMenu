@@ -275,8 +275,8 @@ namespace ElysiumModMenu
 
             if (string.IsNullOrWhiteSpace(ElysiumUpdater.DownloadUrl))
             {
-                try { GUIUtility.systemCopyBuffer = ElysiumUpdater.ReleasesUrl; } catch { }
-                try { Application.OpenURL(ElysiumUpdater.ReleasesUrl); } catch { }
+                try { GUIUtility.systemCopyBuffer = ElysiumUpdater.ReleasesUrl; } catch (global::System.Exception __elysiumCaught579) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught579); }
+                try { Application.OpenURL(ElysiumUpdater.ReleasesUrl); } catch (global::System.Exception __elysiumCaught580) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught580); }
                 return;
             }
 
@@ -337,7 +337,7 @@ namespace ElysiumModMenu
                     if (i >= 0) return url.Substring(i + 5);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught581) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught581); }
             return null;
         }
 

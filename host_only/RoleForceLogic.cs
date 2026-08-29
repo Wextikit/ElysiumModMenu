@@ -56,7 +56,7 @@ private static void ClearAutoTwoImpostorSelection()
                 }
                 autoTwoImpostorPlayerIds.Clear();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught300) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught300); }
         }
 
 public static string GetRoleForceKey(PlayerControl pc)
@@ -87,7 +87,7 @@ private static PlayerControl FindPlayerById(byte id)
                     if (pc != null && pc.PlayerId == id)
                         return pc;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught301) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught301); }
             return null;
         }
 
@@ -177,7 +177,7 @@ public static List<byte> GetForcedImpostorIdsByFc()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught302) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught302); }
             return result;
         }
 
@@ -294,7 +294,7 @@ private static void TickAutoTwoImpostors()
                 if (autoTwoImpostorPlayerIds.Count != 2 || autoTwoImpostorsLastLobbyFingerprint != fingerprint)
                     RollAutoTwoImpostors(true);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught303) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught303); }
         }
 
 private static void EnsureAutoTwoImpostorsForRoleSelection()

@@ -61,7 +61,7 @@ internal static class PlayerLoadState
 	internal static PlayerLoadInfo Evaluate(ClientData client)
 	{
 		PlayerLoadInfo info = default(PlayerLoadInfo);
-		try { info.Connected = client != null; info.Ready = client != null && client.Character != null; } catch { }
+		try { info.Connected = client != null; info.Ready = client != null && client.Character != null; } catch (global::System.Exception __elysiumCaught641) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught641); }
 		return info;
 	}
 }

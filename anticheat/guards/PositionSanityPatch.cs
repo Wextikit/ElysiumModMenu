@@ -95,9 +95,7 @@ internal static class CntPositionSanityPatch
 					Mathf.Clamp(p.z, -MaxCoord, MaxCoord));
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught642) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught642); }
 	}
 }
 }

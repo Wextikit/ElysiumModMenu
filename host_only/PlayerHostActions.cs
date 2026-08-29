@@ -68,9 +68,7 @@ private void ForceGlobalEject(PlayerControl target)
 
                 ShowNotification($"<color=#00FF00>[EJECT]</color> Ejecting <b>{target.Data.PlayerName}</b>...");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught296) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught296); }
         }
 
 private void ForceAllVotesTo(PlayerControl target)
@@ -106,7 +104,7 @@ private void ForceAllVotesTo(PlayerControl target)
                 MeetingHud.Instance.RpcVotingComplete(states, target.Data, false, false, 0);
                 ShowNotification($"<color=#00FF00>[VOTE]</color> Votes -> <b>{target.Data.PlayerName}</b>");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught298) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught298); }
         }
 
 private void DrawPlayerVentTpRow(PlayerControl target, float fullW, float btnW, float gap)
@@ -192,7 +190,7 @@ private static bool IsDeadBodyForPlayerPresent(byte playerId)
                     if (parentId == playerId) return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught299) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught299); }
 
             return false;
         }
@@ -229,9 +227,7 @@ private static void AttemptReportBody(PlayerControl target)
 
                     TryOpenModdedMeeting(PlayerControl.LocalPlayer, target.Data, $"<color=#00FF00>[REPORT]</color> Modded report: <b>{target.Data.PlayerName}</b>.");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught297) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught297); }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -82,7 +82,7 @@ private static bool IsRainbowEsp(byte id)
                 if (PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.PlayerId == id)
                     return localRainbow || localRainbowFreeOnly;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught76) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught76); }
             return false;
         }
 
@@ -104,8 +104,13 @@ private static Color GetEspBaseColor(byte id, Color fallback)
 private static Color GetEspShimmerColor(byte id, Color fallback)
         {
             Color baseCol = GetEspBaseColor(id, fallback);
-            float wave = 0.5f + Mathf.Sin(Time.unscaledTime * 4.6f + id * 0.63f) * 0.5f;
-            Color c = Color.Lerp(baseCol, Color.white, 0.18f + wave * 0.42f);
+            if (baseCol.a <= 0.001f) baseCol = GetMenuAccentColor(false);
+
+            float phase = Time.unscaledTime + id * 0.37f;
+            float wave = 0.5f + Mathf.Sin(phase * 5.2f) * 0.5f;
+            Color spectrum = Color.HSVToRGB(Mathf.Repeat(phase * 0.16f, 1f), 0.82f, 1f);
+            Color c = Color.Lerp(baseCol, spectrum, 0.38f + wave * 0.38f);
+            c = Color.Lerp(c, Color.white, wave * 0.16f);
             c.a = 1f;
             return c;
         }
@@ -129,7 +134,7 @@ public static Color GetEspColor(PlayerControl pc, Color fallback)
                 if (rgbMenuMode)
                     return GetMenuControlAccentColor();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught77) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught77); }
             return fallback;
         }
 
@@ -158,7 +163,7 @@ public static void RegisterVoteKickEsp(int targetClientId)
                     break;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught78) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught78); }
         }
 
 private static int GetVoteKickEspCount(byte playerId)
@@ -226,7 +231,7 @@ private static void LoadFriendEspIgnoreTokensIfNeeded()
                     friendEspIgnoreTokens.Add(token);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught79) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught79); }
         }
 
 private static bool IsEspIgnored(NetworkedPlayerInfo info)
@@ -269,7 +274,7 @@ public static string BuildESPInfoLine(NetworkedPlayerInfo info, int customPlatfo
             bool isHost = false;
             bool hasCustomPlatformName = false;
 
-            try { level = (int)info.PlayerLevel + 1; } catch { }
+            try { level = (int)info.PlayerLevel + 1; } catch (global::System.Exception __elysiumCaught80) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught80); }
 
             try
             {
@@ -285,7 +290,7 @@ public static string BuildESPInfoLine(NetworkedPlayerInfo info, int customPlatfo
                     isHost = AmongUsClient.Instance.GetHost() == client;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught81) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught81); }
 
             if (enablePlatformSpoof &&
                 !hasCustomPlatformName &&
@@ -348,7 +353,7 @@ public static void HandleTracer(PlayerControl target, bool enable)
                     lr = target.gameObject.AddComponent<LineRenderer>();
                     lr.SetVertexCount(2);
                     lr.SetWidth(0.02f, 0.02f);
-                    try { if (HatManager.Instance != null) lr.material = HatManager.Instance.PlayerMaterial; } catch { }
+                    try { if (HatManager.Instance != null) lr.material = HatManager.Instance.PlayerMaterial; } catch (global::System.Exception __elysiumCaught82) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught82); }
                 }
 
                 lr.enabled = true;
@@ -365,7 +370,7 @@ public static void HandleTracer(PlayerControl target, bool enable)
                         tColor = GetRoleColor((int)target.Data.Role.Role, target.Data.Role.TeamColor);
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught83) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught83); }
 
                 tColor = GetEspColor(target, tColor);
                 lr.SetColors(tColor, tColor);
@@ -373,7 +378,7 @@ public static void HandleTracer(PlayerControl target, bool enable)
                 lr.SetPosition(0, PlayerControl.LocalPlayer.transform.position);
                 lr.SetPosition(1, target.transform.position);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught84) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught84); }
         }
 
 public static bool ShouldShowPlayerTracer(PlayerControl target)
@@ -392,7 +397,7 @@ public static bool ShouldShowPlayerTracer(PlayerControl target)
                     isImpostor = roleId == 1 || roleId == 5 || roleId == 9 || roleId == 18;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught85) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught85); }
 
             return isImpostor ? showImpostorTracers : showCrewmateTracers;
         }
@@ -415,7 +420,7 @@ public static void HandleBodyTracer(DeadBody body, bool enable)
                     line = body.gameObject.AddComponent<LineRenderer>();
                     line.SetVertexCount(2);
                     line.SetWidth(0.025f, 0.025f);
-                    try { if (HatManager.Instance != null) line.material = HatManager.Instance.PlayerMaterial; } catch { }
+                    try { if (HatManager.Instance != null) line.material = HatManager.Instance.PlayerMaterial; } catch (global::System.Exception __elysiumCaught86) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught86); }
                 }
 
                 line.enabled = true;
@@ -424,7 +429,7 @@ public static void HandleBodyTracer(DeadBody body, bool enable)
                 line.SetPosition(0, PlayerControl.LocalPlayer.transform.position);
                 line.SetPosition(1, body.transform.position);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught87) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught87); }
         }
 
 private void DrawLobbyAllColorSlider()
@@ -519,7 +524,7 @@ private static void ApplyColorToLobby(int colorId)
                         player.RpcSetColor(targetColor);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught88) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught88); }
         }
 
 private static string GetSafeColorName(int colorId)
@@ -530,7 +535,7 @@ private static string GetSafeColorName(int colorId)
 
 private void DrawLobbyControls()
         {
-            // Keep room for the menu's inner margins and the scroll-view gutter.
+            // Leave room for inner margins and the scroll bar.
             float outerContentWidth = Mathf.Floor(Mathf.Max(220f, GetMenuWorkWidth(220f, 760f) - 44f));
             float columnGap = 10f;
             const float hostActionButtonHeight = 24f;
@@ -603,7 +608,7 @@ private void DrawLobbyControls()
             blockRainbowChat = DrawToggle(blockRainbowChat, L("Block Rainbow Chat", "Блокировать радужный чат"), lobbyControlWidth);
             GUILayout.Space(5);
             autoChatEveryone = DrawToggle(autoChatEveryone, L("Chat as Everyone", "Чат от всех"), lobbyControlWidth);
-            if (false && autoChatEveryone)
+            if (autoChatEveryone)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{L("Delay:", "Задержка:")} {autoChatEveryoneDelay:0.0}s", toggleLabelStyle, GUILayout.Width(92));
@@ -731,9 +736,7 @@ private static void FloodAllPlayersWithTasks()
 
                 ShowNotification($"<color=#00FF00>[TASKS]</color> Flood tasks applied to {changed} player(s).");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught74) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught74); }
         }
 
 private static void DeleteAllPlayerTasks()
@@ -759,9 +762,7 @@ private static void DeleteAllPlayerTasks()
 
                 ShowNotification($"<color=#00FF00>[TASKS]</color> Deleted {removed} task(s) for {changed} player(s).");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught75) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught75); }
         }
 
 public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName)
@@ -769,7 +770,7 @@ public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName
             if (info == null) return originalName;
             bool suppressPlayerInfo = IsMeetingVoteUiActive();
             int currentRoleId = -1;
-            try { if (info.Role != null) currentRoleId = (int)info.Role.Role; } catch { }
+            try { if (info.Role != null) currentRoleId = (int)info.Role.Role; } catch (global::System.Exception __elysiumCaught89) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught89); }
             string activeLocalName = enableLocalNameSpoof ? customNameInput ?? string.Empty : string.Empty;
             bool rgbEsp = rgbMenuMode || espShimmerMode || IsRainbowEsp(info.PlayerId);
             string activeAccent = (showPlayerInfo || seeKillCooldown || showEspVoteKicks) ? GetEspAccentHex(info.PlayerId) : string.Empty;
@@ -857,6 +858,10 @@ public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName
                     newName = $"<size=78%><color=#{accentHex}>KCD: </color><color=#{timerColor}>{timerText}</color></size>\n{newName}";
                 }
             }
+            // Shimmer still colors names when the other ESP layers are off.
+            if (espShimmerMode)
+                newName = $"<color=#{GetEspAccentHex(info.PlayerId)}>{newName}</color>";
+
             espNameTagCache[info.PlayerId] = new EspStringCacheEntry
             {
                 Value = newName,
@@ -910,7 +915,7 @@ public static bool IsMeetingOrExileActive()
                 if (ExileController.Instance != null)
                     return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught90) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught90); }
 
             return false;
         }
@@ -952,7 +957,7 @@ private static float GetConfiguredKillCooldown()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught91) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught91); }
             return 25f;
         }
 
@@ -969,7 +974,7 @@ private static float GetRemainingKillCooldown(byte playerId)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught92) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught92); }
 
             if (!lastKillTimestamps.ContainsKey(playerId)) return 0f;
             float elapsed = Time.time - lastKillTimestamps[playerId];
@@ -994,7 +999,7 @@ public static void InitializeKillCooldownOnRoundStart()
             {
                 lastKillTimestamps.Clear();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught93) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught93); }
         }
 
 [HarmonyPatch(typeof(VersionShower), nameof(VersionShower.Start))]
@@ -1076,12 +1081,12 @@ public static void InitializeKillCooldownOnRoundStart()
                     float zPos = MeetingHud.Instance != null && MeetingHud.Instance.gameObject.activeInHierarchy ? -100f : -10f;
                     __instance.transform.localPosition = new Vector3(0f, -2.3f, zPos);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught94) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught94); }
             }
         }
 
 [HarmonyPatch(typeof(GameManager), nameof(GameManager.RpcEndGame))]
-        public static class InfiniteGamePatch { public static bool Prefix() { try { if (ElysiumModMenuGUI.neverEndGame && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost) return false; } catch { } return true; } }
+        public static class InfiniteGamePatch { public static bool Prefix() { try { if (ElysiumModMenuGUI.neverEndGame && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost) return false; } catch (global::System.Exception __elysiumCaught95) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught95); } return true; } }
 
 [HarmonyPatch(typeof(IntroCutscene), "CoBegin")]
         public static class IntroCutscene_CoBegin_Patch
@@ -1180,7 +1185,7 @@ public static void InitializeKillCooldownOnRoundStart()
                         return false;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught96) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught96); }
 
                 return true;
             }
@@ -1255,7 +1260,7 @@ public static void InitializeKillCooldownOnRoundStart()
                     if (ElysiumModMenuGUI.TryGetForcedHideAndSeekSeekerId(out byte seekerId))
                         __result = seekerId;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught97) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught97); }
             }
         }
 
@@ -1269,7 +1274,7 @@ public static void InitializeKillCooldownOnRoundStart()
                     if (ElysiumModMenuGUI.TryGetForcedHideAndSeekSeekerId(out _))
                         __result = true;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught98) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught98); }
             }
         }
 
@@ -1298,7 +1303,7 @@ public static void InitializeKillCooldownOnRoundStart()
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught99) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught99); }
             }
         }
 

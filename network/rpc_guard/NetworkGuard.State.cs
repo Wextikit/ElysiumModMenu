@@ -547,7 +547,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 						}
 					}
 				}
-				catch { }
+				catch (global::System.Exception __elysiumCaught632) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught632); }
 
 				return HarmonyControl.Continue;
 			}
@@ -632,7 +632,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 									return HarmonyControl.SkipOriginal;
 								}
 							}
-							catch { }
+							catch (global::System.Exception __elysiumCaught633) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught633); }
 						}
 
 						if (partTag == 2 && client != null && !client.AmHost &&
@@ -687,7 +687,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 									return HarmonyControl.SkipOriginal;
 								}
 							}
-							catch { }
+							catch (global::System.Exception __elysiumCaught634) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught634); }
 						}
 
 					if (partTag == 4 && client != null && !client.AmHost && SpawnShouldDrop(part))
@@ -709,7 +709,7 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 						return HarmonyControl.SkipOriginal;
 					}
 				}
-				catch { }
+				catch (global::System.Exception __elysiumCaught635) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught635); }
 			}
 
 			if (EnabledNonHostFloodDrop() && client != null && reader != null)
@@ -1300,9 +1300,7 @@ private static bool SpawnShouldDrop(MessageReader part)
 					int ownerId = copy.ReadPackedInt32();
 					fabricatedOwner = ownerId != -2 && ownerId != inner.ClientId && !IsKnownRemoteClient(ownerId);
 				}
-				catch
-				{
-				}
+				catch (global::System.Exception __elysiumCaught636) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught636); }
 				finally { copy?.Recycle(); }
 			}
 

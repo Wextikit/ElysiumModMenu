@@ -13,7 +13,7 @@ public static class PlayerControl_RpcSyncSettings_Patch
             if (__instance == PlayerControl.LocalPlayer && ElysiumModMenuGUI.BlockDirectSettingsSync())
                 return false;
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught373) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught373); }
         return true;
     }
 }

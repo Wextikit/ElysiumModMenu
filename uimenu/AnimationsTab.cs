@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -97,7 +97,7 @@ public static class ChatHistory
             {
                 if (!enableChatHistory) return;
                 if (string.IsNullOrWhiteSpace(message)) return;
-                ElysiumModMenuGUI.chatHistoryLimit = 20;
+                ElysiumModMenuGUI.chatHistoryLimit = Mathf.Clamp(ElysiumModMenuGUI.chatHistoryLimit, 5, 200);
                 bool isNewEntry = sentMessages.Count == 0 || sentMessages[sentMessages.Count - 1] != message;
                 if (isNewEntry)
                 {
@@ -215,7 +215,7 @@ public static class ChatBubbleCopyHandler
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught458) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught458); }
             }
 
             private static bool TryCopy(string copyText, string kind)
@@ -343,7 +343,7 @@ public static class ChatBubbleCopyHandler
                     if (bubble.playerInfo != null && !string.IsNullOrWhiteSpace(bubble.playerInfo.PlayerName))
                         return CleanCopiedChatText(bubble.playerInfo.PlayerName);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught459) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught459); }
 
                 try
                 {

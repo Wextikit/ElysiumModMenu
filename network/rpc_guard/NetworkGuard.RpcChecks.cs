@@ -119,9 +119,7 @@ private static bool TryResolveCachedClientId(PlayerControl player, out int clien
 				return true;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught613) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught613); }
 
 		clientId = -1;
 		return false;
@@ -198,9 +196,7 @@ private static string ReadClientName(ClientData client, string fallback)
 				name = client.PlayerName;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught614) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught614); }
 
 		try
 		{
@@ -209,9 +205,7 @@ private static string ReadClientName(ClientData client, string fallback)
 				name = client.Character.Data.PlayerName;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught615) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught615); }
 
 		return SafeString(name);
 	}
@@ -288,9 +282,7 @@ private static int GetPlayerClientId(PlayerControl player)
 				return ownerId;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught616) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught616); }
 
 		return -1;
 	}
@@ -340,9 +332,7 @@ private static ClientData GetClient(PlayerControl player)
 				return direct;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught617) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught617); }
 
 		try
 		{
@@ -357,9 +347,7 @@ private static ClientData GetClient(PlayerControl player)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught618) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught618); }
 
 		try
 		{
@@ -376,9 +364,7 @@ private static ClientData GetClient(PlayerControl player)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught619) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught619); }
 
 		return null;
 	}
@@ -403,9 +389,7 @@ private static ClientData GetClientById(int clientId)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught620) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught620); }
 
 		try
 		{
@@ -422,9 +406,7 @@ private static ClientData GetClientById(int clientId)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught621) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught621); }
 
 		return null;
 	}
@@ -566,9 +548,7 @@ private static void SetActiveInboundSender(int clientId)
 				return;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught622) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught622); }
 
 		activeInboundSenderClientId = clientId;
 		activeInboundSenderSetAtMs = Environment.TickCount64;
@@ -598,9 +578,7 @@ private static void RememberRecentJoinCandidate(int clientId)
 				return;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught623) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught623); }
 
 		RecentJoinSenderCandidates[clientId] = Time.realtimeSinceStartup;
 		PruneRecentJoinSenderCandidates();
@@ -718,9 +696,7 @@ private static void RememberConnectionClient(string connectionKey, int clientId)
 				return;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught624) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught624); }
 
 		if (ClientIdByConnectionKey.TryGetValue(connectionKey, out int existingClientId) && existingClientId != clientId)
 		{
@@ -838,9 +814,7 @@ private static string StableObjectKey(object source)
 				return source.GetType().FullName + ":" + endpoint.Trim();
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught625) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught625); }
 
 		try
 		{
@@ -875,9 +849,7 @@ private static string ReadFirstNonEmptyString(object source, params string[] mem
 					return text;
 				}
 			}
-			catch
-			{
-			}
+			catch (global::System.Exception __elysiumCaught626) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught626); }
 		}
 
 		return null;
@@ -1106,9 +1078,7 @@ private static TypeReflectionPlan BuildReflectionPlan(Type type)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught627) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught627); }
 
 		return new TypeReflectionPlan(idCarriers.ToArray(), byName);
 	}
@@ -1362,9 +1332,7 @@ private static string PlayerName(PlayerControl player)
 				return StripTags(name);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught628) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught628); }
 
 		return player == null ? "Unknown" : $"Player {player.PlayerId}";
 	}
@@ -1383,9 +1351,7 @@ private static string ClientName(int clientId)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught629) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught629); }
 
 		return SnapshotDisplayName(clientId);
 	}
@@ -1399,9 +1365,7 @@ private static string RpcName(byte rpcByte)
 				return ((RpcCalls)rpcByte).ToString();
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught630) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught630); }
 
 		return $"RPC {rpcByte}";
 	}

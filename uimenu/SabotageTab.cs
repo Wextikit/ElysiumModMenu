@@ -335,7 +335,7 @@ private void DrawSabotagesTab()
             GUILayout.EndVertical();
 
             GUILayout.Space(6);
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(doorColumnWidth), GUILayout.Height(268f));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(doorColumnWidth), GUILayout.Height(326f));
             DrawMenuSectionHeader("ZIPLINE");
             GUILayout.Label(ZiplineControl.OnMap ? $"Selected: {ZiplineControl.TargetCount}   Loops: {ZiplineControl.LoopCount}" : "Fungle map only", toggleLabelStyle11);
             GUILayout.Space(3);
@@ -357,33 +357,29 @@ private void DrawSabotagesTab()
             GUILayout.Space(4);
             if (GUILayout.Button("CLEAR TARGETS", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH))) ZiplineControl.ClearTargets();
             GUILayout.Space(4);
-            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
-            if (GUILayout.Button("SEND MARKED DOWN", btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            if (GUILayout.Button("SEND MARKED DOWN", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
             {
                 int count = ZiplineControl.RideSelected(true);
                 ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Down: {count}");
             }
-            GUILayout.Space(6);
-            if (GUILayout.Button("SEND MARKED UP", btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            GUILayout.Space(4);
+            if (GUILayout.Button("SEND MARKED UP", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
             {
                 int count = ZiplineControl.RideSelected(false);
                 ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Up: {count}");
             }
-            GUILayout.EndHorizontal();
             GUILayout.Space(4);
-            GUILayout.BeginHorizontal(GUILayout.Width(doorInnerWidth));
-            if (GUILayout.Button("START ALL DOWN", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            if (GUILayout.Button("START ALL DOWN", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
             {
                 int count = ZiplineControl.StartAll(true);
                 ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Loop all: {count}");
             }
-            GUILayout.Space(6);
-            if (GUILayout.Button("START ALL UP", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorPairWidth), GUILayout.Height(actionH)))
+            GUILayout.Space(4);
+            if (GUILayout.Button("START ALL UP", ZiplineControl.LoopCount > 0 ? activeTabStyle : btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
             {
                 int count = ZiplineControl.StartAll(false);
                 ShowNotification(count < 0 ? "<color=#FF0000>[ZIPLINE]</color> Fungle map required" : $"<color=#00FF00>[ZIPLINE]</color> Loop all: {count}");
             }
-            GUILayout.EndHorizontal();
             GUILayout.Space(4);
             if (GUILayout.Button($"STOP ALL LOOPS ({ZiplineControl.LoopCount})", btnStyle, GUILayout.Width(doorInnerWidth), GUILayout.Height(actionH)))
                 ZiplineControl.StopAllLoops();

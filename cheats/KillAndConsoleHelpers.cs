@@ -156,7 +156,7 @@ private static float GetConsoleUsableDistance(global::Console console)
                 PropertyInfo property = console.GetType().GetProperty("usableDistance", flags) ?? console.GetType().GetProperty("UsableDistance", flags);
                 if (property != null && property.GetValue(console, null) is float propertyValue) return propertyValue;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught101) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught101); }
 
             return 1f;
         }
@@ -170,11 +170,11 @@ private static bool LocalPlayerHasTaskForConsole(global::Console console)
                 foreach (var task in PlayerControl.LocalPlayer.myTasks)
                 {
                     if (task == null) continue;
-                    try { if (task.IsComplete) continue; } catch { }
+                    try { if (task.IsComplete) continue; } catch (global::System.Exception __elysiumCaught102) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught102); }
                     if (TaskAcceptsConsole(task, console)) return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught103) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught103); }
 
             return false;
         }
@@ -190,7 +190,7 @@ private static bool TaskAcceptsConsole(object task, global::Console console)
                 if (validConsole != null && validConsole.Invoke(task, new object[] { console }) is bool valid)
                     return valid;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught104) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught104); }
 
             return false;
         }

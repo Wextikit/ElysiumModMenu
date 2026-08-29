@@ -89,16 +89,16 @@ private void DrawGeneralInfoTab()
             {
                 GUILayout.BeginVertical(boxStyle);
                 GUILayout.Label(
-                    $"{L("Welcome to", "Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ")} <b><color=#{accentHex}>ElysiumModMenu</color></b> " +
+                    $"{L("Welcome to", "Добро пожаловать в")} <b><color=#{accentHex}>ElysiumModMenu</color></b> " +
                     $"<b><color=#{goldHex}>{versionText}</color></b> {L("by", "РѕС‚")} <b><color=#{leadHex}>Meowchelo</color></b>!",
                     textStyle);
                 GUILayout.Space(4);
                 GUILayout.Label(L(
                     "ElysiumModMenu is a lightweight BepInEx IL2CPP utility for Among Us with lobby tools, visuals, spoofing and host-side controls.",
-                    "ElysiumModMenu СЌС‚Рѕ Р»РµРіРєРёР№ BepInEx IL2CPP РјРѕРґ РґР»СЏ Among Us СЃ РёРЅСЃС‚СЂСѓРјРµРЅС‚Р°РјРё РґР»СЏ Р»РѕР±Р±Рё, РІРёР·СѓР°Р»РѕРј, СЃРїСѓС„РёРЅРіРѕРј Рё С…РѕСЃС‚-С„СѓРЅРєС†РёСЏРјРё."), textStyle);
+                    "ElysiumModMenu это легкий BepInEx IL2CPP мод для Among Us с инструментами для лобби, визуалом, спуфингом и хост-функциями."), textStyle);
                 GUILayout.Label(L(
                     "Use the buttons below to open the GitHub repository or jump straight to the latest public release.",
-                    "РљРЅРѕРїРєРё РЅРёР¶Рµ РѕС‚РєСЂС‹РІР°СЋС‚ GitHub СЂРµРїРѕР·РёС‚РѕСЂРёР№ Рё СЃС‚СЂР°РЅРёС†Сѓ СЃ РїРѕСЃР»РµРґРЅРёРј РїСѓР±Р»РёС‡РЅС‹Рј СЂРµР»РёР·РѕРј."), textStyle);
+                    "Кнопки ниже открывают GitHub репозиторий и страницу с последним публичным релизом."), textStyle);
                 GUILayout.Space(6);
 
                 GUILayout.BeginHorizontal();
@@ -113,18 +113,18 @@ private void DrawGeneralInfoTab()
 
                 GUILayout.Space(8);
                 GUILayout.Label(BuildUpdateStatusText(), textStyle);
-                GUILayout.Label($"{L("Project", "РџСЂРѕРµРєС‚")}: <b><color=#{githubHex}>Wextikit/ElysiumModMenu</color></b>", textStyle);
-                GUILayout.Label($"{L("Main page", "Р“Р»Р°РІРЅР°СЏ СЃСЃС‹Р»РєР°")}: <color=#{githubHex}>https://github.com/Wextikit/ElysiumModMenu</color>", textStyle);
+                GUILayout.Label($"{L("Project", "Проект")}: <b><color=#{githubHex}>Wextikit/ElysiumModMenu</color></b>", textStyle);
+                GUILayout.Label($"{L("Main page", "Главная ссылка")}: <color=#{githubHex}>https://github.com/Wextikit/ElysiumModMenu</color>", textStyle);
                 GUILayout.Space(8);
-                GUILayout.Label($"{L("ElysiumModMenu is free and open-source software.", "ElysiumModMenu СЌС‚Рѕ Р±РµСЃРїР»Р°С‚РЅС‹Р№ open-source РїСЂРѕРµРєС‚.")}", textStyle);
-                GUILayout.Label($"<b><color=#{dangerHex}>{L("If you paid for this menu, demand a refund immediately.", "Р•СЃР»Рё РІС‹ Р·Р°РїР»Р°С‚РёР»Рё Р·Р° СЌС‚Рѕ РјРµРЅСЋ, С‚СЂРµР±СѓР№С‚Рµ РІРѕР·РІСЂР°С‚ РґРµРЅРµРі СЃСЂР°Р·Сѓ.")}</color></b>", textStyle);
-                GUILayout.Label($"<b><color=#{safeHex}>{L("Make sure you are using the latest version from GitHub releases.", "РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ РёР· GitHub releases.")}</color></b>", textStyle);
+                GUILayout.Label($"{L("ElysiumModMenu is free and open-source software.", "ElysiumModMenu — бесплатный проект с открытым исходным кодом.")}", textStyle);
+                GUILayout.Label($"<b><color=#{dangerHex}>{L("If you paid for this menu, demand a refund immediately.", "Если вы заплатили за это меню, немедленно потребуйте возврат денег.")}</color></b>", textStyle);
+                GUILayout.Label($"<b><color=#{safeHex}>{L("Make sure you are using the latest version from GitHub releases.", "Убедитесь, что используете последнюю версию из GitHub releases.")}</color></b>", textStyle);
                 GUILayout.Space(8);
-                GUILayout.Label($"<b><color=#{accentHex}>{L("Quick Hotkeys", "Р‘С‹СЃС‚СЂС‹Рµ РєР»Р°РІРёС€Рё")}</color></b>", textStyle);
+                GUILayout.Label($"<b><color=#{accentHex}>{L("Quick Hotkeys", "Быстрые клавиши")}</color></b>", textStyle);
                 string menuKeyText = (menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey).ToString();
-                GUILayout.Label($"{L("Menu key", "РљРЅРѕРїРєР° РјРµРЅСЋ")}: <b>{menuKeyText}</b>", textStyle);
-                GUILayout.Label(L("Right Click: teleport to cursor", "РџРљРњ: С‚РµР»РµРїРѕСЂС‚ Рє РєСѓСЂСЃРѕСЂСѓ"), textStyle);
-                GUILayout.Label(L("F9: magnet cursor", "F9: РјР°РіРЅРёС‚ РєСѓСЂСЃРѕСЂР°"), textStyle);
+                GUILayout.Label($"{L("Menu key", "Кнопка меню")}: <b>{menuKeyText}</b>", textStyle);
+                GUILayout.Label(L("Right Click: teleport to cursor", "ПКМ: телепорт к курсору"), textStyle);
+                GUILayout.Label(L("F9: magnet cursor", "F9: магнит курсора"), textStyle);
                 GUILayout.EndVertical();
             }
             else
@@ -132,7 +132,7 @@ private void DrawGeneralInfoTab()
                 GUILayout.BeginVertical(boxStyle);
                 GUILayout.Label(L(
                     "ElysiumModMenu is an open-source project. Meet the people behind this build:",
-                    "ElysiumModMenu СЌС‚Рѕ open-source РїСЂРѕРµРєС‚. РќРёР¶Рµ Р»СЋРґРё, РєРѕС‚РѕСЂС‹Рµ СЃС‚РѕСЏС‚ Р·Р° СЌС‚РѕР№ СЃР±РѕСЂРєРѕР№:"), textStyle);
+                    "ElysiumModMenu это open-source проект. Ниже люди, которые стоят за этой сборкой:"), textStyle);
                 GUILayout.Space(8);
 
                 GUILayout.Label($"<b><color=#{goldHex}>LEAD DEVELOPER</color></b>", textStyle);
@@ -160,10 +160,10 @@ private void DrawGeneralInfoTab()
                 DrawColoredActionButton("Жена", new Color32(109, 138, 255, 255), 150f);
 
                 GUILayout.Space(10);
-                GUILayout.Label($"<b><color=#{accentHex}>{L("Repository", "Р РµРїРѕР·РёС‚РѕСЂРёР№")}</color></b>", textStyle);
+                GUILayout.Label($"<b><color=#{accentHex}>{L("Repository", "Репозиторий")}</color></b>", textStyle);
                 GUILayout.Label(L(
                     "The public source, releases and project updates are published on GitHub.",
-                    "РџСѓР±Р»РёС‡РЅС‹Р№ РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ, СЂРµР»РёР·С‹ Рё РѕР±РЅРѕРІР»РµРЅРёСЏ РїСЂРѕРµРєС‚Р° РїСѓР±Р»РёРєСѓСЋС‚СЃСЏ РЅР° GitHub."), textStyle);
+                    "Публичный исходный код, релизы и обновления проекта публикуются на GitHub."), textStyle);
                 GUILayout.Space(4);
                 if (DrawColoredActionButton("Open Elysium GitHub", new Color32(26, 188, 156, 255), 220f))
                     OpenExternalLink("https://github.com/Wextikit/ElysiumModMenu", "ElysiumModMenu GitHub");
@@ -175,10 +175,10 @@ private void DrawGeneralInfoTab()
                     OpenExternalLink("https://discord.gg/ZP8MgMcB8C", "Discord");
 
                 GUILayout.Space(10);
-                GUILayout.Label($"<b><color=#{contributorHex}>{L("Notes", "РџСЂРёРјРµС‡Р°РЅРёРµ")}</color></b>", textStyle);
+                GUILayout.Label($"<b><color=#{contributorHex}>{L("Notes", "Примечание")}</color></b>", textStyle);
                 GUILayout.Label(L(
                     "Thank you to everyone helping with ideas, testing and polishing the menu.",
-                    "РЎРїР°СЃРёР±Рѕ РІСЃРµРј, РєС‚Рѕ РїРѕРјРѕРіР°РµС‚ РёРґРµСЏРјРё, С‚РµСЃС‚Р°РјРё Рё РїРѕР»РёСЂРѕРІРєРѕР№ РјРµРЅСЋ."), textStyle);
+                    "Спасибо всем, кто помогает идеями, тестами и полировкой меню."), textStyle);
                 GUILayout.EndVertical();
             }
 
@@ -232,7 +232,7 @@ private void DrawGeneralInfoTab()
                     string chatLogPath = System.IO.Path.Combine(Plugin.ElysiumFolder, "ChatLog.txt");
                     System.IO.File.AppendAllText(chatLogPath, logLine);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught495) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught495); }
             }
         }
 

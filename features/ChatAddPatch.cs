@@ -182,7 +182,7 @@ public static class ChatController_AddChat_Patch
             {
                 if (pooledBubble != null) chat.chatBubblePool.Reclaim(pooledBubble);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught202) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught202); }
             return true;
         }
     }

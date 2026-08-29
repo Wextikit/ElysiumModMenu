@@ -114,7 +114,7 @@ private void DrawPlayersTab()
                                 bool isSelected = selectedAntiCheatPlayerId == pc.PlayerId;
 
                                 GUI.contentColor = Color.white;
-                                try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch { }
+                                try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch (global::System.Exception __elysiumCaught530) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught530); }
 
                                 if (GUILayout.Button(pName, isSelected ? activeTabStyle : btnStyle, GUILayout.Height(30)))
                                 {
@@ -137,7 +137,7 @@ private void DrawPlayersTab()
 
             PlayerControl target = null;
             try { target = lockedPlayersList.FirstOrDefault(p => p != null && p.PlayerId == selectedAntiCheatPlayerId); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught531) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught531); }
 
             if (target != null && target.Data != null)
             {

@@ -45,17 +45,28 @@ namespace ElysiumModMenu
     {
 private void DrawPlayersRoles()
         {
+            float contentWidth = Mathf.Floor(Mathf.Max(96f, GetMenuWorkWidth(120f, 760f) - 28f));
+            float gap = 5f;
+            float halfWidth = Mathf.Floor((contentWidth - gap) * 0.5f);
+            float thirdWidth = Mathf.Floor((contentWidth - gap * 2f) / 3f);
+
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader("PRE-GAME ROLE MANAGER");
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Height(25))) { enablePreGameRoleForce = !enablePreGameRoleForce; settingsDirty = true; }
-            if (GUILayout.Button(L("Random 2 Imps", "2 СЛУЧАЙНЫХ ИМПОСТЕРА"), btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
+            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
+            if (GUILayout.Button(enablePreGameRoleForce ? "Role Forcing: ON" : "Role Forcing: OFF", enablePreGameRoleForce ? activeTabStyle : btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(25))) { enablePreGameRoleForce = !enablePreGameRoleForce; settingsDirty = true; }
+            GUILayout.Space(gap);
+            if (GUILayout.Button(L("Clear All Roles", "ОЧИСТИТЬ ВСЕ РОЛИ"), btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(25))) { autoTwoImpostors = false; autoTwoImpostorPlayerIds.Clear(); autoTwoImpostorsLastLobbyFingerprint = 0; forcedPreGameRoles.Clear(); forcedImpostors.Clear(); forcedPreGameRoleFcs.Clear(); forcedImpostorFcs.Clear(); }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
+            if (GUILayout.Button(L("Random 2 Imps", "2 СЛУЧАЙНЫХ ИМПОСТЕРА"), btnStyle, GUILayout.Width(thirdWidth), GUILayout.Height(25)))
             {
                 autoTwoImpostorPlayerIds.Clear();
                 autoTwoImpostorsLastLobbyFingerprint = 0;
                 RollAutoTwoImpostors(true);
             }
-            if (GUILayout.Button(autoTwoImpostors ? "Auto 2 Imps: ON" : "Auto 2 Imps", autoTwoImpostors ? activeTabStyle : btnStyle, GUILayout.Width(120), GUILayout.Height(25)))
+            GUILayout.Space(gap);
+            if (GUILayout.Button(autoTwoImpostors ? "Auto 2 Imps: ON" : "Auto 2 Imps", autoTwoImpostors ? activeTabStyle : btnStyle, GUILayout.Width(thirdWidth), GUILayout.Height(25)))
             {
                 autoTwoImpostors = !autoTwoImpostors;
                 settingsDirty = true;
@@ -71,20 +82,19 @@ private void DrawPlayersRoles()
                     autoTwoImpostorsLastLobbyFingerprint = 0;
                 }
             }
-            if (GUILayout.Button(forceFourImpostors ? "4 Imps: ON" : "4 Imps (9+)", forceFourImpostors ? activeTabStyle : btnStyle, GUILayout.Width(110), GUILayout.Height(25)))
+            GUILayout.Space(gap);
+            if (GUILayout.Button(forceFourImpostors ? "4 Imps: ON" : "4 Imps (9+)", forceFourImpostors ? activeTabStyle : btnStyle, GUILayout.Width(thirdWidth), GUILayout.Height(25)))
             {
                 forceFourImpostors = !forceFourImpostors;
                 settingsDirty = true;
             }
-            if (GUILayout.Button(L("Clear All Roles", "ОЧИСТИТЬ ВСЕ РОЛИ"), btnStyle, GUILayout.Width(110), GUILayout.Height(25))) { autoTwoImpostors = false; autoTwoImpostorPlayerIds.Clear(); autoTwoImpostorsLastLobbyFingerprint = 0; forcedPreGameRoles.Clear(); forcedImpostors.Clear(); forcedPreGameRoleFcs.Clear(); forcedImpostorFcs.Clear(); }
-            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
             GUILayout.Space(8);
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader("LIVE ROLE DISTRIBUTOR (HOST)");
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
 
             if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
@@ -92,7 +102,7 @@ private void DrawPlayersRoles()
                 if (allPlayersRoleAssignIdx < 0) allPlayersRoleAssignIdx = roleAssignOptions.Length - 1;
             }
 
-            GUILayout.Label(roleAssignNames[allPlayersRoleAssignIdx], accentValueStyle, GUILayout.Height(25), GUILayout.ExpandWidth(true));
+            GUILayout.Label(roleAssignNames[allPlayersRoleAssignIdx], accentValueStyle, GUILayout.Width(contentWidth - 66f), GUILayout.Height(25));
 
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(25)))
             {
@@ -102,7 +112,7 @@ private void DrawPlayersRoles()
             GUILayout.EndHorizontal();
 
             GUILayout.Space(5);
-            if (GUILayout.Button(L("SET ALL PLAYERS ROLE", "ВЫДАТЬ РОЛЬ ВСЕМ"), activeTabStyle, GUILayout.Height(28)))
+            if (GUILayout.Button(L("SET ALL PLAYERS ROLE", "ВЫДАТЬ РОЛЬ ВСЕМ"), activeTabStyle, GUILayout.Width(contentWidth), GUILayout.Height(28)))
             {
                 if (IsGhostRoleSelection(allPlayersRoleAssignIdx))
                     SetAllPlayersGhost();
@@ -112,15 +122,16 @@ private void DrawPlayersRoles()
                     SetAllPlayersRole(roleAssignOptions[allPlayersRoleAssignIdx]);
             }
             GUILayout.Space(4);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("ALL -> GHOST", "ВСЕ -> ПРИЗРАКИ"), btnStyle, GUILayout.Height(26)))
+            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
+            if (GUILayout.Button(L("ALL -> GHOST", "ВСЕ -> ПРИЗРАКИ"), btnStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
                 SetAllPlayersGhost();
-            if (GUILayout.Button(L("REVIVE ALL", "ВОСКРЕСИТЬ ВСЕХ"), activeTabStyle, GUILayout.Height(26)))
+            GUILayout.Space(gap);
+            if (GUILayout.Button(L("REVIVE ALL", "ВОСКРЕСИТЬ ВСЕХ"), activeTabStyle, GUILayout.Width(halfWidth), GUILayout.Height(26)))
                 ReviveAllPlayers();
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(L("ALL -> GHOST IMP", "ВСЕ -> ПРИЗРАКИ-ИМПОСТЕРЫ"), btnStyle, GUILayout.Height(26)))
+            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
+            if (GUILayout.Button(L("ALL -> GHOST IMP", "ВСЕ -> ПРИЗРАКИ-ИМПОСТЕРЫ"), btnStyle, GUILayout.Width(contentWidth), GUILayout.Height(26)))
                 SetAllPlayersGhost(true);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -137,7 +148,7 @@ private void DrawPlayersRoles()
                 if (TryGetForcedRole(pc, out RoleTypes rowRole)) { string rShort = rowRole.ToString().Replace("9", "Pha").Replace("10", "Tra").Replace("8", "Noi").Replace("12", "Det").Replace("18", "Vip").Replace("19", "Jud"); if (rShort.Length > 3) rShort = rShort.Substring(0, 3); pName += $" [{rShort}]"; }
                 else if (IsForcedImp(pc)) pName += " [Imp]";
                 bool isSelected = !string.IsNullOrEmpty(fc) ? selectedPreRoleFc == fc : selectedPreRoleId == pc.PlayerId;
-                try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch { }
+                try { GUI.contentColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId]; } catch (global::System.Exception __elysiumCaught538) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught538); }
                 if (GUILayout.Button(pName, isSelected ? activeTabStyle : btnStyle, GUILayout.Height(30))) { selectedPreRoleId = pc.PlayerId; selectedPreRoleFc = fc; }
                 GUI.contentColor = Color.white;
             }

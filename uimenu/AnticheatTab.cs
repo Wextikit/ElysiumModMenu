@@ -60,7 +60,7 @@ private void UpdateRoomPlayers()
                         if (playerName.Length > 18) playerName = playerName.Substring(0, 15) + "...";
 
                         int level = 1;
-                        try { level = (int)player.Data.PlayerLevel + 1; } catch { }
+                        try { level = (int)player.Data.PlayerLevel + 1; } catch (global::System.Exception __elysiumCaught460) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught460); }
 
                         RoomPlayerActionEntry entry;
                         if (count < roomPlayers.Count)
@@ -80,10 +80,10 @@ private void UpdateRoomPlayers()
                         entry.label = $"{playerName}  <color=#777777>Lv:{level}</color>";
                         count++;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught461) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught461); }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught462) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught462); }
 
             if (roomPlayers.Count > count)
                 roomPlayers.RemoveRange(count, roomPlayers.Count - count);
@@ -314,7 +314,7 @@ private void DrawAntiCheatTab()
                     {
                         KickRoomPlayer(player.ownerId, player.playerName);
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught463) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught463); }
                 }
 
                 GUI.enabled = previousEnabled && canHostAction;
@@ -331,7 +331,7 @@ private void DrawAntiCheatTab()
                         AmongUsClient.Instance.KickPlayer(player.ownerId, true);
                         ShowNotification($"<color=#FF4444>[BAN]</color> {player.playerName}");
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught464) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught464); }
                 }
 
                 GUI.enabled = previousEnabled;
@@ -423,9 +423,9 @@ private static void KickRoomPlayer(int ownerId, string name)
             }
             finally
             {
-                try { msg?.Recycle(); } catch { }
-                try { msg2?.Recycle(); } catch { }
-                try { batch?.Recycle(); } catch { }
+                try { msg?.Recycle(); } catch (global::System.Exception __elysiumCaught465) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught465); }
+                try { msg2?.Recycle(); } catch (global::System.Exception __elysiumCaught466) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught466); }
+                try { batch?.Recycle(); } catch (global::System.Exception __elysiumCaught467) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught467); }
             }
         }
 

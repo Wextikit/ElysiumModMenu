@@ -144,9 +144,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 					return true;
 				}
 			}
-			catch
-			{
-			}
+			catch (global::System.Exception __elysiumCaught583) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught583); }
 		}
 
 		if (rpcByte == 38 && TryReadLevel(reader, out uint level))
@@ -200,9 +198,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 							return true;
 						}
 					}
-					catch
-					{
-					}
+					catch (global::System.Exception __elysiumCaught584) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught584); }
 				}
 				else if (!PlayerExists(reportedPlayerId))
 				{
@@ -284,9 +280,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 				return true;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught585) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught585); }
 
 		if (IsImpostor(target))
 		{
@@ -319,9 +313,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 				return true;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught586) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught586); }
 
 		return false;
 	}
@@ -340,9 +332,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			MessageExtensions.ReadNetObject<PlayerControl>(copy);
 			animated = copy.ReadBoolean();
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught587) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught587); }
 
 		if (MeetingOrExileActive() && !SamePlayer(player, target))
 		{
@@ -598,9 +588,7 @@ private static bool PlayerExists(byte playerId)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught588) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught588); }
 
 		if (PlayerControl.AllPlayerControls == null)
 		{
@@ -619,9 +607,7 @@ private static bool PlayerExists(byte playerId)
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught589) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught589); }
 
 		return false;
 	}
@@ -722,9 +708,7 @@ private static bool HasBrokenFriendCode(ClientData client)
 		{
 			friendCode = client?.FriendCode;
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught590) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught590); }
 
 		if (string.IsNullOrWhiteSpace(friendCode) || friendCode.Length < 7 || friendCode.Length > 32)
 		{
@@ -904,7 +888,7 @@ private static bool TryHandleKnownModRpc(PlayerControl player, byte rpcByte, int
 			return false;
 		}
 
-		try { ElysiumModMenu.ElysiumModMenuGUI.RecordPlayerRpc(player, rpcByte); } catch { }
+		try { ElysiumModMenu.ElysiumModMenuGUI.RecordPlayerRpc(player, rpcByte); } catch (global::System.Exception __elysiumCaught591) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught591); }
 
 		string action = KnownModRpcAction(ruleIndex);
 		if (action == "Null")
@@ -935,9 +919,7 @@ private static string KnownModRpcAction(int ruleIndex)
 				return GuardOptions.NormalizeNetworkProtectionAction(actions[ruleIndex].Value);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught592) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught592); }
 
 		return "Warn";
 	}
@@ -1108,9 +1090,7 @@ internal static void ReportQuickChatFlood(PlayerControl sender, int ownerId, str
 
 			ApplyProtectionAction(ownerId, "QuickChat flood", detail, action);
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught593) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught593); }
 	}
 
 private static void ApplyProtectionAction(int clientId, string attackType, string detail)
@@ -1291,9 +1271,7 @@ private static bool ForceLocalClientLeave(int clientId)
 		{
 			character = target.Character;
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught594) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught594); }
 
 		MarkDisconnected(target, character);
 		RunNormalPlayerLeft(target);
@@ -1316,9 +1294,7 @@ private static void MarkDisconnected(ClientData client, PlayerControl character)
 		{
 			client.InScene = false;
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught595) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught595); }
 
 		try
 		{
@@ -1327,9 +1303,7 @@ private static void MarkDisconnected(ClientData client, PlayerControl character)
 				character.Data.Disconnected = true;
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught596) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught596); }
 	}
 
 private static void RunNormalPlayerLeft(ClientData client)
@@ -1387,9 +1361,7 @@ private static void DestroyVisibleCharacter(PlayerControl character)
 		{
 			UnityEngine.Object.Destroy(((Component)character).gameObject);
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught597) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught597); }
 	}
 
 private static void CleanupDisconnectedGameData()
@@ -1398,9 +1370,7 @@ private static void CleanupDisconnectedGameData()
 		{
 			GameData.Instance?.RemoveDisconnectedPlayers();
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught598) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught598); }
 	}
 
 private static void RememberAllClients()
@@ -1428,9 +1398,7 @@ private static void RememberAllClients()
 				RememberClient(clients.Current);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught599) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught599); }
 
 		try
 		{
@@ -1442,9 +1410,7 @@ private static void RememberAllClients()
 				RememberClient(cursor.Current);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught600) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught600); }
 	}
 
 private static void RememberClient(ClientData client)
@@ -1482,9 +1448,7 @@ private static void RememberClient(ClientData client)
 		{
 			character = client.Character;
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught601) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught601); }
 
 		if (character != null)
 		{
@@ -1497,9 +1461,7 @@ private static void RememberClient(ClientData client)
 					snapshot.OwnerId = ownerId;
 				}
 			}
-			catch
-			{
-			}
+			catch (global::System.Exception __elysiumCaught602) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught602); }
 		}
 		else if (snapshot.PlayerId == 0)
 		{

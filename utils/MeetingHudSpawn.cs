@@ -35,12 +35,12 @@ private static void SpawnBugMeeting()
                 if (MeetingHud.Instance != null)
                     hud.OpenMeetingRoom(PlayerControl.LocalPlayer);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught565) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught565); }
         }
 
 private static void FixSendMode(InnerNetObject obj, GameObject root)
         {
-            try { if (obj != null) obj.sendMode = SendOption.Reliable; } catch { }
+            try { if (obj != null) obj.sendMode = SendOption.Reliable; } catch (global::System.Exception __elysiumCaught566) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught566); }
             if (root == null) return;
 
             try
@@ -48,10 +48,10 @@ private static void FixSendMode(InnerNetObject obj, GameObject root)
                 InnerNetObject[] nets = root.GetComponentsInChildren<InnerNetObject>(true);
                 foreach (InnerNetObject net in nets)
                 {
-                    try { if (net != null) net.sendMode = SendOption.Reliable; } catch { }
+                    try { if (net != null) net.sendMode = SendOption.Reliable; } catch (global::System.Exception __elysiumCaught567) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught567); }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught568) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught568); }
 
             try
             {
@@ -63,11 +63,11 @@ private static void FixSendMode(InnerNetObject obj, GameObject root)
                         InnerNetObject net = comp.TryCast<InnerNetObject>();
                         if (net != null) net.sendMode = SendOption.Reliable;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught569) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught569); }
                     FixSendModeObj(comp);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught570) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught570); }
         }
 
 private static void FixSendModeObj(object obj)
@@ -92,7 +92,7 @@ private static void FixSendModeObj(object obj)
                     field.SetValue(obj, val);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught571) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught571); }
         }
 
         private static bool IsChatUiBusy()
@@ -131,7 +131,7 @@ private static void HideMenuForMeeting()
                 isEditingBugRoomTimedAutoRun = false;
                 customSpoofRpcInputFocused = false;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught572) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught572); }
         }
 
 private static void KeepMeetingHudVisible()
@@ -146,7 +146,7 @@ private static void KeepMeetingHudVisible()
                 if (HudManager.Instance != null && HudManager.Instance.Chat != null && HudManager.Instance.Chat.gameObject != null)
                     HudManager.Instance.Chat.gameObject.SetActive(false);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught573) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught573); }
         }
 
 private static bool BlockEarlyEmergencyCall(string src)
@@ -169,7 +169,7 @@ private static bool BlockEarlyEmergencyCall(string src)
                 {
                     Plugin.Instance?.Log?.LogWarning((object)$"[MEETING] blocked early {src}: intro={IsIntroCutsceneActive()}, mtg={MeetingHud.Instance != null}, mini={Minigame.Instance != null}, shhh={HasCurrentGameSeenShhh()}");
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught574) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught574); }
                 return true;
             }
             catch
@@ -261,7 +261,7 @@ private static bool BlockEarlyEmergencyCall(string src)
                 if (!BlockEarlyEmergencyCall("button-call"))
                     return true;
 
-                try { __instance?.Close(); } catch { }
+                try { __instance?.Close(); } catch (global::System.Exception __elysiumCaught575) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught575); }
                 return false;
             }
         }
@@ -279,7 +279,7 @@ private static bool BlockEarlyEmergencyCall(string src)
                     if (__instance != null && __instance.gameObject != null)
                         __instance.gameObject.SetActive(false);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught576) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught576); }
 
                 return false;
             }
@@ -298,7 +298,7 @@ private static bool BlockEarlyEmergencyCall(string src)
                     if (obj == null) return;
 
                     bool mtg = false;
-                    try { mtg = obj.GetComponent<MeetingHud>() != null; } catch { }
+                    try { mtg = obj.GetComponent<MeetingHud>() != null; } catch (global::System.Exception __elysiumCaught577) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught577); }
                     if (!mtg)
                     {
                         string nm = obj.name ?? string.Empty;
@@ -308,7 +308,7 @@ private static bool BlockEarlyEmergencyCall(string src)
 
                     if (mtg) FixSendMode(netObjParent, obj);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught578) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught578); }
             }
         }
     }

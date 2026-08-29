@@ -224,7 +224,7 @@ public static string GetCachedOriginalFriendCode(NetworkedPlayerInfo data, strin
                     safeIdentityByPlayerId.TryGetValue(data.PlayerId, out snapshot))
                     return string.IsNullOrEmpty(snapshot.FriendCode) ? emptyValue : snapshot.FriendCode;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught540) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught540); }
             return emptyValue;
         }
 
@@ -276,7 +276,7 @@ public static string GetCachedOriginalFriendCode(NetworkedPlayerInfo data, strin
                 if (eos != null) eos.FriendCode = friendCode;
                 FriendsListUI.Instance?.UpdateFriendCodeUI();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught541) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught541); }
 
             ShowNotification($"<color=#00FFAA>[SPOOF FC]</color> Registered: <b>{friendCode}</b>");
         }
@@ -397,7 +397,7 @@ private void TryAutoBanBrokenFriendCodeTick()
                     AmongUsClient.Instance.KickPlayer(owner, true);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught542) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught542); }
         }
 
 private void TryAutoKickLowLevelTick()
@@ -437,7 +437,7 @@ private void TryAutoKickLowLevelTick()
                         uint rawLevel = pc.Data.PlayerLevel;
                         if (rawLevel != uint.MaxValue && rawLevel < 10000) level = (int)rawLevel + 1;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught543) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught543); }
 
                     if (level >= minLevel) continue;
 
@@ -450,7 +450,7 @@ private void TryAutoKickLowLevelTick()
                     AmongUsClient.Instance.KickPlayer(owner, false);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught544) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught544); }
         }
 
 private static void TryAutoGhostAfterStartTick()
@@ -484,7 +484,7 @@ private static void TryAutoGhostAfterStartTick()
                 autoGhostAppliedThisGame = true;
                 ShowNotification("<color=#AA88FF>[AUTO HOST]</color> Auto ghost applied.");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught545) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught545); }
         }
 
 private static void EnsurePlatformBanListLoaded()
@@ -508,7 +508,7 @@ private static void EnsurePlatformBanListLoaded()
                     customPlatformBanTokens.Add(line);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught546) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught546); }
         }
 
 private static bool IsCustomPlatformName(ClientData client, out string platformName)
@@ -530,7 +530,7 @@ private static bool IsCustomPlatformName(ClientData client, out string platformN
                 return !platformName.Equals(enumName, StringComparison.OrdinalIgnoreCase) &&
                        !platformName.Equals(GetPlatform(client), StringComparison.OrdinalIgnoreCase);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught547) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught547); }
 
             return false;
         }
@@ -578,7 +578,7 @@ private static bool IsInvalidPlatformData(ClientData client, out string reason)
                     return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught548) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught548); }
 
             return false;
         }
@@ -627,7 +627,7 @@ private static void HostBanForPlatform(PlayerControl player, string reason)
                 RegisterAntiCheatDisconnectNotice(owner, name, reason, true);
                 AmongUsClient.Instance.KickPlayer(owner, true);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught549) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught549); }
         }
 
 private static void TryAutoBanCustomPlatformsTick()
@@ -650,7 +650,7 @@ private static void TryAutoBanCustomPlatformsTick()
                     if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
 
                     ClientData client = null;
-                    try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch { }
+                    try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch (global::System.Exception __elysiumCaught550) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught550); }
                     if (client == null) continue;
 
                     if (banCustomPlatformsFromTxt && MatchesPlatformBanTxt(client, out string platformName, out string token))
@@ -663,7 +663,7 @@ private static void TryAutoBanCustomPlatformsTick()
                         HostBanForPlatform(pc, reason);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught551) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught551); }
         }
 
         [HideFromIl2Cpp]
@@ -904,8 +904,7 @@ private void DrawSelfSpoof()
             Rect tasksCardRect = GUILayoutUtility.GetLastRect();
             GUILayout.EndVertical();
 
-            // A fixed height can be smaller than the enlarged controls at some menu
-            // scales. On repaint, match the visible lower edge to TASKS itself.
+            // TASKS can outgrow the estimate after menu scaling.
             if (Event.current != null && Event.current.type == EventType.Repaint)
             {
                 float correction = tasksCardRect.yMax - identityCardRect.yMax;
@@ -951,7 +950,7 @@ private void CompleteLocalTasks()
 
                 ShowNotification($"<color=#00FFAA>[TASKS]</color> Completed {completed} task(s).");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught552) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught552); }
         }
 
 private void DrawVisualsTab()
@@ -1001,7 +1000,7 @@ private void DrawVisualsTab()
                     if (__instance != null && __instance._textArea != null)
                         __instance.SetText(__instance._textArea.text + "\n\n<size=60%>Room code copied to clipboard</size>");
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught553) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught553); }
             }
         }
 
@@ -1029,7 +1028,7 @@ private void DrawVisualsTab()
                     if (__instance.StartButtonGlyphContainer == null && __instance.StartButtonGlyph != null)
                         __instance.StartButtonGlyphContainer = __instance.StartButtonGlyph.gameObject;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught554) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught554); }
             }
 
             public static void Postfix(GameStartManager __instance)
@@ -1089,7 +1088,7 @@ private void DrawVisualsTab()
                         rainbowApplied = false;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught555) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught555); }
             }
         }
 
@@ -1167,7 +1166,7 @@ private void DrawVisualsTab()
                     __instance.GameRoomNameCode.text = renderedText;
                     applied = true;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught556) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught556); }
             }
         }
 
@@ -1249,17 +1248,17 @@ private static bool IsCameraZoomScrollAllowed()
                             GameStartManager.Instance.LobbyInfoPane.LobbyViewSettingsPane.gameObject.active)
                             return false;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught557) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught557); }
 
                     try
                     {
                         if (GameStartManager.Instance.RulesEditPanel != null)
                             return false;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught558) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught558); }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught559) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught559); }
 
             return true;
         }
@@ -1283,7 +1282,7 @@ private static void RestoreFreecamCamera()
 
                 _freecamActive = false;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught560) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught560); }
         }
 }
 }

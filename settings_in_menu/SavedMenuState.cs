@@ -241,7 +241,7 @@ public static class AmongUsClientUtils
 
                         return false;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught440) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught440); }
                 }
 
                 return true;
@@ -414,17 +414,17 @@ private void DespawnLobby()
                             lobby.Cast<InnerNetObject>().Despawn();
                             despawned++;
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught441) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught441); }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught442) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught442); }
 
                 if (despawned == 0 && LobbyBehaviour.Instance != null)
                     LobbyBehaviour.Instance.Cast<InnerNetObject>().Despawn();
 
                 ResetLobbyMapTransientState();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught443) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught443); }
         }
 
 private void SpawnLobby()
@@ -452,13 +452,13 @@ private void SpawnLobby()
                     ResetLobbyMapTransientState();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught444) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught444); }
         }
 
 private static void ResetLobbyMapTransientState()
         {
-            try { fortegreenTimer.Clear(); } catch { }
-            try { lastKillTimestamps.Clear(); } catch { }
+            try { fortegreenTimer.Clear(); } catch (global::System.Exception __elysiumCaught445) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught445); }
+            try { lastKillTimestamps.Clear(); } catch (global::System.Exception __elysiumCaught446) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught446); }
         }
 
 private static bool CanMutateLobbyMap(string actionName, bool allowActiveMatch = false, bool disableSafeMode = false)
@@ -498,7 +498,7 @@ public static void ChangeNameGlobalHost(PlayerControl target, string newName)
                 var netObj = GameData.Instance.GetComponent<InnerNetObject>();
                 if (netObj != null) netObj.SetDirtyBit(1U << (int)target.PlayerId);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught447) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught447); }
         }
 
 private static void ApplyLocalNameSelf(string newName, bool notify = true)
@@ -533,7 +533,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
                 if (notify)
                     ShowNotification($"<color=#00FFAA>[LOCAL NAME]</color> Applied locally: <b>{newName}</b>");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught448) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught448); }
         }
 
         private static void RestoreLocalNameSelf()
@@ -559,7 +559,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
 
                 originalLocalName = null;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught449) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught449); }
         }
 
         private static void ApplyLocalFriendCodeSelf(string fakeFriendCode, bool notify = true)
@@ -583,7 +583,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
                 if (notify)
                     ShowNotification($"<color=#00FFAA>[LOCAL FC]</color> Applied locally: <b>{fakeFriendCode}</b>");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught450) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught450); }
         }
 
         private static void RestoreLocalFriendCodeSelf()
@@ -592,7 +592,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
             {
                 originalLocalFriendCode = null;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught451) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught451); }
         }
 
         private static void TrySetPlayerNameObject(object target, string newName)
@@ -616,14 +616,14 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
                     return;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught452) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught452); }
 
             try
             {
                 FieldInfo field = type.GetField(memberName, flags);
                 if (field != null) field.SetValue(target, value);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught453) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught453); }
         }
 
         private static void TryInvokeStringMethod(object target, string methodName, string value)
@@ -642,7 +642,7 @@ private static void ApplyLocalNameSelf(string newName, bool notify = true)
                 if (method != null)
                     method.Invoke(target, new object[] { value });
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught454) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught454); }
         }
 
         public static bool showWatermark = true;
@@ -702,17 +702,23 @@ private static void SaveKeybinds()
                 PlayerPrefs.SetInt("M_BndSetAllGhost", (int)bindSetAllGhost);
                 PlayerPrefs.SetInt("M_BndSetAllGhostImp", (int)bindSetAllGhostImp);
                 PlayerPrefs.SetInt("M_BndReviveAll", (int)bindReviveAll);
+                PlayerPrefs.SetInt("M_BndToggleRadar", (int)bindToggleRadar);
+                PlayerPrefs.SetInt("M_BndToggleReplay", (int)bindToggleReplay);
+                PlayerPrefs.SetInt("M_BndToggleReplayConsole", (int)bindToggleReplayConsole);
+                PlayerPrefs.SetInt("M_BndToggleRadarIcons", (int)bindToggleRadarIcons);
+                PlayerPrefs.SetInt("M_BndToggleReplayIcons", (int)bindToggleReplayIcons);
+                PlayerPrefs.SetInt("M_BndToggleAlwaysChat", (int)bindToggleAlwaysChat);
                 SyncKeybindDictionary();
                 PlayerPrefs.Save();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught455) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught455); }
 
             try
             {
                 Plugin.MenuKeybind.Value = menuToggleKey;
                 Plugin.MenuConfig.Save();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught456) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught456); }
         }
 
 private void SaveConfig()
@@ -826,13 +832,14 @@ private void SaveConfig()
                 SaveBool("M_ChatNoCooldown", chatNoCooldown);
                 SaveBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 SaveBool("M_EnableChatHistory", enableChatHistory);
-                PlayerPrefs.SetInt("M_ChatHistoryLimit", 20);
+                PlayerPrefs.SetInt("M_ChatHistoryLimit", Mathf.Clamp(chatHistoryLimit, 5, 200));
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);
                 SaveBool("M_EnableChatLog", enableChatLog);
                 SaveBool("M_EnableColorCommand", enableColorCommand);
                 SaveBool("M_BlockRainbowChat", blockRainbowChat);
+                PlayerPrefs.SetFloat("M_AutoChatEveryoneDelay", Mathf.Clamp(autoChatEveryoneDelay, 0f, 10f));
                 SaveBool("M_BlockFortegreenChat", blockFortegreenChat);
                 SaveBool("M_SkipRoleIntroAnim", skipRoleIntroAnim);
                 SaveBool("M_SkipKillAnimation", skipKillAnimation);
@@ -864,11 +871,22 @@ private void SaveConfig()
                 PlayerPrefs.SetFloat("M_RadarX", radarRect.x);
                 PlayerPrefs.SetFloat("M_RadarY", radarRect.y);
                 SaveBool("M_ShowReplay", showReplay);
+                SaveBool("M_ShowReplayLog", showReplayLog);
+                SaveBool("M_ReplayRecordEnabled", replayRecordEnabled);
+                SaveBool("M_ReplayOverlayOnRadar", replayOverlayOnRadar);
+                SaveBool("M_ReplayHideRadarLive", replayHideRadarLive);
                 SaveBool("M_ReplayOnlyLastSeconds", replayOnlyLastSeconds);
                 SaveBool("M_ReplayDrawIcons", replayDrawIcons);
-                PlayerPrefs.SetFloat("M_ReplaySeconds", Mathf.Clamp(replaySeconds, 5f, 180f));
+                PlayerPrefs.SetInt("M_ReplayFilterMask", replayFilterMask & 0x3FF);
+                PlayerPrefs.SetFloat("M_ReplaySeconds", Mathf.Clamp(replaySeconds, 5f, 900f));
                 PlayerPrefs.SetFloat("M_ReplayX", replayRect.x);
                 PlayerPrefs.SetFloat("M_ReplayY", replayRect.y);
+                PlayerPrefs.SetFloat("M_ReplayW", replayRect.width);
+                PlayerPrefs.SetFloat("M_ReplayH", replayRect.height);
+                PlayerPrefs.SetFloat("M_ReplayLogX", replayLogRect.x);
+                PlayerPrefs.SetFloat("M_ReplayLogY", replayLogRect.y);
+                PlayerPrefs.SetFloat("M_ReplayLogW", replayLogRect.width);
+                PlayerPrefs.SetFloat("M_ReplayLogH", replayLogRect.height);
                 SaveBool("M_RevealVotes", RevealVotesEnabled);
                 SaveBool("M_NoTaskMode", noTaskMode);
                 SaveBool("M_NoMapCooldowns", noMapCooldowns);
@@ -974,7 +992,7 @@ private void SaveConfig()
                     PlayerPrefs.SetString($"M_FavoriteOutfit_{i}", favoriteOutfitSlots[i] ?? string.Empty);
                 PlayerPrefs.Save();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught457) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught457); }
         }
 
 private void DrawAutoHostTab()

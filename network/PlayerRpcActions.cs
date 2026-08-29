@@ -35,7 +35,7 @@ private static bool SendPlayerSnapTo(PlayerControl player, Vector2 pos)
             }
             finally
             {
-                try { batch?.Recycle(); } catch { }
+                try { batch?.Recycle(); } catch (global::System.Exception __elysiumCaught370) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught370); }
             }
         }
 
@@ -71,7 +71,7 @@ private static int SendAllPlayersSnapTo(Vector2 pos)
             }
             finally
             {
-                try { batch?.Recycle(); } catch { }
+                try { batch?.Recycle(); } catch (global::System.Exception __elysiumCaught371) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught371); }
             }
         }
 
@@ -125,7 +125,7 @@ private static bool SendPlayerShapeshift(PlayerControl player, PlayerControl tar
             }
             finally
             {
-                try { batch?.Recycle(); } catch { }
+                try { batch?.Recycle(); } catch (global::System.Exception __elysiumCaught372) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught372); }
             }
         }
 

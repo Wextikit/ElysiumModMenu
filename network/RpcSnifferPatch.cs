@@ -158,7 +158,7 @@ public static class RPCSniffer_RawGameDataPatch
                     string objectLabel = ResolveRpcObjectLabel(__instance, netId);
                     string rpcLabel = ResolveRpcLabel(callId);
                     string line = $"Raw RPC recv: {rpcLabel} ({callId}), netId={netId}, object={objectLabel}, localClient={__instance.ClientId}, gameId={__instance.GameId}";
-                    try { Plugin.Instance?.Log?.LogInfo((object)line); } catch { }
+                    try { Plugin.Instance?.Log?.LogInfo((object)line); } catch (global::System.Exception __elysiumCaught388) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught388); }
                     if (!IsPlayerRpcTarget(__instance, netId))
                         ElysiumModMenuGUI.ShowNotification($"<color=#00FFFF>[RAW RPC]</color> {objectLabel}: <b>{rpcLabel}</b> <color=#FFFF00>({callId})</color>");
                 }
@@ -170,12 +170,12 @@ public static class RPCSniffer_RawGameDataPatch
         }
         catch (Exception error)
         {
-            try { Plugin.Instance?.Log?.LogWarning((object)$"Raw RPC sniffer failed: {error.Message}"); } catch { }
+            try { Plugin.Instance?.Log?.LogWarning((object)$"Raw RPC sniffer failed: {error.Message}"); } catch (global::System.Exception __elysiumCaught389) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught389); }
         }
         finally
         {
             copy?.Recycle();
-            try { parentReader.Position = originalPosition; } catch { }
+            try { parentReader.Position = originalPosition; } catch (global::System.Exception __elysiumCaught390) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught390); }
         }
     }
 
@@ -210,7 +210,7 @@ public static class RPCSniffer_RawGameDataPatch
                 return obj.name;
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught391) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught391); }
 
         return $"unknown:{netId}";
     }
@@ -238,7 +238,7 @@ public static class RPCSniffer_RawGameDataPatch
                     return Regex.Replace(ElysiumModMenuGUI.spoofMenuNames[i], @"\s*\(\d+\)\s*$", string.Empty).Trim();
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught392) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught392); }
 
         return "Unknown RPC";
     }

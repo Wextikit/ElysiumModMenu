@@ -63,7 +63,7 @@ public static class UnlockCosmetics_PlayerPurchasesData_GetPurchase_Prefix
                 }
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught201) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught201); }
 
         return false;
     }

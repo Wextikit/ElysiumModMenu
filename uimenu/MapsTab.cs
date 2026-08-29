@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -79,7 +79,7 @@ namespace ElysiumModMenu
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught504) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught504); }
             }
         }
 
@@ -133,7 +133,7 @@ namespace ElysiumModMenu
                     ElysiumNetGuard.NetworkGuard.BanClient(voterClientId, "Vote-kick attempt", CleanVoteName(targetName));
                     ElysiumModMenuGUI.ShowNotification($"<color=#FF4444>[VOTE BAN]</color> {CleanVoteName(voterName)} banned for vote-kick.");
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught505) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught505); }
             }
 
             private static PlayerControl FindVoteClientPlayer(int clientId)
@@ -148,7 +148,7 @@ namespace ElysiumModMenu
                             return pc;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught506) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught506); }
 
                 return null;
             }
@@ -170,7 +170,7 @@ namespace ElysiumModMenu
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught507) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught507); }
 
                 return $"client {clientId}";
             }
@@ -186,7 +186,7 @@ namespace ElysiumModMenu
                         return;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught508) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught508); }
 
                 ElysiumModMenuGUI.ShowNotification(message);
             }
@@ -251,7 +251,7 @@ public static bool banVoteKickVoters = false;
                             shhh.HoldDuration = holdDuration;
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught509) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught509); }
                 }
             }
         }
@@ -294,7 +294,7 @@ private static NamePlateViewData meetingNameplate;
                     if (ElysiumModMenuGUI.meetingNameplate != null)
                         Object.Destroy(ElysiumModMenuGUI.meetingNameplate);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught510) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught510); }
 
                 ElysiumModMenuGUI.meetingNameplate = null;
             }
@@ -359,7 +359,7 @@ private static NamePlateViewData meetingNameplate;
                 {
                     Plugin.Instance?.Log?.LogMessage((object)$"[ANIM] Role intro skip applied: {(ElysiumModMenuGUI.IsHideAndSeekMode() ? "HideAndSeek" : "Normal")}");
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught511) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught511); }
 
                 __result = Run(__instance, __result, __state).WrapToIl2Cpp();
             }
@@ -383,7 +383,7 @@ private static NamePlateViewData meetingNameplate;
                             if (intro != null && intro.gameObject != null)
                                 intro.gameObject.SetActive(false);
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught512) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught512); }
 
                         while (anim.MoveNext())
                             yield return anim.Current;
@@ -411,14 +411,14 @@ private static NamePlateViewData meetingNameplate;
                         intro.HnSSeekerSpawnLongInGameAnim = clips.LongInGame;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught513) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught513); }
 
                 try
                 {
                     if (clips.Empty != null)
                         Object.Destroy(clips.Empty);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught514) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught514); }
             }
         }
 
@@ -481,7 +481,7 @@ private void SpawnMap(int mapId)
 
                 BepInEx.Unity.IL2CPP.Utils.MonoBehaviourExtensions.StartCoroutine(this, CoSpawnMap(realMapId));
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught515) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught515); }
         }
 
 [HideFromIl2Cpp]
@@ -501,7 +501,7 @@ private void SpawnMap(int mapId)
             finally
             {
                 manualMapSpawnInProgress = false;
-                try { AmongUsClient.Instance.ShipLoadingAsyncHandle = default; } catch { }
+                try { AmongUsClient.Instance.ShipLoadingAsyncHandle = default; } catch (global::System.Exception __elysiumCaught516) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught516); }
             }
 
         }
@@ -519,7 +519,7 @@ private void DespawnMap()
                     ResetLobbyMapTransientState();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught517) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught517); }
         }
 
 private void DespawnCurrentMap()
@@ -631,13 +631,14 @@ private static bool TryGetLiveShipMapId(out int mapId)
 
                 string typeName = ship.GetType().Name ?? string.Empty;
                 string objectName = string.Empty;
-                try { objectName = ((Component)ship).gameObject.name ?? string.Empty; } catch { }
+                try { objectName = ((Component)ship).gameObject.name ?? string.Empty; } catch (global::System.Exception __elysiumCaught518) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught518); }
                 string marker = (typeName + " " + objectName).ToLowerInvariant();
 
                 if (marker.Contains("fungle")) { mapId = 5; return true; }
                 if (marker.Contains("airship")) { mapId = 4; return true; }
                 if (marker.Contains("polus")) { mapId = 2; return true; }
                 if (marker.Contains("mira")) { mapId = 1; return true; }
+                if (marker.Contains("dleks")) { mapId = 3; return true; }
                 if (marker.Contains("skeld")) { mapId = 0; return true; }
 
                 switch (ship.Type)
@@ -656,14 +657,13 @@ private static bool TryGetLiveShipMapId(out int mapId)
                         return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught519) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught519); }
 
             return false;
         }
 
 private static int NormalizeRuntimeMapId(int mapId)
         {
-            if (mapId == 3) return 0;
             return mapId;
         }
 
@@ -731,7 +731,7 @@ private static Vector2 ResolveRoomTeleportPosition(string label, Bounds bounds)
                 if (IsSafeRoomTeleportPoint(safePosition))
                     return safePosition;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught520) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught520); }
 
             return center;
         }
@@ -829,7 +829,7 @@ private static bool IsSafeRoomTeleportPoint(Vector2 position)
                 if (hits == null) return true;
 
                 Collider2D localCollider = null;
-                try { localCollider = PlayerControl.LocalPlayer?.Collider; } catch { }
+                try { localCollider = PlayerControl.LocalPlayer?.Collider; } catch (global::System.Exception __elysiumCaught521) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught521); }
 
                 foreach (Collider2D hit in hits)
                 {
@@ -958,7 +958,7 @@ private static void TeleportPlayerToVent(PlayerControl player, int ventIdx, bool
 
                 if (notify) ShowNotification($"<color=#00FF00>[VENT]</color> {player.Data.PlayerName} -> {GetVentRoomLabel((ushort)ventId)}");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught522) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught522); }
         }
 
 private static void TeleportAllPlayersToVent(int ventIdx)
@@ -1012,9 +1012,9 @@ private static void SendVentTpUpdate(PlayerControl player, int ventId)
             }
             finally
             {
-                try { enter?.Recycle(); } catch { }
-                try { boot?.Recycle(); } catch { }
-                try { batch?.Recycle(); } catch { }
+                try { enter?.Recycle(); } catch (global::System.Exception __elysiumCaught523) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught523); }
+                try { boot?.Recycle(); } catch (global::System.Exception __elysiumCaught524) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught524); }
+                try { batch?.Recycle(); } catch (global::System.Exception __elysiumCaught525) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught525); }
             }
         }
 
@@ -1059,10 +1059,10 @@ private static bool TryGetVentSys(out SystemTypes sys)
                         sys = pair.Key;
                         return true;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught526) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught526); }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught527) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught527); }
 
             return false;
         }
@@ -1078,7 +1078,7 @@ private static Vector2 GetVentPos(int ventId)
                             return v.transform.position;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught528) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught528); }
 
             return PlayerControl.LocalPlayer != null ? (Vector2)PlayerControl.LocalPlayer.transform.position : Vector2.zero;
         }

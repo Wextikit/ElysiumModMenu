@@ -459,7 +459,7 @@ public class ModPlayer : MonoBehaviour
                                 return false;
                             }
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught369) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught369); }
                     }
                     else
                     {
@@ -511,10 +511,7 @@ public class ModPlayer : MonoBehaviour
 
             public static bool Prefix(InnerNetClient __instance, MessageReader reader, SendOption sendOption)
             {
-                // Keep the game's packet dispatcher intact. The legacy replacement
-                // below processed GameData parts in separate coroutines, which could
-                // reorder spawn/data/RPC during join (especially Hide & Seek) and
-                // leave the local client permanently waiting for missing objects.
+                // Let vanilla keep GameData ordering; splitting it broke H&S joins.
                 return true;
 
 #pragma warning disable CS0162
@@ -668,8 +665,7 @@ public class ModPlayer : MonoBehaviour
 #pragma warning restore CS0162
             }
 
-            // Catch malformed-reader failures at the packet boundary. Patching Hazel's
-            // packed integer methods directly recurses on Epic's IL2CPP wrappers.
+            // Patching Hazel's packed-int wrappers recurses on Epic IL2CPP.
             public static Exception Finalizer(Exception __exception)
             {
                 if (__exception == null || !enableMalformedPacketGuard)
@@ -686,8 +682,7 @@ public class ModPlayer : MonoBehaviour
 
             public static bool Prefix(InnerNetClient __instance, MessageReader parentReader)
             {
-                // Validation happens at the packet boundary; vanilla must retain
-                // ownership of ordered GameData dispatch and reader recycling.
+                // Vanilla still owns ordered dispatch and reader recycling.
                 return true;
             }
 
@@ -804,9 +799,7 @@ public class ModPlayer : MonoBehaviour
                             reader.Recycle();
                         }
                     default:
-                        // Removed per-packet Debug.Log here. It fired on every unrecognized
-                        // data flag and Unity's Debug.Log is expensive (synchronous write +
-                        // stack trace capture), which caused log spam and micro-stutters.
+                        // Logging every unknown flag caused visible stutter.
                         yield return __instance.HandleGameDataInner(reader, __instance.msgNum);
                         break;
                 }

@@ -102,7 +102,7 @@ public static void RevivePlayer(PlayerControl target)
                             mb.gameObject.SetActive(false);
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught199) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught199); }
 
                 bool wasImpTeam = false;
                 try
@@ -118,7 +118,7 @@ public static void RevivePlayer(PlayerControl target)
                         wasImpTeam = rt == RoleTypes.Impostor || rt == RoleTypes.Shapeshifter || (int)rt == 9 || (int)rt == 18;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught200) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught200); }
 
                 target.RpcSetRole(wasImpTeam ? RoleTypes.Impostor : RoleTypes.Crewmate, true);
 

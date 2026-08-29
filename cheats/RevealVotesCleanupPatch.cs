@@ -49,7 +49,7 @@ public static class RevealVotesCleanupPatch
             RevealVotesPatch.ClearVoteIcons(__instance);
             RevealVotesPatch.ClearMeetingVotes(false);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught194) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught194); }
     }
 
     public static void Postfix(MeetingHud __instance, Il2CppStructArray<MeetingHud.VoterState> states)
@@ -73,6 +73,6 @@ public static class RevealVotesCleanupPatch
 
             RevealVotesPatch.DrawRememberedVotes(__instance);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught195) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught195); }
     }
 }

@@ -90,7 +90,9 @@ public void OnGUI()
                   isWaitBindKillAll || isWaitBindCallMeeting || isWaitBindTogglePlayerInfo ||
                   isWaitBindToggleSeeRoles || isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright ||
                   isWaitBindKickAll || isWaitBindFixSabotages || isWaitBindSetAllGhost ||
-                  isWaitBindSetAllGhostImp || isWaitBindReviveAll;
+                  isWaitBindSetAllGhostImp || isWaitBindReviveAll || isWaitBindToggleRadar ||
+                  isWaitBindToggleReplay || isWaitBindToggleReplayConsole || isWaitBindToggleRadarIcons ||
+                  isWaitBindToggleReplayIcons || isWaitBindToggleAlwaysChat;
 
             if (e != null && e.isKey && e.type == EventType.KeyDown)
             {
@@ -145,6 +147,12 @@ public void OnGUI()
                     else if (isWaitBindSetAllGhost) { bindSetAllGhost = e.keyCode; }
                     else if (isWaitBindSetAllGhostImp) { bindSetAllGhostImp = e.keyCode; }
                     else if (isWaitBindReviveAll) { bindReviveAll = e.keyCode; }
+                    else if (isWaitBindToggleRadar) { bindToggleRadar = e.keyCode; }
+                    else if (isWaitBindToggleReplay) { bindToggleReplay = e.keyCode; }
+                    else if (isWaitBindToggleReplayConsole) { bindToggleReplayConsole = e.keyCode; }
+                    else if (isWaitBindToggleRadarIcons) { bindToggleRadarIcons = e.keyCode; }
+                    else if (isWaitBindToggleReplayIcons) { bindToggleReplayIcons = e.keyCode; }
+                    else if (isWaitBindToggleAlwaysChat) { bindToggleAlwaysChat = e.keyCode; }
 
                     ResetAllBindWaits();
                     SaveKeybinds();
@@ -247,8 +255,6 @@ public void OnGUI()
             }
 
             DrawMenuWindowIfVisible();
-            if (e != null && e.type == EventType.Layout)
-                TickVisualReplay();
             DrawVisualRadar();
             DrawVisualReplay();
             DrawEspBoxes();
@@ -377,7 +383,7 @@ public void OnGUI()
                         pendingJoinWaitTimes.Clear();
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught362) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught362); }
             }
             if (e != null && e.type == EventType.Repaint && screenNotifications.Count > 0)
             {
@@ -487,8 +493,8 @@ private static void ClampMenuWindowToScreen()
             float maxWidth = Mathf.Max(320f, screenWidth - 20f);
             float maxHeight = Mathf.Max(260f, screenHeight - 20f);
 
-            windowRect.width = Mathf.Clamp(windowRect.width, Mathf.Min(640f, maxWidth), maxWidth);
-            windowRect.height = Mathf.Clamp(windowRect.height, Mathf.Min(420f, maxHeight), maxHeight);
+            windowRect.width = Mathf.Clamp(windowRect.width, Mathf.Min(820f, maxWidth), maxWidth);
+            windowRect.height = Mathf.Clamp(windowRect.height, Mathf.Min(480f, maxHeight), maxHeight);
             windowRect.x = Mathf.Clamp(windowRect.x, 0f, Mathf.Max(0f, screenWidth - windowRect.width));
             windowRect.y = Mathf.Clamp(windowRect.y, 0f, Mathf.Max(0f, screenHeight - windowRect.height));
         }
@@ -499,8 +505,9 @@ private static float GetMenuSidebarWidth()
             if (w < 220f) return 0f;
             if (w < 340f) return 58f;
             if (w < 430f) return 72f;
-            if (w < 560f) return 96f;
-            return 130f;
+            if (w < 560f) return 104f;
+            if (w < 760f) return 132f;
+            return 150f;
         }
 
 private static int visibleWidthFrame = -1;
@@ -651,15 +658,22 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
             if (sideW > 0f)
             {
-                float searchW = Mathf.Max(60f, sideW - 8f);
+                // Keep search 2px off the sidebar edge.
+                float searchW = Mathf.Max(60f, sideW - 4f);
                 GUILayout.BeginArea(new Rect(0f, 31f, sideW, windowRect.height - 31f));
                 try
                 {
                     GUILayout.BeginVertical(sidebarStyle, GUILayout.ExpandHeight(true));
                     try
                     {
-                        GUILayout.Space(5);
-                        DrawMenuSearchBar(searchW);
+                        GUILayout.Space(2);
+                        GUILayout.BeginHorizontal();
+                        try
+                        {
+                            GUILayout.Space(2f);
+                            DrawMenuSearchBar(searchW);
+                        }
+                        finally { GUILayout.EndHorizontal(); }
                         GUILayout.Space(5);
                         for (int i = 0; i < tabNames.Length; i++)
                         {
@@ -741,8 +755,8 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                             else if (tabToDraw == 0) DrawGeneralTab();
                             else if (tabToDraw == 1) DrawSelfTab();
                             else if (tabToDraw == 2) DrawVisualsTab();
-                            else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
-                            else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch { } }
+                            else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch (global::System.Exception __elysiumCaught363) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught363); } }
+                            else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch (global::System.Exception __elysiumCaught364) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught364); } }
                             else if (tabToDraw == 5) DrawHostOnlyTab();
                             else if (tabToDraw == 6) DrawVotekickTab();
                             else if (tabToDraw == 7) DrawMenuTab();

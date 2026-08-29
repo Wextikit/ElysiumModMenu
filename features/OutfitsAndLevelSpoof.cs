@@ -216,7 +216,7 @@ private void DrawOutfitsTab()
                 }
 
                 Color prevSnipeSwatchCol = GUI.color;
-                try { GUI.color = Palette.PlayerColors[localSnipeColorId]; } catch { }
+                try { GUI.color = Palette.PlayerColors[localSnipeColorId]; } catch (global::System.Exception __elysiumCaught230) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught230); }
                 GUILayout.Button(GUIContent.none, menuSwatchSquareStyle, GUILayout.Width(28), GUILayout.Height(28));
                 GUI.color = prevSnipeSwatchCol;
 
@@ -249,7 +249,7 @@ private void DrawOutfitsTab()
             GUI.enabled = freeCount > 0;
 
             Color prevSwatchCol = GUI.color;
-            if (freeCount > 0) { try { GUI.color = Palette.PlayerColors[freeColors[clampedFreeIdx]]; } catch { } }
+            if (freeCount > 0) { try { GUI.color = Palette.PlayerColors[freeColors[clampedFreeIdx]]; } catch (global::System.Exception __elysiumCaught231) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught231); } }
             bool swatchClicked = GUILayout.Button(GUIContent.none, menuSwatchSquareStyle, GUILayout.Width(28), GUILayout.Height(28));
             GUI.color = prevSwatchCol;
             if (swatchClicked && freeCount > 0) selectedFreeColorIndex = (selectedFreeColorIndex + 1) % freeCount;
@@ -370,7 +370,7 @@ public static void ResetRandomOutfitForLobby()
                     profile.NamePlate,
                     profile.Pet));
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught232) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught232); }
         }
 
 private static PlayerControl SelectedOutfitSourcePlayer()
@@ -386,7 +386,7 @@ private static PlayerControl SelectedOutfitSourcePlayer()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught233) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught233); }
 
             return PlayerControl.LocalPlayer;
         }
@@ -407,7 +407,7 @@ private static List<PlayerControl> GetLobbyOutfitPlayers()
                     players.Add(pc);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught234) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught234); }
 
             return players.OrderBy(p => p.PlayerId).ToList();
         }
@@ -431,7 +431,7 @@ private static void CopyOutfitFromPlayer(PlayerControl source)
                 PlayerControl.LocalPlayer.RpcSetPet(outfit.PetId);
                 ShowNotification($"<color=#00FFAA>[OUTFIT]</color> Copied {CleanOutfitPlayerName(source.Data.PlayerName ?? "player")}");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught235) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught235); }
         }
 
 private static string CleanOutfitPlayerName(string value)
@@ -462,12 +462,12 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
             catch
             {
                 try { AmongUs.Data.DataManager.Player.Stats.Level = rawLevel; }
-                catch { }
+                catch (global::System.Exception __elysiumCaught236) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught236); }
             }
 
             if (save)
             {
-                try { AmongUs.Data.DataManager.Player.Save(); } catch { }
+                try { AmongUs.Data.DataManager.Player.Save(); } catch (global::System.Exception __elysiumCaught237) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught237); }
             }
         }
 
@@ -549,7 +549,7 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
                     sourceOutfit.PetId);
                 return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught238) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught238); }
 
             return false;
         }
@@ -615,7 +615,7 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
         private static string FavoriteOutfitSummary(FavoriteOutfitSnapshot outfit)
         {
             string color = "Color " + outfit.ColorId;
-            try { color = Palette.GetColorName(outfit.ColorId); } catch { }
+            try { color = Palette.GetColorName(outfit.ColorId); } catch (global::System.Exception __elysiumCaught239) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught239); }
             return $"{color} | {ShortOutfitId(outfit.HatId)}";
         }
 
@@ -656,7 +656,7 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
                 ApplyFavoriteOutfit(PlayerControl.LocalPlayer, outfit);
                 ShowNotification($"<color=#00FFAA>[OUTFIT]</color> Applied slot {index + 1}");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught240) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught240); }
         }
 
         private void ClearFavoriteOutfitSlot(int index)

@@ -93,13 +93,13 @@ public static class AmongUsClient_KickPlayer_BanList_Patch
                         else
                             puid = ElysiumModMenuGUI.GetPlayerPuid(pc);
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught367) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught367); }
 
                     ElysiumModMenuGUI.AddToBanList(fc, puid, name, "Host ban");
                     ElysiumModMenuGUI.ShowNotification($"<color=#FF0000>[BAN]</color> {name} added to ban list!");
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught368) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught368); }
         }
 
         return true;

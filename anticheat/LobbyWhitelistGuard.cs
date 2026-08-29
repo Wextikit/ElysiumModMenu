@@ -64,14 +64,14 @@ private static string GetLobbyWhitelistKey(PlayerControl pc)
                 string puid = GetPlayerPuid(pc);
                 if (!string.IsNullOrWhiteSpace(puid) && puid != "Unknown") return "puid:" + puid.Trim();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught1) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught1); }
 
             try
             {
                 string fc = GetDisplayedFriendCode(pc.Data, string.Empty);
                 if (!string.IsNullOrWhiteSpace(fc) && fc != "Hidden") return "fc:" + fc.Trim();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught2) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught2); }
 
             return string.Empty;
         }
@@ -137,7 +137,7 @@ public static bool IsMeowcheloProtected(int clientId)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught3) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught3); }
 
             try
             {
@@ -151,7 +151,7 @@ public static bool IsMeowcheloProtected(int clientId)
                         return IsMeowcheloProtected(data);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught4) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught4); }
 
             return false;
         }
@@ -167,7 +167,7 @@ public static bool IsProtectedFromAnticheat(PlayerControl pc)
                 ClientData client = AmongUsClient.Instance != null ? AmongUsClient.Instance.GetClientFromCharacter(pc) : null;
                 if (client != null && IsProtectedFromAnticheat(client)) return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught5) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught5); }
 
             return false;
         }
@@ -207,7 +207,7 @@ public static bool IsProtectedFromAnticheat(int clientId)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught6) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught6); }
 
             try
             {
@@ -221,7 +221,7 @@ public static bool IsProtectedFromAnticheat(int clientId)
                         return IsProtectedFromAnticheat(data);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught7) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught7); }
 
             return false;
         }
@@ -245,7 +245,7 @@ public static void AddToLobbyWhitelist(string fc, string puid, string name = "")
                         ShowNotification($"<color=#39FF14>[WL]</color> {name} added.");
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught8) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught8); }
         }
 
 private static void EnsureLobbyWhitelistLoaded()
@@ -266,7 +266,7 @@ private static void EnsureLobbyWhitelistLoaded()
                     lobbyWhitelistLoaded = true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught9) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught9); }
         }
 
 private static void AddLobbyWhitelistLine(string raw)
@@ -291,7 +291,7 @@ private static void SaveLobbyWhitelistFile()
                 System.IO.File.WriteAllLines(lobbyWhitelistPath, lobbyWhitelist.ToArray());
                 lobbyWhitelistLoaded = true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught10) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught10); }
         }
 
 private static string SaveLobbyWhitelist()
@@ -339,7 +339,7 @@ private static void TickWhitelistOnlyLobby()
                     AmongUsClient.Instance.KickPlayer(pc.OwnerId, false);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught11) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught11); }
         }
     }
 }

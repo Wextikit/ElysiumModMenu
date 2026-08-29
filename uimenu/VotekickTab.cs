@@ -57,7 +57,7 @@ namespace ElysiumModMenu
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(outerContentWidth), GUILayout.Height(154f));
             try
             {
-                DrawMenuSectionHeader(L("VOTEKICK MENU", "РђР’РўРћ-Р“РћР›РћРЎРћР’РђРќРР•"));
+                DrawMenuSectionHeader(L("VOTEKICK MENU", "АВТО-ГОЛОСОВАНИЕ"));
 
                 GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(18f));
                 string statusText = VotekickStatusText();
@@ -147,7 +147,7 @@ namespace ElysiumModMenu
                                 var pColor = Palette.PlayerColors[pc.Data.DefaultOutfit.ColorId];
                                 hexColor = $"#{(byte)(pColor.r * 255f):X2}{(byte)(pColor.g * 255f):X2}{(byte)(pColor.b * 255f):X2}";
                             }
-                            catch { }
+                            catch (global::System.Exception __elysiumCaught561) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught561); }
 
                             string displayStr = $"<color={hexColor}>{pName}</color>" + (isHost ? " <color=#FF3333>[Host]</color>" : "");
 
@@ -162,7 +162,7 @@ namespace ElysiumModMenu
 
                             GUILayout.Space(4);
 
-                            if (GUILayout.Button(L("Vote", "Р“РѕР»РѕСЃ"), btnStyle, GUILayout.Width(58), GUILayout.Height(20)))
+                            if (GUILayout.Button(L("Vote", "Голос"), btnStyle, GUILayout.Width(58), GUILayout.Height(20)))
                                 ExecuteVotekickTarget(pc);
                         }
                         finally

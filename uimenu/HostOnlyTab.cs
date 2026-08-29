@@ -136,7 +136,7 @@ public static bool enablePlatformSpoof = true;
 
 public static bool throttleDefaultLogs = true;
 
-// Controls verbose Message/Info/Debug output. Warnings and errors are never hidden.
+// Verbose logs only; warnings and errors stay visible.
 public static bool detailedLogsEnabled = false;
 
 public static bool showEspFriendCode = true;
@@ -185,6 +185,8 @@ private static float localNameRefreshTimer = 0f;
 private static float platformBanScanTimer = 0f;
 
 private static int lastAppliedFpsLimit = -1;
+
+private static int fpsLimitPreviousVSync = -1;
 
 private static bool autoGhostAppliedThisGame = false;
 
@@ -352,7 +354,7 @@ public static void LoadBanList()
                 bannedEntries = new List<string>(System.IO.File.ReadAllLines(banListPath));
                 RebuildBannedFriendCodeIndex();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught496) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught496); }
         }
 
 private static void RebuildBannedFriendCodeIndex()
@@ -434,7 +436,7 @@ public static void AddToBanList(string friendCode, string puid, string name, str
                 if (hasPuid) bannedProductUserIds.Add(productId);
                 System.IO.File.AppendAllText(banListPath, entry + Environment.NewLine);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught497) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught497); }
         }
 
 public static void RemoveFromBanList(string entry)
@@ -445,7 +447,7 @@ public static void RemoveFromBanList(string entry)
                 System.IO.File.WriteAllLines(banListPath, bannedEntries.ToArray());
                 RebuildBannedFriendCodeIndex();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught498) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught498); }
         }
 
 public static void LoadBotBanList()
@@ -478,7 +480,7 @@ public static void LoadBotBanList()
                 if (changed)
                     System.IO.File.WriteAllLines(botBanListPath, botBannedEntries.ToArray());
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught499) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught499); }
         }
 
 public static void AddToBotBanList(string friendCode, string puid, string name, string reason)
@@ -498,7 +500,7 @@ public static void AddToBotBanList(string friendCode, string puid, string name, 
                     System.IO.File.AppendAllText(botBanListPath, entry + Environment.NewLine);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught500) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught500); }
         }
 
 public static bool IsBotRawPlatform(ClientData client, out string rawPlatformName)
@@ -517,7 +519,7 @@ public static bool IsBotRawPlatform(ClientData client, out string rawPlatformNam
                         return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught501) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught501); }
             return false;
         }
 
@@ -548,7 +550,7 @@ public static bool IsBotBannedIdentity(string friendCode, string puid, string na
                     if (token.IndexOf("bot", StringComparison.OrdinalIgnoreCase) >= 0 && IsBotNameVariant(nm, token)) return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught502) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught502); }
             return false;
         }
 
@@ -684,7 +686,7 @@ public static float replaySeconds = 30f;
 
 public static bool replayDrawIcons = false;
 
-public static Rect replayRect = new Rect(250f, 90f, 330f, 240f);
+public static Rect replayRect = new Rect(250f, 90f, 640f, 440f);
 
 public static void ShowNotification(string text)
         {
@@ -1131,18 +1133,12 @@ private void DrawVisualsInGame()
 
             GUILayout.BeginHorizontal();
             showEspBoxes = DrawToggle(showEspBoxes, "ESP Boxes", 210);
-            espShimmerMode = DrawToggle(espShimmerMode, "ESP Shimmer", 210);
+            espShimmerMode = DrawToggle(espShimmerMode, "Rainbow ESP", 210);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
             showEspVoteKicks = DrawToggle(showEspVoteKicks, "Vote Kicks ESP", 210);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.Space(5);
-
-            GUILayout.BeginHorizontal();
-            showTaskArrows = DrawToggle(showTaskArrows, L("Task Arrows", "Стрелки к таскам"), 210);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
@@ -1182,6 +1178,12 @@ private void DrawVisualsInGame()
             lockRadar = DrawToggle(lockRadar, "Lock Position", 210);
             realisticRadar = DrawToggle(realisticRadar, "Realistic Mode", 210);
             GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            radarBorder = DrawToggle(radarBorder, "Border", 210);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
             float sliderRowW = GetMenuWorkWidth(180f, 390f);
@@ -1205,7 +1207,13 @@ private void DrawVisualsInGame()
 
             DrawMenuSectionHeader("REPLAY");
             GUILayout.BeginHorizontal();
-            showReplay = DrawToggle(showReplay, "Show Replay", 210);
+            showReplay = DrawToggle(showReplay, "Replay Window", 210);
+            showReplayLog = DrawToggle(showReplayLog, "Console", 210);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            replayRecordEnabled = DrawToggle(replayRecordEnabled, "Record Continuously", 210);
             replayDrawIcons = DrawToggle(replayDrawIcons, "Draw Icons", 210, "replayDrawIcons");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
@@ -1240,7 +1248,7 @@ private void DrawVisualsInGame()
 
             GUILayout.BeginHorizontal();
             showBodyTracers = DrawToggle(showBodyTracers, L("Body Tracers", "Трассеры трупов"), 210);
-            GUILayout.FlexibleSpace();
+            showTaskArrows = DrawToggle(showTaskArrows, L("Task Tracers", "Трассеры к таскам"), 210);
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 

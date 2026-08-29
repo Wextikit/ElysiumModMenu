@@ -74,6 +74,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_NoAbilityCooldown", "M_NoMapCooldowns", "M_NoTaskMode", "M_OverflowProtection", "M_PasosLimit",
             "M_QuickChatEmptyGuard", "M_RadarBorder", "M_RadarDrawIcons", "M_RadarRightClickTp", "M_RainbowLobbyTimer", "M_RealisticRadar",
             "M_ReadGhostChat", "M_RemovePenalty", "M_ReplayDrawIcons", "M_ReplayOnlyLastSeconds",
+            "M_ReplayRecordEnabled", "M_ReplayOverlayOnRadar", "M_ReplayHideRadarLive", "M_ShowReplayLog",
             "M_RevealMeetingRoles", "M_RevealVotes", "M_RgbMenuText", "M_RgbTaskBar",
             "M_RoleBuffImmortality", "M_SeeGhosts", "M_SeeKillCooldown", "M_SeePhantoms",
             "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowCrewmateTracers", "M_SpamMeetings",
@@ -96,16 +97,17 @@ private static readonly string[] menuProfileIntKeys = {
             "M_BugRoomTimedAutoRunMinutes", "M_ChatHistoryLimit", "M_CurrentAutoHostSubTab", "M_CurrentGeneralInfoSubTab",
             "M_CurrentGeneralSubTab", "M_CurrentHostOnlySubTab", "M_CurrentPlayersSubTab", "M_CurrentSabotageSubTab",
             "M_CurrentSelfSubTab", "M_CurrentTab", "M_CurrentVisualsSubTab", "M_FpsLimit",
-            "M_HostAutoKillRate", "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuToggleKey",
-            "M_PunishmentMode", "M_SelectedSpoofMenuIndex", "M_TargetTab"
+            "M_HostAutoKillRate", "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuLanguageIndex", "M_MenuToggleKey",
+            "M_PunishmentMode", "M_ReplayFilterMask", "M_SelectedSpoofMenuIndex", "M_TargetTab"
         };
 
 private static readonly string[] menuProfileFloatKeys = {
-            "M_AutoHostAutoRunDelaySeconds", "M_AutoHostFastStartDelaySeconds", "M_AutoHostStartDelaySeconds", "M_AutoKickTimer",
+            "M_AutoChatEveryoneDelay", "M_AutoHostAutoRunDelaySeconds", "M_AutoHostFastStartDelaySeconds", "M_AutoHostStartDelaySeconds", "M_AutoKickTimer",
             "M_BugRoomAutoAngelIntervalSeconds", "M_EngineSpeed", "M_MenuScale", "M_MenuWindowH",
             "M_MenuWindowW", "M_MenuWindowX", "M_MenuWindowY", "M_RadarAlpha",
             "M_RadarScale", "M_RadarX", "M_RadarY", "M_ReplaySeconds",
-            "M_ReplayX", "M_ReplayY", "M_WalkSpeed"
+            "M_ReplayX", "M_ReplayY", "M_ReplayW", "M_ReplayH",
+            "M_ReplayLogX", "M_ReplayLogY", "M_ReplayLogW", "M_ReplayLogH", "M_WalkSpeed"
         };
 
 private static readonly string[] menuProfileStringKeys = {
@@ -265,7 +267,7 @@ private bool LoadMenuProfile()
                     else if (key.StartsWith("int."))
                     {
                         string prefKey = key.Substring(4);
-                        if (prefKey != "M_MenuLanguageIndex" && int.TryParse(value, out int v)) PlayerPrefs.SetInt(prefKey, v);
+                        if (int.TryParse(value, out int v)) PlayerPrefs.SetInt(prefKey, v);
                     }
                     else if (key.StartsWith("float."))
                     {

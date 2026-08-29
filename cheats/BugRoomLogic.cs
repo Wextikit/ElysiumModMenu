@@ -74,7 +74,7 @@ private void TryBugRoomAutoKillShieldTick()
             if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
             {
                 if (!TryFindBugRoomHostShieldPair(out PlayerControl killer, out PlayerControl hostTarget)) return;
-                try { killer.CmdCheckMurder(hostTarget); } catch { }
+                try { killer.CmdCheckMurder(hostTarget); } catch (global::System.Exception __elysiumCaught12) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught12); }
                 return;
             }
 
@@ -83,7 +83,7 @@ private void TryBugRoomAutoKillShieldTick()
             PlayerControl target = FindBugRoomShieldKillTarget(local);
             if (target == null) return;
 
-            try { local.CmdCheckMurder(target); } catch { }
+            try { local.CmdCheckMurder(target); } catch (global::System.Exception __elysiumCaught13) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught13); }
         }
 
 private void TryBugRoomImpMeetingTick()
@@ -121,8 +121,8 @@ private void TryBugRoomImpMeetingTick()
             }
 
             bool imp = false;
-            try { imp = local.Data.Role.IsImpostor; } catch { }
-            try { imp = imp || RoleManager.IsImpostorRole(local.Data.RoleType); } catch { }
+            try { imp = local.Data.Role.IsImpostor; } catch (global::System.Exception __elysiumCaught14) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught14); }
+            try { imp = imp || RoleManager.IsImpostorRole(local.Data.RoleType); } catch (global::System.Exception __elysiumCaught15) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught15); }
             if (!imp)
             {
                 bugRoomImpMeetingTimer = 0f;
@@ -166,7 +166,7 @@ private void TryGlitchRoomGodModeTick()
             if (glitchRoomGodModeTimer > 0f && now < glitchRoomGodModeTimer) return;
             glitchRoomGodModeTimer = now + 0.20f;
 
-            try { local.RpcProtectPlayer(local, local.Data.DefaultOutfit.ColorId); } catch { }
+            try { local.RpcProtectPlayer(local, local.Data.DefaultOutfit.ColorId); } catch (global::System.Exception __elysiumCaught16) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught16); }
         }
 
 private void TryGlitchRoomGodModeAllTick()
@@ -217,7 +217,7 @@ private static void ProtectGlitchRoomEveryone(bool notify)
                         local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId);
                         count++;
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught17) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught17); }
                 }
 
                 if (!notify) return;
@@ -263,7 +263,7 @@ private void TryGlitchRoomForcedProtectionTick()
                 {
                     if (target != null && target.protectedByGuardianId >= 0)
                     {
-                        try { target.RemoveProtection(); } catch { }
+                        try { target.RemoveProtection(); } catch (global::System.Exception __elysiumCaught18) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught18); }
                     }
 
                     glitchRoomProtectionRemove.Add(id);
@@ -274,7 +274,7 @@ private void TryGlitchRoomForcedProtectionTick()
 
                 PlayerControl local = PlayerControl.LocalPlayer;
                 if (local == null || local.Data == null) continue;
-                try { local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId); } catch { }
+                try { local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId); } catch (global::System.Exception __elysiumCaught19) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught19); }
             }
 
             foreach (byte id in glitchRoomProtectionRemove)
@@ -390,7 +390,7 @@ private void ResetGlitchRoomState()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught20) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught20); }
 
             PlayerControl_TurnOnProtection_Patch.ClearProtectionState();
             settingsDirty = true;
@@ -541,7 +541,7 @@ private static bool TryClickBugRoomProtectButton()
                         if (mb != null && TryClickBugRoomButtonObject(mb))
                             return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught21) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught21); }
 
             return false;
         }
@@ -559,7 +559,7 @@ private static bool ClickBugRoomPassiveButton(PassiveButton btn)
                     clicked = true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught22) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught22); }
 
             try
             {
@@ -567,7 +567,7 @@ private static bool ClickBugRoomPassiveButton(PassiveButton btn)
                 btn.ReceiveClickUp();
                 clicked = true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught23) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught23); }
 
             if (TryClickBugRoomButtonObject(btn)) clicked = true;
             return clicked;
@@ -596,7 +596,7 @@ private static bool TryClickBugRoomButtonObject(object obj)
                     clicked = true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught24) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught24); }
 
             return clicked;
         }
@@ -690,8 +690,8 @@ private static bool IsBugRoomReadyKiller(PlayerControl pc)
                 if (pc.Data.Disconnected || pc.Data.IsDead) return false;
                 bool canKill = pc.Data.Role != null && pc.Data.Role.CanUseKillButton;
                 bool imp = false;
-                try { imp = pc.Data.Role != null && pc.Data.Role.IsImpostor; } catch { }
-                try { imp = imp || RoleManager.IsImpostorRole(pc.Data.RoleType); } catch { }
+                try { imp = pc.Data.Role != null && pc.Data.Role.IsImpostor; } catch (global::System.Exception __elysiumCaught25) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught25); }
+                try { imp = imp || RoleManager.IsImpostorRole(pc.Data.RoleType); } catch (global::System.Exception __elysiumCaught26) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught26); }
                 if (!canKill || !imp) return false;
                 if (pc.inVent || pc.onLadder || pc.inMovingPlat) return false;
 
@@ -730,7 +730,7 @@ private static List<PlayerControl> GetBugRoomKillTargets()
                 }
                 plrs.Sort((a, b) => a.PlayerId.CompareTo(b.PlayerId));
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught27) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught27); }
             return plrs;
         }
     }

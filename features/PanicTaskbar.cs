@@ -172,7 +172,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught241) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught241); }
         }
 
         private static void ApplyRgbRenderer(Renderer rend, Color col)
@@ -214,7 +214,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught242) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught242); }
         }
 
         private static Texture2D GetRgbTaskWhiteTex()
@@ -273,7 +273,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught243) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught243); }
         }
 
         private static void AddRgbTaskParts(Transform root, HashSet<int> seenSprites, HashSet<int> seenImgs, HashSet<int> seenTexts)
@@ -347,7 +347,7 @@ namespace ElysiumModMenu
                     rgbTaskImgs.Add(img);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught244) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught244); }
         }
 
         private static bool IsUnderTasksPanel(Transform tr)
@@ -380,7 +380,7 @@ namespace ElysiumModMenu
                 Vector3 s = tr.lossyScale;
                 if (Mathf.Abs(s.x) > Mathf.Abs(s.y) * 2.2f) return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught245) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught245); }
 
             string n = FullPath(tr).ToLowerInvariant();
             return n.Contains("total") || n.Contains("complete") || n.Contains("progress") || n.Contains("fill");
@@ -425,7 +425,7 @@ namespace ElysiumModMenu
                     if (LooksLikeTotalTaskPath(tr) && HasTaskBarBits(tr)) AddTaskRoot(roots, tr);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught246) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught246); }
 
             return roots;
         }
@@ -445,7 +445,7 @@ namespace ElysiumModMenu
 
                 roots.Add(tr);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught247) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught247); }
         }
 
         private static bool LooksLikeTaskRootName(string name)
@@ -528,7 +528,7 @@ namespace ElysiumModMenu
                         return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught248) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught248); }
 
             return false;
         }
@@ -600,7 +600,7 @@ namespace ElysiumModMenu
                             mats[m].SetTexture("_MainTex", tex[m]);
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught249) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught249); }
             }
 
             rgbTaskSprites.Clear();
@@ -636,7 +636,7 @@ namespace ElysiumModMenu
                     fld.SetValue(null, false);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught250) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught250); }
 
             isPanicked = true;
             showMenu = false;
@@ -648,7 +648,7 @@ namespace ElysiumModMenu
                 var stamp = ModManager.Instance.ModStamp;
                 if (stamp) stamp.enabled = false;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught251) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught251); }
 
             try
             {
@@ -656,10 +656,10 @@ namespace ElysiumModMenu
                 if (scene.name == "MainMenu" || scene.name == "MatchMaking")
                     SceneManager.LoadScene(scene.name);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught252) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught252); }
 
-            try { Harmony.UnpatchID("com.elysiummodmenu.harmony"); } catch { }
-            try { if (activeGui != null) activeGui.enabled = false; } catch { }
+            try { Harmony.UnpatchID("com.elysiummodmenu.harmony"); } catch (global::System.Exception __elysiumCaught253) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught253); }
+            try { if (activeGui != null) activeGui.enabled = false; } catch (global::System.Exception __elysiumCaught254) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught254); }
         }
 
         private static void ResetAllBindWaitsStatic()
@@ -690,6 +690,12 @@ namespace ElysiumModMenu
             isWaitBindSetAllGhost = false;
             isWaitBindSetAllGhostImp = false;
             isWaitBindReviveAll = false;
+            isWaitBindToggleRadar = false;
+            isWaitBindToggleReplay = false;
+            isWaitBindToggleReplayConsole = false;
+            isWaitBindToggleRadarIcons = false;
+            isWaitBindToggleReplayIcons = false;
+            isWaitBindToggleAlwaysChat = false;
         }
 
         [HarmonyPatch]
@@ -707,7 +713,7 @@ namespace ElysiumModMenu
 
             public static void Postfix()
             {
-                try { TickRgbTaskBar(); } catch { }
+                try { TickRgbTaskBar(); } catch (global::System.Exception __elysiumCaught255) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught255); }
             }
         }
     }

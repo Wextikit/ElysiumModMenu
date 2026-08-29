@@ -93,7 +93,7 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
                 if (rgbMenuMode)
                     source = GetStableMenuAccentSource();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught438) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught438); }
 
             return GetThemeAccentColor(source);
         }
@@ -703,7 +703,7 @@ private static void ApplyTelemetryPreference()
                 UnityEngine.Analytics.Analytics.deviceStatsEnabled = enabled;
                 UnityEngine.Analytics.PerformanceReporting.enabled = enabled;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught439) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught439); }
         }
 
 public static HashSet<int> votedPlayerIds = new HashSet<int>();
@@ -863,9 +863,10 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
             text = MenuText(text);
             int reqW = width > 0 ? width : 200;
             int finalW = Mathf.RoundToInt(Mathf.Clamp(reqW, 82f, Mathf.Max(82f, GetMenuBodyWidth() - 18f)));
-            GUILayout.BeginHorizontal(GUILayout.Width(finalW), GUILayout.Height(20));
+            GUILayout.BeginHorizontal(GUILayout.Width(finalW), GUILayout.Height(22));
 
-            Rect animSwitchRect = GUILayoutUtility.GetRect(30f, 16f, GUILayout.Width(30f), GUILayout.Height(16f));
+            Rect switchSlot = GUILayoutUtility.GetRect(30f, 22f, GUILayout.Width(30f), GUILayout.Height(22f));
+            Rect animSwitchRect = new Rect(switchSlot.x, switchSlot.y + 3f, 30f, 16f);
             bool clickedBox = GUI.Button(animSwitchRect, "", value ? trackOnStyle : trackOffStyle);
             DrawAnimatedSwitch(animSwitchRect, value, animKey ?? text);
 
@@ -885,7 +886,7 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
 
             GUIContent toggleContent = GUIContent.Temp(text);
             float toggleTextWidth = Mathf.Min(Mathf.Ceil(menuToggleTextStyle.CalcSize(toggleContent).x) + 8f, Mathf.Max(40f, finalW - 42f));
-            Rect textRect = GUILayoutUtility.GetRect(toggleTextWidth, 18f, GUILayout.Width(toggleTextWidth), GUILayout.Height(18f));
+            Rect textRect = GUILayoutUtility.GetRect(toggleTextWidth, 22f, GUILayout.Width(toggleTextWidth), GUILayout.Height(22f));
             GUI.Label(textRect, toggleContent, menuToggleTextStyle);
 
             bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
@@ -916,8 +917,9 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
         private bool DrawHostToggle(bool value, string text, float totalWidth = 250f)
         {
             text = MenuText(text);
-            GUILayout.BeginHorizontal(GUILayout.MinWidth(totalWidth), GUILayout.Height(20));
-            Rect animSwitchRect = GUILayoutUtility.GetRect(30f, 16f, GUILayout.Width(30f), GUILayout.Height(16f));
+            GUILayout.BeginHorizontal(GUILayout.MinWidth(totalWidth), GUILayout.Height(22));
+            Rect switchSlot = GUILayoutUtility.GetRect(30f, 22f, GUILayout.Width(30f), GUILayout.Height(22f));
+            Rect animSwitchRect = new Rect(switchSlot.x, switchSlot.y + 3f, 30f, 16f);
             bool clickedBox = GUI.Button(animSwitchRect, "", value ? trackOnStyle : trackOffStyle);
             DrawAnimatedSwitch(animSwitchRect, value, text);
             GUILayout.Space(6);
@@ -936,7 +938,7 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
 
             GUIContent hostToggleContent = GUIContent.Temp(text);
             float hostToggleTextWidth = Mathf.Ceil(hostToggleTextStyle.CalcSize(hostToggleContent).x) + 8f;
-            Rect textRect = GUILayoutUtility.GetRect(hostToggleTextWidth, 16f, GUILayout.Width(hostToggleTextWidth), GUILayout.Height(16f));
+            Rect textRect = GUILayoutUtility.GetRect(hostToggleTextWidth, 22f, GUILayout.Width(hostToggleTextWidth), GUILayout.Height(22f));
             GUI.Label(textRect, hostToggleContent, hostToggleTextStyle);
 
             bool clickedText = Event.current.type == EventType.MouseDown && textRect.Contains(Event.current.mousePosition);
@@ -982,6 +984,12 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
                 DrawKeybindRow("Ghost All:", ref bindSetAllGhost, ref isWaitBindSetAllGhost);
                 DrawKeybindRow("Revive All:", ref bindReviveAll, ref isWaitBindReviveAll);
                 DrawKeybindRow("All -> Ghost Imp:", ref bindSetAllGhostImp, ref isWaitBindSetAllGhostImp);
+                DrawKeybindRow("Toggle Radar:", ref bindToggleRadar, ref isWaitBindToggleRadar);
+                DrawKeybindRow("Toggle Replay:", ref bindToggleReplay, ref isWaitBindToggleReplay);
+                DrawKeybindRow("Replay Console:", ref bindToggleReplayConsole, ref isWaitBindToggleReplayConsole);
+                DrawKeybindRow("Toggle Radar Icons:", ref bindToggleRadarIcons, ref isWaitBindToggleRadarIcons);
+                DrawKeybindRow("Toggle Replay Icons:", ref bindToggleReplayIcons, ref isWaitBindToggleReplayIcons);
+                DrawKeybindRow("Toggle Always Chat:", ref bindToggleAlwaysChat, ref isWaitBindToggleAlwaysChat);
             }
             finally { GUILayout.EndVertical(); }
         }
@@ -1048,6 +1056,12 @@ private void ResetAllBindWaits()
             isWaitBindSetAllGhost = false;
             isWaitBindSetAllGhostImp = false;
             isWaitBindReviveAll = false;
+            isWaitBindToggleRadar = false;
+            isWaitBindToggleReplay = false;
+            isWaitBindToggleReplayConsole = false;
+            isWaitBindToggleRadarIcons = false;
+            isWaitBindToggleReplayIcons = false;
+            isWaitBindToggleAlwaysChat = false;
         }
 
 private void DrawGeneralTab()

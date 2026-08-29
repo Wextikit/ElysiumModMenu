@@ -97,8 +97,8 @@ private static bool TrySetGhostRole(PlayerControl target, bool impostorGhost, ou
             {
                 if (!Enum.TryParse(roleName, true, out RoleTypes ghostRole)) continue;
 
-                try { target.RpcSetRole(ghostRole, true); } catch { }
-                try { RoleManager.Instance?.SetRole(target, ghostRole); } catch { }
+                try { target.RpcSetRole(ghostRole, true); } catch (global::System.Exception __elysiumCaught131) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught131); }
+                try { RoleManager.Instance?.SetRole(target, ghostRole); } catch (global::System.Exception __elysiumCaught132) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught132); }
 
                 methodUsed = $"SetRole:{roleName}";
                 return true;
@@ -148,7 +148,7 @@ private static bool TryActivateGhostState(PlayerControl target, out string metho
 private static bool TryDie(PlayerControl target, DeathReason reason, bool allowAnimation)
         {
             try { target.Die(reason, allowAnimation); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught133) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught133); }
             return target != null && target.Data != null && target.Data.IsDead;
         }
 
@@ -165,7 +165,7 @@ private static bool TryInvokeNoArg(object target, string methodName)
                     return target is PlayerControl player && player.Data != null && player.Data.IsDead;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught134) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught134); }
             return false;
         }
 
@@ -178,7 +178,7 @@ private static bool TrySetDeadFlag(PlayerControl target)
                 if (target.Collider != null) target.Collider.enabled = false;
                 if (target.MyPhysics != null) target.MyPhysics.gameObject.layer = LayerMask.NameToLayer("Ghost");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught135) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught135); }
             return target.Data.IsDead;
         }
 
@@ -265,7 +265,7 @@ public static void ReviveAllPlayers()
                                 mb.gameObject.SetActive(false);
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught136) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught136); }
 
                     bool wasImpTeam = false;
                     try
@@ -281,12 +281,12 @@ public static void ReviveAllPlayers()
                             wasImpTeam = rt == RoleTypes.Impostor || rt == RoleTypes.Shapeshifter || (int)rt == 9 || (int)rt == 18;
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught137) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught137); }
 
                     pc.RpcSetRole(wasImpTeam ? RoleTypes.Impostor : RoleTypes.Crewmate, true);
                     count++;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught138) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught138); }
             }
 
             var netObj = GameData.Instance?.GetComponent<InnerNetObject>();

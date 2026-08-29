@@ -24,7 +24,7 @@ namespace ElysiumModMenu
                     TryRepairOptionsMenu(__instance);
                     TryOpenOptionsMenuSoft(__instance);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught347) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught347); }
 
                 return null;
             }
@@ -39,14 +39,14 @@ namespace ElysiumModMenu
                 if (menu.DefaultButtonSelected == null && menu.BackButton != null)
                     menu.DefaultButtonSelected = menu.BackButton;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught348) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught348); }
 
             try
             {
                 if (menu.ControllerSelectable == null)
                     menu.ControllerSelectable = new Il2CppSystem.Collections.Generic.List<UiElement>();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught349) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught349); }
 
             try
             {
@@ -57,20 +57,20 @@ namespace ElysiumModMenu
                         menu.Tabs = new Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<TabGroup>(tabs);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught350) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught350); }
         }
 
         private static void TryOpenOptionsMenuSoft(OptionsMenuBehaviour menu)
         {
             if (menu == null) return;
 
-            try { if (menu.gameObject != null) menu.gameObject.SetActive(true); } catch { }
-            try { if (menu.Background != null && menu.Background.gameObject != null) menu.Background.gameObject.SetActive(true); } catch { }
-            try { menu.ResetText(); } catch { }
-            try { menu.UpdateButtons(); } catch { }
-            try { menu.OpenTabGroup(0); } catch { }
-            try { if (menu.MenuButton != null) menu.MenuButton.SelectButton(true); } catch { }
-            try { menu.GrabControllerButtons(); } catch { }
+            try { if (menu.gameObject != null) menu.gameObject.SetActive(true); } catch (global::System.Exception __elysiumCaught351) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught351); }
+            try { if (menu.Background != null && menu.Background.gameObject != null) menu.Background.gameObject.SetActive(true); } catch (global::System.Exception __elysiumCaught352) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught352); }
+            try { menu.ResetText(); } catch (global::System.Exception __elysiumCaught353) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught353); }
+            try { menu.UpdateButtons(); } catch (global::System.Exception __elysiumCaught354) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught354); }
+            try { menu.OpenTabGroup(0); } catch (global::System.Exception __elysiumCaught355) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught355); }
+            try { if (menu.MenuButton != null) menu.MenuButton.SelectButton(true); } catch (global::System.Exception __elysiumCaught356) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught356); }
+            try { menu.GrabControllerButtons(); } catch (global::System.Exception __elysiumCaught357) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught357); }
         }
     }
 }

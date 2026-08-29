@@ -53,6 +53,8 @@ public static class ElysiumAutoLobbyReturn
             private static int attempt;
             private static float nextAttemptAt;
             private static bool pending;
+            private static float nextManagerSearchAt;
+            private static EndGameManager cachedEndGameManager;
 
             public static void UpdateLogic()
             {
@@ -67,7 +69,13 @@ public static class ElysiumAutoLobbyReturn
                     return;
                 }
 
-                EndGameManager val = UnityEngine.Object.FindObjectOfType<EndGameManager>();
+                EndGameManager val = cachedEndGameManager;
+                if (val == null && Time.unscaledTime >= nextManagerSearchAt)
+                {
+                    nextManagerSearchAt = Time.unscaledTime + 0.20f;
+                    val = UnityEngine.Object.FindObjectOfType<EndGameManager>();
+                    cachedEndGameManager = val;
+                }
                 if (val != null)
                 {
                     int instanceID = val.gameObject.GetInstanceID();
@@ -113,6 +121,8 @@ public static class ElysiumAutoLobbyReturn
                 attempt = 0;
                 nextAttemptAt = 0f;
                 pending = false;
+                nextManagerSearchAt = 0f;
+                cachedEndGameManager = null;
             }
 
             private static bool ShouldAutoReturn()
@@ -130,7 +140,7 @@ public static class ElysiumAutoLobbyReturn
                     if (methodInfo != null)
                     {
                         try { methodInfo.Invoke(manager, null); return true; }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught270) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught270); }
                     }
                 }
                 return false;
@@ -183,7 +193,7 @@ public static class ElysiumAutoLobbyReturn
                             return true;
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught271) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught271); }
                 }
                 return false;
             }
@@ -206,7 +216,7 @@ public static class ElysiumAutoLobbyReturn
                             return true;
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught272) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught272); }
                 }
                 return false;
             }
@@ -866,7 +876,7 @@ public static class ElysiumAutoHostService
                             return player.protectedByGuardianId >= 0;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught273) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught273); }
                 return false;
             }
 
@@ -950,7 +960,7 @@ public static class ElysiumAutoHostService
 
             private static GameStartManager TryGetGameStartManager()
             {
-                try { if (DestroyableSingleton<GameStartManager>.InstanceExists) return DestroyableSingleton<GameStartManager>.Instance; } catch { }
+                try { if (DestroyableSingleton<GameStartManager>.InstanceExists) return DestroyableSingleton<GameStartManager>.Instance; } catch (global::System.Exception __elysiumCaught274) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught274); }
                 try { return UnityEngine.Object.FindObjectOfType<GameStartManager>(); } catch { return null; }
             }
 

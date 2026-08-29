@@ -76,7 +76,7 @@ public static void RegisterAntiCheatDisconnectNotice(int clientId, string player
 
                 ShowNotification(BuildAntiCheatDisconnectNotification(cleanName, cleanReason, ban));
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught374) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught374); }
         }
 
 private static void PruneAntiCheatDisconnectNotices()
@@ -100,7 +100,7 @@ private static void PruneAntiCheatDisconnectNotices()
                 for (int i = 0; i < stale.Count; i++)
                     pendingAntiCheatDisconnectNotices.Remove(stale[i]);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught375) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught375); }
         }
 
 private static bool TryConsumeAntiCheatDisconnectNotice(PlayerControl player, out string message)
@@ -192,7 +192,7 @@ public static class ElysiumAnticheat
                             var client = AmongUsClient.Instance.GetClientFromCharacter(player);
                             if (client != null) puid = GetPlayerPuid(player);
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught376) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught376); }
 
                         ElysiumModMenuGUI.AddToBanList(fc, puid, pName, $"Anticheat: {reason}");
 
@@ -217,7 +217,7 @@ public static class ElysiumAnticheat
                     if (__instance == null || __instance.myPlayer == null) return true;
                     if (!__instance.myPlayer.inVent) return false;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught377) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught377); }
 
                 return true;
             }
@@ -236,7 +236,7 @@ public static class ElysiumAnticheat
                     if (__instance != null && __instance.myPlayer == PlayerControl.LocalPlayer)
                         return false;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught378) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught378); }
                 return true;
             }
         }
@@ -289,7 +289,7 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
                 return true;
             }
             catch { return false; }
-            finally { try { copy?.Recycle(); } catch { } }
+            finally { try { copy?.Recycle(); } catch (global::System.Exception __elysiumCaught379) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught379); } }
         }
 
 private static string GetVentRoomLabel(ushort ventId)
@@ -344,7 +344,7 @@ private static string GetVentRoomLabel(ushort ventId)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught380) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught380); }
 
             return $"Vent #{ventId}";
         }
@@ -357,7 +357,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                 ventExploitBannedOwners.Add(owner);
                 ElysiumNetGuard.NetworkGuard.BanClient(owner, "Vent kick exploit", reason);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught381) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught381); }
         }
 
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
@@ -414,7 +414,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     {
                         Plugin.Instance?.Log?.LogWarning((object)$"[ANTICHEAT] blocked duplicate meeting RPC from {__instance.Data.PlayerName}: {(RpcCalls)callId}");
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught382) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught382); }
                     return false;
                 }
 
@@ -478,13 +478,13 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                                             var qcClient = AmongUsClient.Instance.GetClientFromCharacter(__instance);
                                             if (qcClient != null) qcPuid = ElysiumModMenuGUI.GetPlayerPuid(__instance);
                                         }
-                                        catch { }
+                                        catch (global::System.Exception __elysiumCaught383) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught383); }
                                         ElysiumModMenuGUI.AddToBanList(qcFc, qcPuid, qcName, "QuickChat Empty spam (anti-crash)");
                                     }
                                     ElysiumModMenuGUI.RegisterAntiCheatDisconnectNotice(__instance.OwnerId, qcName, "QuickChat spam", qcBan);
                                     AmongUsClient.Instance.KickPlayer(__instance.OwnerId, qcBan);
                                 }
-                                catch { }
+                                catch (global::System.Exception __elysiumCaught384) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught384); }
                             }
                             return false; 
                         }
@@ -554,7 +554,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught385) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught385); }
 
                 reader.Position = oldPos;
 
@@ -604,7 +604,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                         { isCheat = true; cheatReason = "Closed doors in H&S"; }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught386) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught386); }
 
                 reader.Position = oldPos;
 
@@ -706,7 +706,7 @@ public static bool pendingAutoMeeting = false;
                             ElysiumAnticheat.Flag(__instance, reason);
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught387) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught387); }
             }
         }
     }

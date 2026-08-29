@@ -30,7 +30,7 @@ namespace ElysiumModMenu
                 if (plr.Data != null && plr.Data.DefaultOutfit != null)
                     plr.Data.DefaultOutfit.ColorId = 0;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught220) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught220); }
         }
 
         private static void TickLocalColorOverride()
@@ -67,7 +67,7 @@ namespace ElysiumModMenu
             nextColorSnipeAt = Time.unscaledTime + 1f;
 
             try { PlayerControl.LocalPlayer.CmdCheckColor((byte)colorId); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught221) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught221); }
         }
 
         private static void TickFortegreenColor()
@@ -91,7 +91,7 @@ namespace ElysiumModMenu
             nextFortegreenAt = Time.unscaledTime + 1f;
 
             try { PlayerControl.LocalPlayer.RpcSetColor(18); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught222) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught222); }
         }
 
         private static bool IsLocalColorAvailable(int colorId)

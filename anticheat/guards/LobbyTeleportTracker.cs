@@ -124,7 +124,7 @@ internal static class LobbyTeleportPositionTracker
 			int clientId = NetworkGuard.ResolvePlayerClientId(player);
 			NetworkGuard.FlagLobbyTeleport(player, clientId, dist);
 		}
-		catch { }
+		catch (global::System.Exception __elysiumCaught639) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught639); }
 	}
 }
 }

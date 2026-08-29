@@ -83,9 +83,15 @@ private static void LoadKeybinds()
                 if (PlayerPrefs.HasKey("M_BndSetAllGhost")) bindSetAllGhost = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhost");
                 if (PlayerPrefs.HasKey("M_BndSetAllGhostImp")) bindSetAllGhostImp = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhostImp");
                 if (PlayerPrefs.HasKey("M_BndReviveAll")) bindReviveAll = (KeyCode)PlayerPrefs.GetInt("M_BndReviveAll");
+                if (PlayerPrefs.HasKey("M_BndToggleRadar")) bindToggleRadar = (KeyCode)PlayerPrefs.GetInt("M_BndToggleRadar");
+                if (PlayerPrefs.HasKey("M_BndToggleReplay")) bindToggleReplay = (KeyCode)PlayerPrefs.GetInt("M_BndToggleReplay");
+                if (PlayerPrefs.HasKey("M_BndToggleReplayConsole")) bindToggleReplayConsole = (KeyCode)PlayerPrefs.GetInt("M_BndToggleReplayConsole");
+                if (PlayerPrefs.HasKey("M_BndToggleRadarIcons")) bindToggleRadarIcons = (KeyCode)PlayerPrefs.GetInt("M_BndToggleRadarIcons");
+                if (PlayerPrefs.HasKey("M_BndToggleReplayIcons")) bindToggleReplayIcons = (KeyCode)PlayerPrefs.GetInt("M_BndToggleReplayIcons");
+                if (PlayerPrefs.HasKey("M_BndToggleAlwaysChat")) bindToggleAlwaysChat = (KeyCode)PlayerPrefs.GetInt("M_BndToggleAlwaysChat");
                 SyncKeybindDictionary();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught430) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught430); }
         }
 
 private void LoadConfig()
@@ -119,7 +125,7 @@ private void LoadConfig()
                 rgbMenuText = LoadBool("M_RgbMenuText", Plugin.RgbMenuTextConfig.Value);
                 boldMenuText = LoadBool("M_BoldMenuText", Plugin.BoldMenuTextConfig.Value);
                 whiteMenuTheme = LoadBool("M_WhiteTheme", whiteMenuTheme);
-                currentMenuLanguageIndex = 0;
+                currentMenuLanguageIndex = Mathf.Clamp(LoadInt("M_MenuLanguageIndex", currentMenuLanguageIndex), 0, menuLanguageNames.Length - 1);
                 selectedMenuProfileIndex = Mathf.Clamp(LoadInt("M_MenuProfileSlot", selectedMenuProfileIndex), 0, menuProfileCount - 1);
                 limitFps = LoadBool("M_LimitFps", limitFps);
                 fpsLimit = Mathf.Clamp(LoadInt("M_FpsLimit", fpsLimit), 1, 560);
@@ -185,13 +191,14 @@ private void LoadConfig()
                 chatNoCooldown = LoadBool("M_ChatNoCooldown", chatNoCooldown);
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
-                chatHistoryLimit = 20;
+                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 200);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
                 enableChatLog = LoadBool("M_EnableChatLog", enableChatLog);
                 enableColorCommand = LoadBool("M_EnableColorCommand", enableColorCommand);
                 blockRainbowChat = LoadBool("M_BlockRainbowChat", blockRainbowChat);
+                autoChatEveryoneDelay = Mathf.Clamp(LoadFloat("M_AutoChatEveryoneDelay", autoChatEveryoneDelay), 0f, 10f);
                 blockFortegreenChat = LoadBool("M_BlockFortegreenChat", blockFortegreenChat);
                 skipRoleIntroAnim = LoadBool("M_SkipRoleIntroAnim", skipRoleIntroAnim);
                 skipKillAnimation = LoadBool("M_SkipKillAnimation", skipKillAnimation);
@@ -227,14 +234,24 @@ private void LoadConfig()
                     radarRect.width,
                     radarRect.height);
                 showReplay = LoadBool("M_ShowReplay", showReplay);
+                showReplayLog = LoadBool("M_ShowReplayLog", showReplayLog);
+                replayRecordEnabled = LoadBool("M_ReplayRecordEnabled", replayRecordEnabled);
+                replayOverlayOnRadar = LoadBool("M_ReplayOverlayOnRadar", replayOverlayOnRadar);
+                replayHideRadarLive = LoadBool("M_ReplayHideRadarLive", replayHideRadarLive);
                 replayOnlyLastSeconds = LoadBool("M_ReplayOnlyLastSeconds", replayOnlyLastSeconds);
-                replaySeconds = Mathf.Clamp(LoadFloat("M_ReplaySeconds", replaySeconds), 5f, 180f);
+                replaySeconds = Mathf.Clamp(LoadFloat("M_ReplaySeconds", replaySeconds), 5f, 900f);
                 replayDrawIcons = LoadBool("M_ReplayDrawIcons", replayDrawIcons);
+                replayFilterMask = LoadInt("M_ReplayFilterMask", replayFilterMask) & 0x3FF;
                 replayRect = new Rect(
                     LoadFloat("M_ReplayX", replayRect.x),
                     LoadFloat("M_ReplayY", replayRect.y),
-                    replayRect.width,
-                    replayRect.height);
+                    Mathf.Clamp(LoadFloat("M_ReplayW", replayRect.width), 460f, 1800f),
+                    Mathf.Clamp(LoadFloat("M_ReplayH", replayRect.height), 320f, 1200f));
+                replayLogRect = new Rect(
+                    LoadFloat("M_ReplayLogX", replayLogRect.x),
+                    LoadFloat("M_ReplayLogY", replayLogRect.y),
+                    Mathf.Clamp(LoadFloat("M_ReplayLogW", replayLogRect.width), 520f, 1400f),
+                    Mathf.Clamp(LoadFloat("M_ReplayLogH", replayLogRect.height), 300f, 1000f));
                 RevealVotesEnabled = LoadBool("M_RevealVotes", RevealVotesEnabled);
                 noTaskMode = LoadBool("M_NoTaskMode", noTaskMode);
                 noMapCooldowns = LoadBool("M_NoMapCooldowns", noMapCooldowns);
@@ -335,8 +352,8 @@ private void LoadConfig()
                 windowRect = new Rect(
                     LoadFloat("M_MenuWindowX", windowRect.x),
                     LoadFloat("M_MenuWindowY", windowRect.y),
-                    Mathf.Clamp(LoadFloat("M_MenuWindowW", windowRect.width), 640f, 1400f),
-                    Mathf.Clamp(LoadFloat("M_MenuWindowH", windowRect.height), 420f, 900f));
+                    Mathf.Clamp(LoadFloat("M_MenuWindowW", windowRect.width), 820f, 1400f),
+                    Mathf.Clamp(LoadFloat("M_MenuWindowH", windowRect.height), 480f, 1000f));
                 currentTab = Mathf.Clamp(LoadInt("M_CurrentTab", currentTab), 0, tabNames.Length - 1);
                 targetTabIndex = Mathf.Clamp(LoadInt("M_TargetTab", currentTab), 0, tabNames.Length - 1);
                 currentGeneralSubTab = Mathf.Clamp(LoadInt("M_CurrentGeneralSubTab", currentGeneralSubTab), 0, generalSubTabs.Length - 1);
@@ -370,7 +387,7 @@ private void LoadConfig()
                 SyncKeybindDictionary();
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught431) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught431); }
         }
 
 private static void ApplyFpsLimit()
@@ -379,31 +396,37 @@ private static void ApplyFpsLimit()
             {
                 if (!limitFps)
                 {
-                    Application.targetFrameRate = -1;
-                    lastAppliedFpsLimit = -1;
+                    if (lastAppliedFpsLimit != -1)
+                    {
+                        Application.targetFrameRate = -1;
+                        if (fpsLimitPreviousVSync >= 0) QualitySettings.vSyncCount = fpsLimitPreviousVSync;
+                        fpsLimitPreviousVSync = -1;
+                        lastAppliedFpsLimit = -1;
+                    }
                     return;
                 }
 
                 fpsLimit = Mathf.Clamp(fpsLimit, 1, 560);
                 if (lastAppliedFpsLimit == fpsLimit) return;
+                if (lastAppliedFpsLimit == -1) fpsLimitPreviousVSync = QualitySettings.vSyncCount;
                 Application.targetFrameRate = fpsLimit;
                 QualitySettings.vSyncCount = 0;
                 lastAppliedFpsLimit = fpsLimit;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught432) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught432); }
         }
 
 private static void TrimChatHistoryToLimit()
         {
             try
             {
-                chatHistoryLimit = 20;
+                chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 200);
                 while (ChatHistory.sentMessages.Count > chatHistoryLimit)
                     ChatHistory.sentMessages.RemoveAt(0);
 
                 ChatHistory.HistoryIndex = Mathf.Clamp(ChatHistory.HistoryIndex, 0, ChatHistory.sentMessages.Count);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught433) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught433); }
         }
 
 private static void SyncKeybindDictionary()
@@ -436,11 +459,17 @@ private static void SyncKeybindDictionary()
                 keyBinds["All Ghost"] = bindSetAllGhost;
                 keyBinds["All Ghost Imp"] = bindSetAllGhostImp;
                 keyBinds["Revive All"] = bindReviveAll;
+                keyBinds["Toggle Radar"] = bindToggleRadar;
+                keyBinds["Toggle Replay"] = bindToggleReplay;
+                keyBinds["Toggle Replay Console"] = bindToggleReplayConsole;
+                keyBinds["Toggle Radar Icons"] = bindToggleRadarIcons;
+                keyBinds["Toggle Replay Icons"] = bindToggleReplayIcons;
+                keyBinds["Toggle Always Chat"] = bindToggleAlwaysChat;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught434) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught434); }
         }
 
-private Texture2D MakeRoundedTex(int size, Color col, float radius)
+private static Texture2D MakeRoundedTex(int size, Color col, float radius)
         {
             Texture2D result = new Texture2D(size, size, TextureFormat.RGBA32, false);
             result.hideFlags = HideFlags.HideAndDontSave;
@@ -490,7 +519,7 @@ private void UpdateRoundedGradientTex(Texture2D tex, Color left, Color right, fl
             tex.Apply();
         }
 
-private RectOffset CreateRectOffset(int left, int right, int top, int bottom)
+private static RectOffset CreateRectOffset(int left, int right, int top, int bottom)
         {
             return new RectOffset { left = left, right = right, top = top, bottom = bottom };
         }
@@ -604,7 +633,7 @@ private static Color GetStableMenuAccentSource()
                 if (activeGui != null && activeGui.menuColors != null && activeGui.menuColors.Length > 0)
                     return activeGui.menuColors[Mathf.Clamp(activeGui.currentMenuColorIndex, 0, activeGui.menuColors.Length - 1)];
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught435) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught435); }
 
             return currentAccentColor;
         }
@@ -620,7 +649,7 @@ private static bool MenuAccentPairActive()
             {
                 return activeGui != null && activeGui.HasMenuAccentPair();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught436) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught436); }
 
             return false;
         }
@@ -639,7 +668,7 @@ private static Color GetStableMenuControlAccentSource()
                 if (activeGui != null)
                     return activeGui.GetSelectedMenuControlColor();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught437) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught437); }
 
             return currentAccentColor;
         }

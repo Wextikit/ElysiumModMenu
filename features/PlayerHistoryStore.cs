@@ -111,7 +111,7 @@ private static void UpsertPlayerHistory(PlayerControl pc)
                 IndexPlayerHistoryEntry(item, pc.Data.ClientId);
                 if (changed) WritePlayerHistoryFile();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught257) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught257); }
         }
 
 private static bool TryGetSafeIdentity(PlayerControl player, out SafePlayerIdentitySnapshot snapshot)
@@ -152,7 +152,7 @@ private static bool TryGetSafeIdentity(PlayerControl player, out SafePlayerIdent
                     if (safeIdentityByClientId.TryGetValue(data.ClientId, out snapshot)) return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught258) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught258); }
 
             snapshot = null;
             return false;
@@ -183,7 +183,7 @@ private static bool TryGetPlayerDisplayLevel(PlayerControl player, SafePlayerIde
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught259) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught259); }
 
             try
             {
@@ -198,7 +198,7 @@ private static bool TryGetPlayerDisplayLevel(PlayerControl player, SafePlayerIde
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught260) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught260); }
 
             if (snapshot != null && snapshot.Level > 0)
             {
@@ -346,7 +346,7 @@ private static void TryRefreshSafeIdentity(PlayerControl player, int clientId)
                 if (safeIdentityByClientId.TryGetValue(clientId, out refreshed) && IsSafeIdentityComplete(refreshed))
                     safeIdentityCaptureAttempts[clientId] = 6;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught261) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught261); }
         }
 
 private static void CaptureSafeIdentity(ClientData client)
@@ -382,7 +382,7 @@ private static void CaptureSafeIdentity(ClientData client)
 
                 safeIdentityByClientId[snapshot.ClientId] = snapshot;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught262) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught262); }
         }
 
 [HarmonyPatch(typeof(AmongUsClient), "OnPlayerJoined")]
@@ -418,7 +418,7 @@ private static void CaptureSafeIdentity(ClientData client)
                     safeIdentityNextCaptureAt.Remove(clientId);
                     ventExploitBannedOwners.Remove(clientId);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught263) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught263); }
             }
         }
 
@@ -465,7 +465,7 @@ public static string GetPlayerPuid(PlayerControl player)
                 if (client != null && !string.IsNullOrWhiteSpace(client.ProductUserId))
                     return client.ProductUserId.Trim();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught264) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught264); }
 
             return "Unknown";
         }
@@ -636,7 +636,7 @@ private static void EnsurePlayerHistoryLoaded()
                 AddLoadedPlayerHistoryEntry(current);
                 InvalidatePlayerHistoryViewCache();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught265) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught265); }
         }
 
 private static void AddLoadedPlayerHistoryEntry(PlayerHistoryEntry entry)
@@ -701,7 +701,7 @@ private static void MarkPlayerHistoryLeft(byte playerId)
                 item.LastSeenUtc = item.LeftUtc.Value;
                 WritePlayerHistoryFile();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught266) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught266); }
         }
 
 private static void MarkPlayerHistoryLeftByClientId(int clientId)
@@ -718,7 +718,7 @@ private static void MarkPlayerHistoryLeftByClientId(int clientId)
                 playerHistoryKeysByClientId.Remove(clientId);
                 WritePlayerHistoryFile();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught267) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught267); }
         }
 
 public static void RecordPlayerRpc(PlayerControl pc, byte callId)
@@ -740,7 +740,7 @@ public static void RecordPlayerRpc(PlayerControl pc, byte callId)
                     WritePlayerHistoryFile();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught268) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught268); }
         }
 
 private static string FormatRpcHistory(PlayerHistoryEntry entry)
@@ -784,7 +784,7 @@ private static void WritePlayerHistoryFile()
 
                 System.IO.File.WriteAllLines(path, lines.ToArray(), Encoding.UTF8);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught269) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught269); }
         }
     }
 }

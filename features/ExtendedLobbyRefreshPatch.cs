@@ -44,6 +44,6 @@ public static class ExtendedLobbyRefreshPatch
 {
     public static void Postfix()
     {
-        try { if (ElysiumModMenuGUI.extendedLobby && ExtendedLobbyListPatch.scroller != null) ExtendedLobbyListPatch.scroller.ScrollRelative(new Vector2(0f, -100f)); } catch { }
+        try { if (ElysiumModMenuGUI.extendedLobby && ExtendedLobbyListPatch.scroller != null) ExtendedLobbyListPatch.scroller.ScrollRelative(new Vector2(0f, -100f)); } catch (global::System.Exception __elysiumCaught216) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught216); }
     }
 }

@@ -28,8 +28,9 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
 
     public static void UpdateStyledNames(bool force = false)
     {
+        if (StyledNames.Count == 0) return;
         if (!force && Time.unscaledTime < NextStyleUpdateAt) return;
-        NextStyleUpdateAt = Time.unscaledTime + 0.05f;
+        NextStyleUpdateAt = Time.unscaledTime + 0.10f;
 
         for (int i = StyledNames.Count - 1; i >= 0; i--)
         {
@@ -42,17 +43,21 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
                     continue;
                 }
 
-                entry.Text.gameObject.SetActive(ElysiumModMenuGUI.moreLobbyInfo);
-                if (!ElysiumModMenuGUI.moreLobbyInfo)
+                bool enabled = ElysiumModMenuGUI.moreLobbyInfo;
+                if (entry.Text.gameObject.activeSelf != enabled) entry.Text.gameObject.SetActive(enabled);
+                if (!enabled)
                 {
-                    entry.InfoText.text = entry.OriginalInfoText;
+                    if (entry.InfoText.text != entry.OriginalInfoText) entry.InfoText.text = entry.OriginalInfoText;
                     continue;
                 }
 
                 string styledName = ElysiumModMenuGUI.rgbMenuMode
                     ? $"<color=#{ElysiumModMenuGUI.GetMenuControlAccentHex()}>{entry.HostName}</color>"
                     : ElysiumModMenuGUI.ApplyMenuShimmer(entry.HostName);
-                entry.Text.text = $"<size=75%><b>{styledName}</b></size>";
+                string hostText = $"<size=75%><b>{styledName}</b></size>";
+                if (entry.Text.text != hostText) entry.Text.text = hostText;
+                string info = $"{StyleInfo(entry.Capacity)}  •  {entry.RoomCode}  •  {entry.Platform}  •  {entry.LobbyTime}";
+                if (entry.InfoText.text != info) entry.InfoText.text = info;
 
             }
             catch
@@ -107,8 +112,7 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
     {
         if (__instance == null || __instance.capacity == null) return;
 
-        // Anchor the label to this card's background and derive the target from
-        // its real bounds. This stays stable across resolution and list scaling.
+        // Use the card bounds so resolution and list scaling do not move the label.
         if (__instance.mapBackground == null) return;
         Transform nameParent = __instance.mapBackground.transform;
         if (nameParent == null) return;

@@ -140,7 +140,7 @@ namespace ElysiumModMenu
                 exitQueuedAt = -1f;
                 checkedGameId = int.MinValue;
                 try { AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame); }
-                catch { }
+                catch (global::System.Exception __elysiumCaught275) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught275); }
             }
         }
 
@@ -235,7 +235,7 @@ namespace ElysiumModMenu
                     return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught276) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught276); }
 
             if (TryClickConfirmByTextParent())
                 return true;
@@ -253,7 +253,7 @@ namespace ElysiumModMenu
                     return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught277) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught277); }
 
             return false;
         }
@@ -274,7 +274,7 @@ namespace ElysiumModMenu
                     if (ClickPassiveButton(button)) return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught278) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught278); }
 
             try
             {
@@ -289,7 +289,7 @@ namespace ElysiumModMenu
                     return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught279) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught279); }
 
             return false;
         }
@@ -302,7 +302,7 @@ namespace ElysiumModMenu
                 if (popup == null || !popup.gameObject.activeInHierarchy) return false;
 
                 CreateGameOptions createOptions = null;
-                try { createOptions = popup.createGameOptions; } catch { }
+                try { createOptions = popup.createGameOptions; } catch (global::System.Exception __elysiumCaught280) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught280); }
                 if (createOptions == null)
                     createOptions = UnityEngine.Object.FindObjectOfType<CreateGameOptions>();
                 if (createOptions == null || !createOptions.gameObject.activeInHierarchy) return false;
@@ -335,7 +335,7 @@ namespace ElysiumModMenu
                                 return true;
                             }
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught281) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught281); }
 
                         try
                         {
@@ -346,14 +346,14 @@ namespace ElysiumModMenu
                                 return true;
                             }
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught282) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught282); }
 
                         if (TryInvokeLikelyClickMethods(cursor.gameObject))
                             return true;
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught283) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught283); }
 
             return false;
         }
@@ -371,7 +371,7 @@ namespace ElysiumModMenu
                     invoked = true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught284) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught284); }
 
             try
             {
@@ -379,14 +379,14 @@ namespace ElysiumModMenu
                 button.ReceiveClickUp();
                 invoked = true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught285) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught285); }
 
             try
             {
                 if (TryInvokeLikelyClickMethods(button.gameObject))
                     invoked = true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught286) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught286); }
 
             return invoked;
         }
@@ -417,11 +417,11 @@ namespace ElysiumModMenu
                             method.Invoke(component, null);
                             invoked = true;
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught287) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught287); }
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught288) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught288); }
 
             return invoked;
         }
@@ -505,7 +505,7 @@ namespace ElysiumModMenu
                         Encoding.UTF8);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught289) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught289); }
         }
 
         private static void ReloadTargetsIfNeeded()
@@ -532,7 +532,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught290) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught290); }
         }
 
         private static string NormalizeCode(string value)
@@ -1020,7 +1020,7 @@ namespace ElysiumModMenu
                     if (n > 0) return n;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught291) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught291); }
 
             try
             {
@@ -1029,7 +1029,7 @@ namespace ElysiumModMenu
                     if (pc != null && pc.Data != null && !pc.Data.Disconnected && pc.PlayerId < 100)
                         n++;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught292) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught292); }
             return n;
         }
 
@@ -1044,7 +1044,7 @@ namespace ElysiumModMenu
                     if (raw != uint.MaxValue && raw < 10000) return (int)raw + 1;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught293) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught293); }
             return 0;
         }
 
@@ -1058,13 +1058,13 @@ namespace ElysiumModMenu
                 var co = au.CoJoinOnlineGameFromCode(code);
                 if (co != null) au.StartCoroutine(co);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught294) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught294); }
         }
 
         private static void Leave()
         {
             try { if (AmongUsClient.Instance != null) AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught295) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught295); }
         }
 
         private static bool InRoom()

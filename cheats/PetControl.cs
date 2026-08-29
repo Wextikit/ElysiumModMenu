@@ -170,7 +170,7 @@ namespace ElysiumModMenu
                         if (inside) pts.Add(p);
                     }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught120) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught120); }
 
             if (pts.Count == 0) return "Empty.";
             Paint = true;
@@ -196,9 +196,9 @@ namespace ElysiumModMenu
             if (me == null || me.cosmetics == null) return;
             me.moveable = true;
             if (me.MyPhysics != null && me.MyPhysics.body != null) me.MyPhysics.body.velocity = Vector2.zero;
-            try { if (me.cosmetics.PettingHand != null) me.cosmetics.PettingHand.StopPetting(); } catch { }
-            try { if (me.cosmetics.CurrentPet != null) me.cosmetics.CurrentPet.SetGettingPet(false, Vector2.zero); } catch { }
-            try { if (me.NetTransform != null && MeetingHud.Instance == null) me.NetTransform.RpcSnapTo(me.GetTruePosition()); } catch { }
+            try { if (me.cosmetics.PettingHand != null) me.cosmetics.PettingHand.StopPetting(); } catch (global::System.Exception __elysiumCaught121) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught121); }
+            try { if (me.cosmetics.CurrentPet != null) me.cosmetics.CurrentPet.SetGettingPet(false, Vector2.zero); } catch (global::System.Exception __elysiumCaught122) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught122); }
+            try { if (me.NetTransform != null && MeetingHud.Instance == null) me.NetTransform.RpcSnapTo(me.GetTruePosition()); } catch (global::System.Exception __elysiumCaught123) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught123); }
         }
 
         internal static void Tick(bool menuOpen)
@@ -214,7 +214,7 @@ namespace ElysiumModMenu
             {
                 me.moveable = true;
                 RecordStroke(menuOpen);
-                if (pts.Count == 0) { try { me.cosmetics.CurrentPet.SetGettingPet(false, Vector2.zero); } catch { } return; }
+                if (pts.Count == 0) { try { me.cosmetics.CurrentPet.SetGettingPet(false, Vector2.zero); } catch (global::System.Exception __elysiumCaught124) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught124); } return; }
                 if (pi >= pts.Count) pi = 0;
                 petPos = pts[pi];
             }
@@ -232,16 +232,16 @@ namespace ElysiumModMenu
                 me.moveable = false;
                 if (me.MyPhysics.body != null) me.MyPhysics.body.velocity = Vector2.zero;
                 petPos = t.transform.position;
-                try { petPos.y -= me.cosmetics.currentPet.yOffset * 2f; } catch { }
+                try { petPos.y -= me.cosmetics.currentPet.yOffset * 2f; } catch (global::System.Exception __elysiumCaught125) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught125); }
             }
 
-            try { me.cosmetics.CurrentPet.SetGettingPet(true, petPos); } catch { }
+            try { me.cosmetics.CurrentPet.SetGettingPet(true, petPos); } catch (global::System.Exception __elysiumCaught126) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught126); }
 
             anim += Time.deltaTime;
             if (anim >= AnimDelay)
             {
                 anim = 0f;
-                try { if (me.cosmetics.PettingHand != null) me.cosmetics.PettingHand.StartPet(me.cosmetics.currentPet); } catch { }
+                try { if (me.cosmetics.PettingHand != null) me.cosmetics.PettingHand.StartPet(me.cosmetics.currentPet); } catch (global::System.Exception __elysiumCaught127) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught127); }
             }
 
             elapsed += Time.deltaTime;
@@ -257,7 +257,7 @@ namespace ElysiumModMenu
                 NetHelpers.WriteVector2(petPos, w);
                 net.FinishRpcImmediately(w);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught128) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught128); }
         }
 
         internal static void DrawOverlay(bool menuOpen)
@@ -406,7 +406,7 @@ namespace ElysiumModMenu
                 roomsAt = Time.unscaledTime;
                 RefreshRooms();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught129) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught129); }
         }
 
         private static bool HasPet(PlayerControl me)
@@ -422,7 +422,7 @@ namespace ElysiumModMenu
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                     if (pc != null && pc.PlayerId == id) return pc;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught130) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught130); }
             return null;
         }
     }

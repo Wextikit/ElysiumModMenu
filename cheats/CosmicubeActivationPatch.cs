@@ -20,13 +20,12 @@ namespace ElysiumModMenu
                 CosmicubeManager manager = DestroyableSingleton<CosmicubeManager>.Instance;
                 if (manager == null || manager.GetCompletionProgress(cube) < 0.999f) return;
 
-                // UI-only override. The game's original ActivateCube handler remains
-                // responsible for changing the locally selected cube.
+                // UI override only; vanilla still changes the selected cube.
                 if (activateButton.gameObject != null)
                     activateButton.gameObject.SetActive(true);
                 activateButton.SetButtonEnableState(true);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught34) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught34); }
         }
     }
 

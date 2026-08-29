@@ -83,7 +83,7 @@ internal static class KnownModRpcCatalog
 			if (ElysiumModMenu.ElysiumModMenuGUI.spoofMenuRPCs != null)
 				return ElysiumModMenu.ElysiumModMenuGUI.spoofMenuRPCs.ToArray();
 		}
-		catch { }
+		catch (global::System.Exception __elysiumCaught582) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught582); }
 
 		return new byte[0];
 	}

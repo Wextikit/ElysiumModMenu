@@ -59,11 +59,11 @@ namespace ElysiumModMenu
                 }
             }
 
-            if (showTaskArrows) DrawEspTaskArrows(PlayerControl.LocalPlayer);
+            if (showTaskArrows) DrawEspTaskTracers(PlayerControl.LocalPlayer);
             GUI.color = Color.white;
         }
 
-        private static void DrawEspTaskArrows(PlayerControl local)
+        private static void DrawEspTaskTracers(PlayerControl local)
         {
             if (Time.unscaledTime - espTaskTargetsAt > 0.5f)
             {
@@ -86,27 +86,44 @@ namespace ElysiumModMenu
             Camera cam = Camera.main;
             Vector2 from = EspScreenPoint(cam, local.GetTruePosition());
             Vector2 localPos = local.GetTruePosition();
-            Color col = new Color(0.42f, 0.92f, 0.55f, 0.92f);
+            Color lineCol = new Color(0.58f, 0.88f, 0.66f, 0.58f);
+            Color textCol = new Color(0.68f, 0.94f, 0.74f, 0.92f);
 
             for (int i = 0; i < espTaskTargets.Count; i++)
             {
                 Vector2 target = espTaskTargets[i];
                 Vector2 delta = EspScreenPoint(cam, target) - from;
                 if (delta.sqrMagnitude < 4f) continue;
-                delta.Normalize();
-
-                Vector2 tip = from + delta * 92f;
-                DrawEspArrow(tip, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg, 15f, col);
+                Vector2 end = ClipEspTaskTracer(from, delta);
+                DrawEspLine(from, end, lineCol, 2.2f);
+                Color markerOld = GUI.color;
+                GUI.color = textCol;
+                DrawEspLine(new Rect(end.x - 2.5f, end.y - 2.5f, 5f, 5f));
+                GUI.color = markerOld;
 
                 string distance = Mathf.RoundToInt(Vector2.Distance(target, localPos)) + "m";
-                Rect label = new Rect(tip.x + delta.x * 20f - 30f, tip.y + delta.y * 20f - 8f, 60f, 16f);
+                Vector2 dir = delta.normalized;
+                Rect label = new Rect(end.x - dir.x * 34f - 30f, end.y - dir.y * 18f - 8f, 60f, 16f);
                 Color old = GUI.color;
                 GUI.color = new Color(0f, 0f, 0f, 0.82f);
                 GUI.Label(new Rect(label.x + 1f, label.y + 1f, label.width, label.height), distance, espTaskLabelStyle);
-                GUI.color = col;
+                GUI.color = textCol;
                 GUI.Label(label, distance, espTaskLabelStyle);
                 GUI.color = old;
             }
+        }
+
+        private static Vector2 ClipEspTaskTracer(Vector2 from, Vector2 delta)
+        {
+            float t = 1f;
+            const float margin = 8f;
+
+            if (delta.x > 0f) t = Mathf.Min(t, (Screen.width - margin - from.x) / delta.x);
+            else if (delta.x < 0f) t = Mathf.Min(t, (margin - from.x) / delta.x);
+            if (delta.y > 0f) t = Mathf.Min(t, (Screen.height - margin - from.y) / delta.y);
+            else if (delta.y < 0f) t = Mathf.Min(t, (margin - from.y) / delta.y);
+
+            return from + delta * Mathf.Clamp01(t);
         }
 
         private static void RebuildEspTaskTargets(PlayerControl local)
@@ -120,31 +137,65 @@ namespace ElysiumModMenu
                 {
                     PlayerTask task = local.myTasks[i];
                     if (task == null || task.IsComplete) continue;
-                    if (!(task is NormalPlayerTask normal) || normal.Locations == null || normal.Locations.Count == 0) continue;
 
-                    int step = Mathf.Clamp(normal.taskStep, 0, normal.Locations.Count - 1);
-                    espTaskTargets.Add(normal.Locations[step]);
+                    NormalPlayerTask normal = task as NormalPlayerTask;
+                    if (normal != null && TryAddTaskArrowTarget(normal)) continue;
+                    if (TryAddCurrentTaskLocation(task)) continue;
+
+                    if (ShipStatus.Instance == null) continue;
+                    var templates = ShipStatus.Instance.GetAllTasks();
+                    if (templates == null) continue;
+                    foreach (PlayerTask templateTask in templates)
+                    {
+                        if (templateTask == null || templateTask.TaskType != task.TaskType) continue;
+                        if (TryAddCurrentTaskLocation(templateTask, task.TaskStep)) break;
+                    }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught71) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught71); }
+        }
+
+        private static bool TryAddTaskArrowTarget(NormalPlayerTask task)
+        {
+            try
+            {
+                if (task == null || task.Arrow == null) return false;
+                Vector3 target = task.Arrow.target;
+                return AddEspTaskTarget(new Vector2(target.x, target.y));
+            }
+            catch { return false; }
+        }
+
+        private static bool TryAddCurrentTaskLocation(PlayerTask task, int requestedStep = -1)
+        {
+            try
+            {
+                if (task == null || task.Locations == null || task.Locations.Count == 0) return false;
+                int step = requestedStep >= 0 ? requestedStep : task.TaskStep;
+                step = Mathf.Clamp(step, 0, task.Locations.Count - 1);
+                return AddEspTaskTarget(task.Locations[step]);
+            }
+            catch (global::System.Exception __elysiumCaught72) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught72); }
+            return false;
+        }
+
+        private static bool AddEspTaskTarget(Vector2 target)
+        {
+            if (float.IsNaN(target.x) || float.IsNaN(target.y) || float.IsInfinity(target.x) || float.IsInfinity(target.y))
+                return false;
+
+            for (int i = 0; i < espTaskTargets.Count; i++)
+                if ((espTaskTargets[i] - target).sqrMagnitude < 0.01f)
+                    return true;
+
+            espTaskTargets.Add(target);
+            return true;
         }
 
         private static Vector2 EspScreenPoint(Camera cam, Vector2 world)
         {
             Vector3 point = cam.WorldToScreenPoint(new Vector3(world.x, world.y, 0f));
             return new Vector2(point.x, Screen.height - point.y);
-        }
-
-        private static void DrawEspArrow(Vector2 tip, float angle, float length, Color color)
-        {
-            float radians = angle * Mathf.Deg2Rad;
-            Vector2 dir = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
-            DrawEspLine(tip - dir * length, tip, color, 3.5f);
-
-            float left = (angle + 150f) * Mathf.Deg2Rad;
-            float right = (angle - 150f) * Mathf.Deg2Rad;
-            DrawEspLine(tip, tip + new Vector2(Mathf.Cos(left), Mathf.Sin(left)) * length * 0.7f, color, 3.5f);
-            DrawEspLine(tip, tip + new Vector2(Mathf.Cos(right), Mathf.Sin(right)) * length * 0.7f, color, 3.5f);
         }
 
         private static Color GetEspBoxColor(PlayerControl pc)
@@ -161,7 +212,7 @@ namespace ElysiumModMenu
                 if (Palette.PlayerColors != null && cid >= 0 && cid < Palette.PlayerColors.Length)
                     return Palette.PlayerColors[cid];
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught73) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught73); }
 
             return Color.white;
         }

@@ -48,6 +48,6 @@ public static class DarkMode_ChatBubblePatch
         {
             DarkChatTheme.ApplyBubble(__instance, ElysiumModMenuGUI.enableChatDarkMode);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught393) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught393); }
     }
 }

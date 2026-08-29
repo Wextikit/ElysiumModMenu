@@ -183,7 +183,7 @@ namespace ElysiumModMenu
                             .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
                             .Any(method => Attribute.IsDefined(method, typeof(HarmonyPatch), true));
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught365) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught365); }
                 }
 
                 if (!hasHarmonyPatch) continue;
@@ -251,7 +251,7 @@ namespace ElysiumModMenu
 
                 System.IO.File.WriteAllLines(path, lines);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught366) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught366); }
         }
 
         private static int DetectNativePlatformIndex()

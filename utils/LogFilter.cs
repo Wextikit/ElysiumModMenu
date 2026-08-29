@@ -94,7 +94,7 @@ namespace ElysiumModMenu
                     if (v != null) return v.ToString();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught562) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught562); }
             try { return obj.ToString(); } catch { return null; }
         }
 
@@ -125,7 +125,7 @@ namespace ElysiumModMenu
                     if ((listener.LogLevelFilter & eventArgs.Level) != 0)
                         listener.LogEvent(sender, eventArgs);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught563) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught563); }
             }
         }
 
@@ -140,7 +140,7 @@ namespace ElysiumModMenu
             foreach (ILogListener listener in listeners)
             {
                 try { listener.Dispose(); }
-                catch { }
+                catch (global::System.Exception __elysiumCaught564) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught564); }
             }
         }
     }

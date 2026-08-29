@@ -80,7 +80,7 @@ private static void EnsureForcedRoleOptionsForCurrentLobby()
                     .Where(p => p != null && p.Data != null && !p.Data.Disconnected && p.PlayerId < 100)
                     .ToList());
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught304) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught304); }
         }
 
 private static void EnsureForcedRoleOptions(List<PlayerControl> players)
@@ -118,7 +118,7 @@ private static void EnsureForcedRoleOptions(List<PlayerControl> players)
                     SyncLobbySettingsNow();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught305) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught305); }
         }
 
 private static bool TryGetRoleOptionNames(RoleTypes role, out string[] names)
@@ -170,7 +170,7 @@ private static bool IsHideAndSeekMode()
                 if (GameManager.Instance != null && GameManager.Instance.IsHideAndSeek())
                     return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught306) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught306); }
 
             try
             {
@@ -202,7 +202,7 @@ private static List<byte> GetForcedImpostorPlayerIds()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught307) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught307); }
 
             return result;
         }
@@ -266,7 +266,7 @@ private static void SetHideAndSeekSeekerOption(byte seekerId, int impostorCount 
                 if (numImpostorsField != null)
                     numImpostorsField.SetValue(options, impostorCount);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught308) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught308); }
         }
 
 private static bool IsPlayerIdActive(byte playerId)
@@ -280,7 +280,7 @@ private static bool IsPlayerIdActive(byte playerId)
                         return true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught309) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught309); }
 
             return false;
         }
@@ -294,7 +294,7 @@ private static void RefreshRoleBehaviour(PlayerControl target)
                 if (IsImpostorTeamRole(target.Data.RoleType))
                     target.SetKillTimer(0f);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught310) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught310); }
         }
     }
 }

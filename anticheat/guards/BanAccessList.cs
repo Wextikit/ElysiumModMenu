@@ -82,7 +82,7 @@ internal static class BanAccessList
 			if (string.IsNullOrEmpty(fc)) return;
 			ElysiumModMenu.ElysiumModMenuGUI.AddToBanList(fc, string.IsNullOrEmpty(identity.ProductUserId) ? "Unknown" : identity.ProductUserId, string.IsNullOrEmpty(identity.PlayerName) ? "Unknown" : identity.PlayerName, reason);
 		}
-		catch { }
+		catch (global::System.Exception __elysiumCaught637) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught637); }
 	}
 	internal static string ClientDisplayName(ClientData data, int clientId)
 	{

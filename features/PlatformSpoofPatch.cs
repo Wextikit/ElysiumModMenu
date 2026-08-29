@@ -54,6 +54,6 @@ public static class PlatformSpooferPatch
                 __instance.PlatformName = "ElysiumModMenu by Meowchelo https://github.com/Wextikit/ElysiumModMenu";
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught256) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught256); }
     }
 }

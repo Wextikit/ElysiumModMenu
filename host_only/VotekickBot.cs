@@ -145,7 +145,7 @@ private void TickVotekickEveryoneRun()
                 else if (votekickPhase == VoteKickPhase.Rejoin) TickVotekickRejoin();
                 else if (votekickPhase == VoteKickPhase.Final) TickVotekickFinal();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught337) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught337); }
         }
 
 private static void TickVotekickRoom()
@@ -289,7 +289,7 @@ private static void FillVotekickQueue()
                     if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected && IsSelectedVotekickTarget(pc))
                         votekickRapidQueue.Add(pc.PlayerId);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught338) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught338); }
         }
 
 private static void RunVotekickRapidAll()
@@ -316,7 +316,7 @@ private static int ExecuteVotekickEveryone(bool once)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught339) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught339); }
             return n;
         }
 
@@ -329,7 +329,7 @@ private static int CountVotekickTargets()
                     if (pc != null && !pc.AmOwner && pc.Data != null && !pc.Data.Disconnected && IsSelectedVotekickTarget(pc))
                         n++;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught340) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught340); }
             return n;
         }
 
@@ -441,7 +441,7 @@ private static int ExecuteVotekickTargets(bool once)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught341) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught341); }
             return n;
         }
 
@@ -491,7 +491,7 @@ private static void SaveVotekickCode(bool copyAlways = false)
                 if ((copyAlways || votekickCopyCode) && votekickCode != 0)
                     GUIUtility.systemCopyBuffer = GameCode.IntToGameName(votekickCode);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught342) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught342); }
         }
 
 private static void RejoinVotekickRoom(int code)
@@ -504,13 +504,13 @@ private static void RejoinVotekickRoom(int code)
                 var co = au.CoJoinOnlineGameFromCode(code);
                 if (co != null) au.StartCoroutine(co);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught343) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught343); }
         }
 
 private static void LeaveVotekickRoom()
         {
             try { if (AmongUsClient.Instance != null) AmongUsClient.Instance.ExitGame(DisconnectReasons.ExitGame); }
-            catch { }
+            catch (global::System.Exception __elysiumCaught344) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught344); }
         }
 
 private static bool VotekickInRoom()
@@ -525,7 +525,7 @@ private static PlayerControl FindVotekickPlayer(byte id)
                 foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                     if (pc != null && pc.PlayerId == id) return pc;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught345) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught345); }
             return null;
         }
 
@@ -536,7 +536,7 @@ private static PlayerControl FindVotekickHost()
                 ClientData host = AmongUsClient.Instance != null ? AmongUsClient.Instance.GetHost() : null;
                 return host != null ? host.Character : null;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught346) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught346); }
             return null;
         }
 

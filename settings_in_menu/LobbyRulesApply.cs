@@ -111,7 +111,7 @@ private static void TryGetClassicRoleOpt(RoleTypes role, out int count, out int 
                     if (mp != null) chance = Convert.ToInt32(mp.Invoke(ro, new object[] { role }));
                     return;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught394) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught394); }
             }
 
             string n = names != null && names.Length > 0 ? names[0] : role.ToString();
@@ -145,7 +145,7 @@ private static void TrySetClassicRoleOpt(RoleTypes role, int count, int chance, 
                         ok = true;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught395) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught395); }
             }
 
             string n = names != null && names.Length > 0 ? names[0] : role.ToString();
@@ -199,8 +199,14 @@ private static void LoadClassicRoleDetails()
             if (dt != null) roleDetectiveLimit = dt.DetectiveSuspectLimit;
             var vp = GetRoleOpt<ViperRoleOptionsV11>((RoleTypes)18);
             if (vp != null) roleViperDissolve = vp.ViperDissolveTime;
+            if (TryGetGameFloat(out float vpDissolve,
+                "ViperDissolveTime", "ViperDissolveDuration", "DissolveTime", "DissolveDuration", "BodyDissolveTime"))
+                roleViperDissolve = vpDissolve;
             var jg = GetRoleOpt<JudgeRoleOptionsV11>((RoleTypes)19);
             if (jg != null) roleJudgeTaskPct = jg.JudgeTaskRequirementPercentage;
+            if (TryGetGameFloat(out float judgeTasks,
+                "JudgeTaskRequirementPercentage", "JudgeTasksPercentage", "JudgeTaskPercentage", "TaskRequirementPercentage", "RequiredTaskPercentage"))
+                roleJudgeTaskPct = judgeTasks;
         }
 
 private static void ApplyClassicRoleDetails()
@@ -238,22 +244,47 @@ private static void ApplyClassicRoleDetails()
             TrySetGameFloat(rolePhantomTime, "1501", "PhantomDuration");
             var dt = GetRoleOpt<DetectiveRoleOptionsV11>((RoleTypes)12);
             if (dt != null) dt.DetectiveSuspectLimit = roleDetectiveLimit;
-            var vp = GetRoleOpt<ViperRoleOptionsV11>((RoleTypes)18);
-            if (vp != null) vp.ViperDissolveTime = roleViperDissolve;
-            var jg = GetRoleOpt<JudgeRoleOptionsV11>((RoleTypes)19);
-            if (jg != null) jg.JudgeTaskRequirementPercentage = roleJudgeTaskPct;
+            // The game keeps several synchronized option sets.
+            foreach (object options in GetGameOptionsObjs())
+            {
+                object roleOptions = GetRoleOptionsObj(options);
+                var vp = GetRoleOpt<ViperRoleOptionsV11>(roleOptions, (RoleTypes)18);
+                if (vp != null)
+                {
+                    vp.ViperDissolveTime = roleViperDissolve;
+                    TrySetMemberValue(vp, roleViperDissolve,
+                        "ViperDissolveTime", "ViperDissolveDuration", "DissolveTime", "DissolveDuration", "BodyDissolveTime");
+                }
+
+                var jg = GetRoleOpt<JudgeRoleOptionsV11>(roleOptions, (RoleTypes)19);
+                if (jg != null)
+                {
+                    jg.JudgeTaskRequirementPercentage = roleJudgeTaskPct;
+                    TrySetMemberValue(jg, roleJudgeTaskPct,
+                        "JudgeTaskRequirementPercentage", "JudgeTasksPercentage", "JudgeTaskPercentage", "TaskRequirementPercentage", "RequiredTaskPercentage");
+                }
+            }
+
+            TrySetGameFloatAll(roleViperDissolve,
+                "ViperDissolveTime", "ViperDissolveDuration", "DissolveTime", "DissolveDuration", "BodyDissolveTime");
+            TrySetGameFloatAll(roleJudgeTaskPct,
+                "JudgeTaskRequirementPercentage", "JudgeTasksPercentage", "JudgeTaskPercentage", "TaskRequirementPercentage", "RequiredTaskPercentage");
         }
 
 private static T GetRoleOpt<T>(RoleTypes role) where T : class
         {
-            object ro = GetRoleOptionsObj();
+            return GetRoleOpt<T>(GetRoleOptionsObj(), role);
+        }
+
+private static T GetRoleOpt<T>(object ro, RoleTypes role) where T : class
+        {
             if (ro == null) return null;
             try
             {
                 if (ro is RoleOptionsCollectionV11 col && col.TryGetRoleOptions<T>(role, out T opt))
                     return opt;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught396) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught396); }
             try
             {
                 MethodInfo m = ro.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -263,7 +294,7 @@ private static T GetRoleOpt<T>(RoleTypes role) where T : class
                 object[] args = new object[] { role, null };
                 if (Convert.ToBoolean(g.Invoke(ro, args))) return args[1] as T;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught397) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught397); }
             return null;
         }
 
@@ -289,7 +320,7 @@ private static object GetRoleOptionsObj(object opts)
                         if (ro != null) return ro;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught398) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught398); }
             }
             return null;
         }
@@ -311,7 +342,7 @@ private static object FindRoleOptObj(RoleTypes role, params string[] names)
                     object got = m.Invoke(opts, new object[] { arg });
                     if (got != null) return got;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught399) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught399); }
             }
 
             foreach (string member in new[] { "RoleOptions", "roleOptions", "RoleSettings", "roleSettings", "Roles", "roles" })
@@ -337,7 +368,7 @@ private static object FindRoleOptInBag(object bag, RoleTypes role, string[] name
                     object got = p.GetValue(bag, new object[] { arg });
                     if (got != null) return got;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught400) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught400); }
             }
 
             if (bag is IEnumerable en)
@@ -356,7 +387,7 @@ private static bool RoleOptMatches(object obj, RoleTypes role, string[] names)
             object raw = GetMemberValue(obj, "Role") ?? GetMemberValue(obj, "RoleType") ?? GetMemberValue(obj, "RoleId");
             if (raw != null)
             {
-                try { if (Convert.ToInt32(raw) == (int)role) return true; } catch { }
+                try { if (Convert.ToInt32(raw) == (int)role) return true; } catch (global::System.Exception __elysiumCaught401) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught401); }
                 string s = raw.ToString();
                 foreach (string n in names ?? Array.Empty<string>())
                     if (!string.IsNullOrEmpty(n) && s.IndexOf(n, StringComparison.OrdinalIgnoreCase) >= 0)
@@ -376,7 +407,7 @@ private static bool TryGetIntMember(object obj, out int val, params string[] nam
             {
                 object raw = GetMemberValue(obj, n);
                 if (raw == null) continue;
-                try { val = Convert.ToInt32(raw); return true; } catch { }
+                try { val = Convert.ToInt32(raw); return true; } catch (global::System.Exception __elysiumCaught402) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught402); }
             }
             return false;
         }
@@ -390,12 +421,12 @@ private static bool TrySetMemberValue(object obj, object val, params string[] na
                 PropertyInfo p = FindGameProp(t, n);
                 if (p != null && p.CanWrite)
                 {
-                    try { p.SetValue(obj, CastGameValue(val, p.PropertyType)); return true; } catch { }
+                    try { p.SetValue(obj, CastGameValue(val, p.PropertyType)); return true; } catch (global::System.Exception __elysiumCaught403) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught403); }
                 }
                 FieldInfo f = t.GetField(n, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (f != null)
                 {
-                    try { f.SetValue(obj, CastGameValue(val, f.FieldType)); return true; } catch { }
+                    try { f.SetValue(obj, CastGameValue(val, f.FieldType)); return true; } catch (global::System.Exception __elysiumCaught404) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught404); }
                 }
             }
             return false;
@@ -566,7 +597,7 @@ internal static void ApplyNoLimitRange(NumberOption opt)
                 }
                 opt.AdjustButtonsActiveState();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught405) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught405); }
         }
 
 private static bool CanApplyLobbySettings()
@@ -676,11 +707,11 @@ private static object GetGameOptionsObj()
 private static IEnumerable<object> GetGameOptionsObjs()
         {
             object cur = null;
-            try { cur = GameOptionsManager.Instance?.CurrentGameOptions; } catch { }
+            try { cur = GameOptionsManager.Instance?.CurrentGameOptions; } catch (global::System.Exception __elysiumCaught406) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught406); }
             if (cur != null) yield return cur;
 
             GameOptionsManager mgr = null;
-            try { mgr = GameOptionsManager.Instance; } catch { }
+            try { mgr = GameOptionsManager.Instance; } catch (global::System.Exception __elysiumCaught407) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught407); }
             if (mgr == null) yield break;
 
             foreach (string n in new[] { "GameHostOptions", "currentNormalGameOptions", "currentGameOptions", "CurrentGameOptions", "currentHideNSeekGameOptions" })
@@ -727,18 +758,18 @@ private static bool TryGetGameOption(out object val, string typedGetter, params 
                         object member = GetMemberValue(opts, n);
                         if (member != null) { val = member; return true; }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught408) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught408); }
 
                     PropertyInfo p = FindGameProp(t, n);
                     if (p != null)
                     {
-                        try { val = p.GetValue(opts); return true; } catch { }
+                        try { val = p.GetValue(opts); return true; } catch (global::System.Exception __elysiumCaught409) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught409); }
                     }
 
                     MethodInfo m0 = t.GetMethod("Get" + n, BindingFlags.Public | BindingFlags.Instance);
                     if (m0 != null && m0.GetParameters().Length == 0)
                     {
-                        try { val = m0.Invoke(opts, null); return true; } catch { }
+                        try { val = m0.Invoke(opts, null); return true; } catch (global::System.Exception __elysiumCaught410) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught410); }
                     }
                 }
 
@@ -748,7 +779,7 @@ private static bool TryGetGameOption(out object val, string typedGetter, params 
 
                 object e = FindGameEnum(m.GetParameters()[0].ParameterType, names);
                 if (e == null) continue;
-                try { val = m.Invoke(opts, new object[] { e }); return true; } catch { }
+                try { val = m.Invoke(opts, new object[] { e }); return true; } catch (global::System.Exception __elysiumCaught411) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught411); }
             }
             return false;
         }
@@ -778,7 +809,7 @@ private static bool TrySetGameOption(object val, string typedSetter, params stri
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "currentHideNSeekGameOptions"), val, typedSetter, names);
                 ok |= TrySetGameOptionObj(GetMemberValue(mgr, "GameHostOptions"), val, typedSetter, names);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught412) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught412); }
             return ok;
         }
 
@@ -795,13 +826,13 @@ private static bool TrySetGameOptionObj(object opts, object val, string typedSet
                 PropertyInfo p = FindGameProp(t, n);
                 if (p != null && p.CanWrite)
                 {
-                    try { p.SetValue(opts, CastGameValue(val, p.PropertyType)); return true; } catch { }
+                    try { p.SetValue(opts, CastGameValue(val, p.PropertyType)); return true; } catch (global::System.Exception __elysiumCaught413) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught413); }
                 }
 
                 MethodInfo m0 = t.GetMethod("Set" + n, BindingFlags.Public | BindingFlags.Instance);
                 if (m0 != null && m0.GetParameters().Length == 1)
                 {
-                    try { m0.Invoke(opts, new object[] { CastGameValue(val, m0.GetParameters()[0].ParameterType) }); return true; } catch { }
+                    try { m0.Invoke(opts, new object[] { CastGameValue(val, m0.GetParameters()[0].ParameterType) }); return true; } catch (global::System.Exception __elysiumCaught414) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught414); }
                 }
             }
 
@@ -833,7 +864,7 @@ private static object FindGameEnum(Type enumType, string[] names)
             {
                 if (int.TryParse(n, NumberStyles.Integer, CultureInfo.InvariantCulture, out int raw))
                 {
-                    try { return Enum.ToObject(enumType, raw); } catch { }
+                    try { return Enum.ToObject(enumType, raw); } catch (global::System.Exception __elysiumCaught415) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught415); }
                 }
             }
 
@@ -869,7 +900,7 @@ private static object CastGameValue(object val, Type target)
                 if (target == typeof(bool)) return Convert.ToBoolean(val);
                 if (target.IsEnum) return Enum.ToObject(target, Convert.ToInt32(val));
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught416) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught416); }
             return val;
         }
 
@@ -885,7 +916,7 @@ private static object GetMemberValue(object obj, string name)
                 FieldInfo f = t.GetField(name, flags);
                 if (f != null) return f.GetValue(obj);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught417) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught417); }
             return null;
         }
 
@@ -902,7 +933,7 @@ private static void TouchGameOptions()
                 opts = mgr?.CurrentGameOptions;
                 if (mgr != null && opts != null) mgr.GameHostOptions = opts;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught418) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught418); }
 
             QueueLobbySettingsSync(0.25f);
         }
@@ -919,7 +950,7 @@ private static void TouchHnsGameOptions()
                 if (mgr != null && opts != null)
                     mgr.GameHostOptions = opts;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught419) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught419); }
 
             QueueLobbySettingsSync(0.25f);
         }
@@ -934,7 +965,7 @@ private static IGameOptions GetHnsGameOptionsObj(GameOptionsManager mgr = null)
                 if (raw is Il2CppInterop.Runtime.InteropTypes.Il2CppObjectBase obj)
                     return obj.Cast<IGameOptions>();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught420) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught420); }
             return null;
         }
 
@@ -955,7 +986,7 @@ internal static void QueueLobbySettingsSync(float delay = 0.25f)
                 if (lobbySettingsSyncAt <= 0f || at < lobbySettingsSyncAt)
                     lobbySettingsSyncAt = at;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught421) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught421); }
         }
 
 internal static void TickLobbySettingsSync()
@@ -995,7 +1026,7 @@ private static void SyncLobbySettingsNow()
                 if (mgr != null && opts != null)
                     mgr.GameHostOptions = opts;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught422) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught422); }
 
             lobbySettingsSyncRun = true;
             try
@@ -1008,7 +1039,7 @@ private static void SyncLobbySettingsNow()
                     return;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught423) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught423); }
             finally
             {
                 lobbySettingsSyncRun = false;
@@ -1024,7 +1055,7 @@ private static void SyncLobbySettingsNow()
                 Il2CppStructArray<byte> raw = mgr?.gameOptionsFactory?.ToBytes(opts, false);
                 if (lp != null && raw != null && raw.Length > 0) lp.RpcSyncSettings(raw);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught424) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught424); }
             finally
             {
                 lobbySettingsSyncRun = false;
@@ -1041,10 +1072,10 @@ internal static void RepairHostGameOptions()
                 RepairGameOptions(mgr.GameHostOptions);
                 RepairGameOptions(mgr.currentNormalGameOptions?.Cast<IGameOptions>());
                 RepairGameOptions(mgr.currentHideNSeekGameOptions?.Cast<IGameOptions>());
-                try { mgr.SaveNormalHostOptions(); } catch { }
-                try { mgr.SaveHideNSeekHostOptions(); } catch { }
+                try { mgr.SaveNormalHostOptions(); } catch (global::System.Exception __elysiumCaught425) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught425); }
+                try { mgr.SaveHideNSeekHostOptions(); } catch (global::System.Exception __elysiumCaught426) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught426); }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught427) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught427); }
         }
 
 private static void RepairGameOptions(IGameOptions opts)
@@ -1060,7 +1091,7 @@ private static void RepairGameOptions(IGameOptions opts)
                     float killCd = opts.GetFloat(FloatOptionNames.KillCooldown);
                     if (killCd < 0.00001f) opts.SetFloat(FloatOptionNames.KillCooldown, 0.00001f);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught428) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught428); }
                 return;
             }
             try
@@ -1078,7 +1109,7 @@ private static void RepairGameOptions(IGameOptions opts)
                 float killCd = opts.GetFloat(FloatOptionNames.KillCooldown);
                 if (killCd <= 0f) opts.SetFloat(FloatOptionNames.KillCooldown, 0.000001f);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught429) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught429); }
         }
     }
 }

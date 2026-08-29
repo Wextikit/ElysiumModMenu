@@ -65,7 +65,7 @@ internal static class SecurityNotice
 			string who = string.IsNullOrEmpty(name) ? "" : (" " + name);
 			ElysiumModMenu.ElysiumModMenuGUI.ShowNotification("[" + title + "]" + who + ": " + detail);
 		}
-		catch { }
+		catch (global::System.Exception __elysiumCaught643) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught643); }
 	}
 }
 }

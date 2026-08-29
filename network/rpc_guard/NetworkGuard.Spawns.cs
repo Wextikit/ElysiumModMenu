@@ -182,7 +182,7 @@ internal static partial class NetworkGuard
 		catch
 		{
 			try { ((InnerNetClient)client).EnqueueDisconnect(DisconnectReasons.ExitGame); }
-			catch { }
+			catch (global::System.Exception __elysiumCaught631) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught631); }
 		}
 	}
 

@@ -30,7 +30,7 @@ public static class ChatButtonFix
                 if (_placed)
                 {
                     _placed = false;
-                    try { chatAp.DistanceFromEdge = _origEdge; chatAp.AdjustPosition(); } catch { }
+                    try { chatAp.DistanceFromEdge = _origEdge; chatAp.AdjustPosition(); } catch (global::System.Exception __elysiumCaught29) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught29); }
                 }
                 return;
             }
@@ -73,8 +73,8 @@ public static class ChatButtonFix
             if (Mathf.Abs(chatAp.DistanceFromEdge.x - want.x) < 1e-4f) return;
             chatAp.updateAlways = false;
             chatAp.DistanceFromEdge = want;
-            try { chatAp.AdjustPosition(); } catch { }
+            try { chatAp.AdjustPosition(); } catch (global::System.Exception __elysiumCaught30) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught30); }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught31) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught31); }
     }
 }

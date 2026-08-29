@@ -59,7 +59,7 @@ public static class RevealVotesPatch
 
             _voteTargets[voterId] = votedForId;
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught196) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught196); }
     }
 
     internal static void ClearVoteIcons(MeetingHud meeting)
@@ -140,7 +140,7 @@ public static class RevealVotesPatch
                 }
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught197) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught197); }
     }
 
     internal static void ShowVoteSprites(MeetingHud meeting)
@@ -171,7 +171,7 @@ public static class RevealVotesPatch
             }
             ShowVoteSprites(__instance);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught198) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught198); }
     }
 }
 

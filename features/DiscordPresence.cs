@@ -92,19 +92,19 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                 {
                     p = new NamedPipeClientStream(".", "discord-ipc-" + i, PipeDirection.InOut, PipeOptions.None);
                     p.Connect(200);
-                    if (!p.IsConnected) { try { p.Dispose(); } catch { } continue; }
+                    if (!p.IsConnected) { try { p.Dispose(); } catch (global::System.Exception __elysiumCaught204) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught204); } continue; }
 
                     _pipe = p;
                     if (Frame(0, "{\"v\":1,\"client_id\":\"" + AppId + "\"}"))
                     {
-                        if (gen != _gen) { try { p.Dispose(); } catch { } _pipe = null; return; }
+                        if (gen != _gen) { try { p.Dispose(); } catch (global::System.Exception __elysiumCaught205) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught205); } _pipe = null; return; }
                         _up = true;
                         return;
                     }
-                    try { p.Dispose(); } catch { }
+                    try { p.Dispose(); } catch (global::System.Exception __elysiumCaught206) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught206); }
                     if (_pipe == p) _pipe = null;
                 }
-                catch { try { p?.Dispose(); } catch { } }
+                catch { try { p?.Dispose(); } catch (global::System.Exception __elysiumCaught207) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught207); } }
             }
             if (gen == _gen) { _pipe = null; _dialFail = true; }
         }
@@ -169,7 +169,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
             if (ShipStatus.Instance != null) return ElysiumModMenuGUI.L("In game", "В игре") + tail;
             if (LobbyBehaviour.Instance != null) return ElysiumModMenuGUI.L("Lobby", "Лобби") + tail;
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught208) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught208); }
         return ElysiumModMenuGUI.L("In menu", "В меню");
     }
 
@@ -182,7 +182,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
             if (m != null && (LobbyBehaviour.Instance != null || ShipStatus.Instance != null))
                 return "ElysiumModMenu • " + m;
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught209) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught209); }
         return "ElysiumModMenu for Among Us";
     }
 
@@ -204,7 +204,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                 case 5: return "Fungle";
             }
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught210) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught210); }
         return null;
     }
 
@@ -223,7 +223,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                 if (GameOptionsManager.Instance != null && GameOptionsManager.Instance.CurrentGameOptions != null)
                     max = GameOptionsManager.Instance.CurrentGameOptions.MaxPlayers;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught211) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught211); }
 
             int cur = 0;
             try
@@ -231,10 +231,10 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                 var c = AmongUsClient.Instance != null ? ((InnerNetClient)AmongUsClient.Instance).allClients : null;
                 if (c != null) cur = c.Count;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught212) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught212); }
             if (cur <= 0)
             {
-                try { if (PlayerControl.AllPlayerControls != null) cur = PlayerControl.AllPlayerControls.Count; } catch { }
+                try { if (PlayerControl.AllPlayerControls != null) cur = PlayerControl.AllPlayerControls.Count; } catch (global::System.Exception __elysiumCaught213) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught213); }
             }
             if (cur <= 0) return null;
             if (max < cur) max = cur;
@@ -249,7 +249,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
                     if (g != 0) id = "au-" + g;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught214) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught214); }
             return (cur, max, id);
         }
         catch { return null; }
@@ -299,7 +299,7 @@ public sealed class ElysiumDiscordPresence : MonoBehaviour
     {
         _gen++;
         _up = false;
-        try { _pipe?.Dispose(); } catch { }
+        try { _pipe?.Dispose(); } catch (global::System.Exception __elysiumCaught215) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught215); }
         _pipe = null;
         _last = null;
     }

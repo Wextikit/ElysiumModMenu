@@ -65,14 +65,14 @@ namespace ElysiumModMenu
         internal static bool IsClone(PlayerControl pc)
         {
             if (pc == null) return false;
-            try { if (cloneNetIds.Contains(pc.NetId)) return true; } catch { }
-            try { return (int)pc.OwnerId == Owner; } catch { }
+            try { if (cloneNetIds.Contains(pc.NetId)) return true; } catch (global::System.Exception __elysiumCaught105) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught105); }
+            try { return (int)pc.OwnerId == Owner; } catch (global::System.Exception __elysiumCaught106) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught106); }
             try
             {
                 InnerNetObject obj = pc.Cast<InnerNetObject>();
                 if (obj != null && obj.OwnerId == Owner) return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught107) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught107); }
             return false;
         }
 
@@ -90,7 +90,7 @@ namespace ElysiumModMenu
                 if (live.Count < MaxCloneCount)
                 {
                     PlayerControl src = ById(j.Src);
-                    if (src != null) { try { Make(src, j.At, j.Batch); } catch { } }
+                    if (src != null) { try { Make(src, j.At, j.Batch); } catch (global::System.Exception __elysiumCaught108) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught108); } }
                 }
             }
         }
@@ -181,7 +181,7 @@ namespace ElysiumModMenu
                 Clone c = live[i];
                 if (c == null || c.Batch != batch) continue;
                 live.RemoveAt(i);
-                try { if (c.Pc != null) cloneNetIds.Remove(c.Pc.NetId); } catch { }
+                try { if (c.Pc != null) cloneNetIds.Remove(c.Pc.NetId); } catch (global::System.Exception __elysiumCaught109) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught109); }
                 Kill(c.Pc);
                 count++;
             }
@@ -461,7 +461,7 @@ namespace ElysiumModMenu
         private static PlayerControl ById(byte pid)
         {
             try { foreach (PlayerControl p in PlayerControl.AllPlayerControls) if (p != null && p.PlayerId == pid && !IsClone(p)) return p; }
-            catch { }
+            catch (global::System.Exception __elysiumCaught110) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught110); }
             return null;
         }
 
@@ -495,8 +495,8 @@ namespace ElysiumModMenu
             }
             catch
             {
-                try { prefab.gameObject.SetActive(wasActive); } catch { }
-                try { Object.Destroy(cl.gameObject); } catch { }
+                try { prefab.gameObject.SetActive(wasActive); } catch (global::System.Exception __elysiumCaught111) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught111); }
+                try { Object.Destroy(cl.gameObject); } catch (global::System.Exception __elysiumCaught112) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught112); }
             }
         }
 
@@ -509,8 +509,8 @@ namespace ElysiumModMenu
                 InnerNetObject obj = pc.Cast<InnerNetObject>();
                 if (net != null && obj != null) net.Despawn(obj);
             }
-            catch { }
-            try { Object.Destroy(pc.gameObject); } catch { }
+            catch (global::System.Exception __elysiumCaught113) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught113); }
+            try { Object.Destroy(pc.gameObject); } catch (global::System.Exception __elysiumCaught114) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught114); }
         }
 
         private static int KillOrphanOwnerClones()
@@ -535,7 +535,7 @@ namespace ElysiumModMenu
                     count++;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught115) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught115); }
             return count;
         }
 
@@ -549,7 +549,7 @@ namespace ElysiumModMenu
                 if (data != null && data.Object != null && data.Object != pc)
                     realPlayerBeforeCloneStart = data.Object;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught116) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught116); }
         }
 
         internal static void AfterPlayerStart(PlayerControl pc)
@@ -561,7 +561,7 @@ namespace ElysiumModMenu
                 if (data != null)
                     RestoreRealPlayer(data, realPlayerBeforeCloneStart);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught117) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught117); }
             finally
             {
                 realPlayerBeforeCloneStart = null;
@@ -592,7 +592,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught118) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught118); }
         }
     }
 
@@ -612,7 +612,7 @@ namespace ElysiumModMenu
             {
                 if (__instance != null && __instance.transform != null) return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught119) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught119); }
             __result = Vector2.zero;
             return false;
         }

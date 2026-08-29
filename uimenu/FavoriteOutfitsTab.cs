@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -47,6 +47,7 @@ public void Update()
         {
             if (isPanicked) return;
 
+            TickVisualReplay();
             TickNotificationQueue();
             TickFakeStartCounter();
             TickAutoTwoImpostors();
@@ -70,7 +71,9 @@ public void Update()
                                      isWaitBindCallMeeting || isWaitBindTogglePlayerInfo || isWaitBindToggleSeeRoles ||
                                      isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright || isWaitBindKickAll ||
                                      isWaitBindFixSabotages || isWaitBindSetAllGhost || isWaitBindSetAllGhostImp ||
-                                     isWaitBindReviveAll;
+                                     isWaitBindReviveAll || isWaitBindToggleRadar || isWaitBindToggleReplay ||
+                                     isWaitBindToggleReplayConsole || isWaitBindToggleRadarIcons ||
+                                     isWaitBindToggleReplayIcons || isWaitBindToggleAlwaysChat;
 
             KeyCode activeMenuKey = menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey;
             if (!isTypingOrBinding && Input.GetKeyDown(activeMenuKey))
@@ -156,6 +159,42 @@ public void Update()
                     fullBright = !fullBright;
                     ShowNotification(fullBright ? "<color=#00FF00>[FULL BRIGHT]</color> ON" : "<color=#FF0000>[FULL BRIGHT]</color> OFF");
                 }
+                if (bindToggleRadar != KeyCode.None && Input.GetKeyDown(bindToggleRadar))
+                {
+                    showRadar = !showRadar;
+                    settingsDirty = true;
+                    ShowNotification(showRadar ? "<color=#00FF00>[RADAR]</color> ON" : "<color=#FF0000>[RADAR]</color> OFF");
+                }
+                if (bindToggleReplay != KeyCode.None && Input.GetKeyDown(bindToggleReplay))
+                {
+                    showReplay = !showReplay;
+                    settingsDirty = true;
+                    ShowNotification(showReplay ? "<color=#00FF00>[REPLAY]</color> ON" : "<color=#FF0000>[REPLAY]</color> OFF");
+                }
+                if (bindToggleReplayConsole != KeyCode.None && Input.GetKeyDown(bindToggleReplayConsole))
+                {
+                    showReplayLog = !showReplayLog;
+                    settingsDirty = true;
+                    ShowNotification(showReplayLog ? "<color=#00FF00>[REPLAY CONSOLE]</color> ON" : "<color=#FF0000>[REPLAY CONSOLE]</color> OFF");
+                }
+                if (bindToggleRadarIcons != KeyCode.None && Input.GetKeyDown(bindToggleRadarIcons))
+                {
+                    radarDrawIcons = !radarDrawIcons;
+                    settingsDirty = true;
+                    ShowNotification(radarDrawIcons ? "<color=#00FF00>[RADAR ICONS]</color> ON" : "<color=#FF0000>[RADAR ICONS]</color> OFF");
+                }
+                if (bindToggleReplayIcons != KeyCode.None && Input.GetKeyDown(bindToggleReplayIcons))
+                {
+                    replayDrawIcons = !replayDrawIcons;
+                    settingsDirty = true;
+                    ShowNotification(replayDrawIcons ? "<color=#00FF00>[REPLAY ICONS]</color> ON" : "<color=#FF0000>[REPLAY ICONS]</color> OFF");
+                }
+                if (bindToggleAlwaysChat != KeyCode.None && Input.GetKeyDown(bindToggleAlwaysChat))
+                {
+                    alwaysChat = !alwaysChat;
+                    settingsDirty = true;
+                    ShowNotification(alwaysChat ? "<color=#00FF00>[ALWAYS CHAT]</color> ON" : "<color=#FF0000>[ALWAYS CHAT]</color> OFF");
+                }
                 if (bindKillAll != KeyCode.None && Input.GetKeyDown(bindKillAll) && CanRunHostBind("Kill All")) KillAll();
                 if (bindCallMeeting != KeyCode.None && Input.GetKeyDown(bindCallMeeting) && CanRunHostBind("Call Meeting")) callMeetingPublic();
                 if (bindKickAll != KeyCode.None && Input.GetKeyDown(bindKickAll) && CanRunHostBind("Kick All")) KickAll();
@@ -178,7 +217,7 @@ public void Update()
             TickLobbySettingsSync();
             ApplyVentCheatsTick();
             TickRoleBuffImmortality();
-            try { GetCurrentRoomCodeForStatus(); } catch { }
+            try { GetCurrentRoomCodeForStatus(); } catch (global::System.Exception __elysiumCaught471) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught471); }
             TickWhitelistOnlyLobby();
             TickVotekickEveryoneRun();
             if (stylesInited && rgbMenuMode)
@@ -260,35 +299,8 @@ public void Update()
                         noTaskOptionsGameId = int.MinValue;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught472) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught472); }
                 TickAutoChatEveryoneAfterShhh();
-
-                if (false && autoChatEveryone && pendingAutoMeeting && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
-                {
-                    try
-                    {
-                        if (PlayerControl.LocalPlayer != null && ShipStatus.Instance != null && !PlayerControl.LocalPlayer.Data.IsDead)
-                        {
-                            autoMeetingTimer += Time.deltaTime;
-
-                            if (autoMeetingTimer >= autoChatEveryoneDelay)
-                            {
-                                if (MeetingHud.Instance == null)
-                                {
-                                    PlayerControl.LocalPlayer.CmdReportDeadBody(null);
-                                }
-                                else
-                                {
-                                    MeetingHud.Instance.RpcClose();
-                                    pendingAutoMeeting = false;
-                                    autoMeetingTimer = 0f;
-                                    ShowNotification("<color=#00FF00>[CHAT EVERYONE]</color> Players gathered in cafeteria!");
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
 
                 if (customChatSpamEnabled)
                 {
@@ -387,7 +399,7 @@ public void Update()
                             }
                         }
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught473) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught473); }
                 }
                 try
                 {
@@ -408,7 +420,7 @@ public void Update()
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught474) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught474); }
 
                 if (SpoofMenuEnabled && PlayerControl.LocalPlayer != null)
                 {
@@ -438,7 +450,7 @@ public void Update()
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught475) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught475); }
                 try
                 {
                     if (banBotsEnabled && Time.unscaledTime >= nextBotBanScanAt && AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && PlayerControl.AllPlayerControls != null)
@@ -456,7 +468,7 @@ public void Update()
                             string botPuid = hasIdentity ? identity.Puid : string.Empty;
 
                             ClientData client = null;
-                            try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch { }
+                            try { client = AmongUsClient.Instance.GetClientFromCharacter(pc); } catch (global::System.Exception __elysiumCaught476) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught476); }
                             if (client != null)
                             {
                                 if (!hasIdentity && !string.IsNullOrWhiteSpace(client.PlayerName)) botName = client.PlayerName;
@@ -482,7 +494,7 @@ public void Update()
                         nextBotBanScanAt = 0f;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught477) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught477); }
                 if (IsHudModalActive())
                 {
                     RestoreFreecamCamera();
@@ -505,7 +517,7 @@ public void Update()
                 }
 
                 try { ApplyCameraZoomTick(); }
-                catch { }
+                catch (global::System.Exception __elysiumCaught478) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught478); }
 
                 try
                 {
@@ -539,7 +551,7 @@ public void Update()
                     for (int i = 0; i < cachedTracerBodies.Count; i++)
                         HandleBodyTracer(cachedTracerBodies[i], enableBodyTracers);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught479) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught479); }
 
 
 
@@ -585,7 +597,7 @@ public void Update()
                 }
 
 
-                catch { }
+                catch (global::System.Exception __elysiumCaught480) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught480); }
 
                 try
                 {
@@ -605,7 +617,7 @@ public void Update()
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught481) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught481); }
 
 
             }
@@ -627,7 +639,7 @@ private static void MoveLocalPlayerToCursor(bool forceRpc)
                 Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 Vector2 target = new Vector2(mouseWorld.x, mouseWorld.y);
 
-                try { local.NetTransform.SnapTo(target); } catch { }
+                try { local.NetTransform.SnapTo(target); } catch (global::System.Exception __elysiumCaught482) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught482); }
 
                 if (!forceRpc && !ShouldSendCursorMoveRpc(target))
                     return;
@@ -637,7 +649,7 @@ private static void MoveLocalPlayerToCursor(bool forceRpc)
                 hasLastCursorMoveRpcPosition = true;
                 nextCursorMoveRpcAt = Time.unscaledTime + CursorMoveRpcIntervalSeconds;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught483) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught483); }
         }
 
 private static bool ShouldSendCursorMoveRpc(Vector2 target)
@@ -673,7 +685,7 @@ private static void TickFollowPlayer()
                 }
 
                 Vector2 pos = target.transform.position;
-                try { local.NetTransform.SnapTo(pos); } catch { }
+                try { local.NetTransform.SnapTo(pos); } catch (global::System.Exception __elysiumCaught484) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught484); }
 
                 if (AmongUsClient.Instance == null || AmongUsClient.Instance.NetworkMode == NetworkModes.FreePlay) return;
                 if (Time.unscaledTime < nextFollowPlayerRpcAt) return;
@@ -681,7 +693,7 @@ private static void TickFollowPlayer()
                 local.NetTransform.RpcSnapTo(pos);
                 nextFollowPlayerRpcAt = Time.unscaledTime + 0.08f;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught485) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught485); }
         }
 
         private static void TickFakeStartCounter()
@@ -707,7 +719,7 @@ private static void TickFollowPlayer()
                     manager.SetStartCounter((sbyte)Mathf.Clamp(custom, -128, 127));
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught486) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught486); }
         }
 
 public static List<int> GetFreeColorIds()
@@ -727,11 +739,11 @@ public static List<int> GetFreeColorIds()
                             int cid = p.Data.DefaultOutfit != null ? p.Data.DefaultOutfit.ColorId : -1;
                             if (cid >= 0 && cid <= 17) used.Add(cid);
                         }
-                        catch { }
+                        catch (global::System.Exception __elysiumCaught487) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught487); }
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught488) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught488); }
 
             List<int> free = new List<int>();
             for (int i = 0; i <= 17; i++)
@@ -748,7 +760,7 @@ public static void ResetAutoChatEveryoneRoundState()
 
                 ClearAutoChatEveryoneState();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught489) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught489); }
         }
 
 public static void ResetCurrentGameIntroState()
@@ -885,7 +897,7 @@ public static void NotifyAutoChatEveryoneShhhSeen()
                 pendingAutoMeeting = true;
                 autoMeetingTimer = 0f;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught490) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught490); }
         }
 
 private static void TickAutoChatEveryoneAfterShhh()
@@ -941,7 +953,7 @@ private static void TickAutoChatEveryoneAfterShhh()
                     ShowNotification("<color=#00FF00>[CHAT EVERYONE]</color> no-eject chat unlock sent.");
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught491) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught491); }
         }
 
 private static bool TryOpenGlobalChatViaNoEjectExile()
@@ -1180,7 +1192,7 @@ private static void LogFakeRpcFailure(byte rpc, string reason)
             {
                 Plugin.Instance?.Log?.LogWarning((object)$"Fake RPC was not sent: {label} ({rpc}). Reason: {reason}");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught492) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught492); }
 
             ShowNotification($"<color=#FF4444>[FAKE RPC]</color> Not sent <b>{label}</b> <color=#FFFF00>({rpc})</color>: {reason}");
         }
@@ -1198,7 +1210,7 @@ private static string GetSpoofRpcLabel(byte rpc)
                         return Regex.Replace(spoofMenuNames[i], @"\s*\(\d+\)\s*$", string.Empty).Trim();
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught493) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught493); }
 
             return "RPC";
         }
@@ -1240,7 +1252,7 @@ public static string SafeColorName(int id)
                 if (names != null && id >= 0 && id < names.Length)
                     return names[id];
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught494) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught494); }
             try { return Palette.GetColorName(id); }
             catch { return "Color " + id; }
         }

@@ -69,7 +69,7 @@ namespace ElysiumModMenu
 
                     int numImps = 1;
                     IGameOptions opts = GameOptionsManager.Instance.CurrentGameOptions;
-                    try { numImps = opts.GetInt((Int32OptionNames)1); } catch { }
+                    try { numImps = opts.GetInt((Int32OptionNames)1); } catch (global::System.Exception __elysiumCaught35) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught35); }
                     var impRoleTypes = new HashSet<int> { 1, 5, 9, 18 };
                     List<PlayerControl> impostors = new List<PlayerControl>();
                     foreach (var p in allPlayers)
@@ -170,7 +170,7 @@ namespace ElysiumModMenu
                         if (!protectionVisuals.TryGetValue(player.PlayerId, out state))
                         {
                             int fallbackColor = 0;
-                            try { fallbackColor = player.Data.DefaultOutfit.ColorId; } catch { }
+                            try { fallbackColor = player.Data.DefaultOutfit.ColorId; } catch (global::System.Exception __elysiumCaught36) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught36); }
                             state = new ProtectionVisualState
                             {
                                 ColorId = fallbackColor,
@@ -180,7 +180,7 @@ namespace ElysiumModMenu
 
                         player.TurnOnProtection(true, state.ColorId, state.GuardianPlayerId);
                     }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught37) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught37); }
                 }
             }
 
@@ -291,7 +291,7 @@ namespace ElysiumModMenu
                         else cosmetics.nameText.transform.localPosition = new Vector3(0f, 0f, 0f);
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught38) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught38); }
             }
         }
 
@@ -333,7 +333,7 @@ namespace ElysiumModMenu
                         }
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught39) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught39); }
             }
         }
 
@@ -357,7 +357,7 @@ namespace ElysiumModMenu
 
                     if (!bubble.NameText.text.Contains("Lv:")) bubble.NameText.text += extra;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught40) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught40); }
             }
         }
 
@@ -380,7 +380,7 @@ namespace ElysiumModMenu
                     if (!didSucceed || __instance == null || __instance.Data == null) return;
                     ElysiumModMenuGUI.lastKillTimestamps[__instance.PlayerId] = Time.time;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught41) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught41); }
             }
         }
 
@@ -399,7 +399,7 @@ namespace ElysiumModMenu
                     __instance.ShadowQuad.gameObject.SetActive(
                         !ElysiumModMenuGUI.fullBright && !ElysiumModMenuGUI.zoomOwnsCamera);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught42) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught42); }
             }
         }
 
@@ -450,27 +450,27 @@ namespace ElysiumModMenu
                     if (!hudModalActive && ElysiumModMenuGUI.zoomOwnsCamera && __instance.TaskPanel != null && __instance.TaskPanel.gameObject != null && ShipStatus.Instance != null && MeetingHud.Instance == null)
                         __instance.TaskPanel.gameObject.SetActive(true);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught43) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught43); }
             }
         }
 
 [HarmonyPatch(typeof(FullAccount), nameof(FullAccount.CanSetCustomName))]
-        public static class FullAccount_CanSetCustomName_Patch { public static void Prefix(ref bool canSetName) { try { if (ElysiumModMenuGUI.unlockFeatures || ElysiumModMenuGUI.guestExtraFeatures) canSetName = true; } catch { } } }
+        public static class FullAccount_CanSetCustomName_Patch { public static void Prefix(ref bool canSetName) { try { if (ElysiumModMenuGUI.unlockFeatures || ElysiumModMenuGUI.guestExtraFeatures) canSetName = true; } catch (global::System.Exception __elysiumCaught44) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught44); } } }
 
 [HarmonyPatch(typeof(AccountManager), nameof(AccountManager.CanPlayOnline))]
-        public static class AccountManager_CanPlayOnline_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.unlockFeatures || ElysiumModMenuGUI.bypassAgeRestrictions) __result = true; } catch { } } }
+        public static class AccountManager_CanPlayOnline_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.unlockFeatures || ElysiumModMenuGUI.bypassAgeRestrictions) __result = true; } catch (global::System.Exception __elysiumCaught45) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught45); } } }
 
 [HarmonyPatch(typeof(EOSManager), "IsFreechatAllowed")]
-        public static class EOSManager_IsFreechatAllowed_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.guestExtraFeatures) __result = true; } catch { } } }
+        public static class EOSManager_IsFreechatAllowed_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.guestExtraFeatures) __result = true; } catch (global::System.Exception __elysiumCaught46) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught46); } } }
 
 [HarmonyPatch(typeof(EOSManager), "IsFriendsListAllowed")]
-        public static class EOSManager_IsFriendsListAllowed_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.guestExtraFeatures) __result = true; } catch { } } }
+        public static class EOSManager_IsFriendsListAllowed_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.guestExtraFeatures) __result = true; } catch (global::System.Exception __elysiumCaught47) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught47); } } }
 
 [HarmonyPatch(typeof(EOSManager), "IsMinorOrWaiting")]
-        public static class EOSManager_IsMinorOrWaiting_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.bypassAgeRestrictions) __result = false; } catch { } } }
+        public static class EOSManager_IsMinorOrWaiting_Patch { public static void Postfix(ref bool __result) { try { if (ElysiumModMenuGUI.bypassAgeRestrictions) __result = false; } catch (global::System.Exception __elysiumCaught48) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught48); } } }
 
 [HarmonyPatch(typeof(EOSManager), "IsAllowedOnline")]
-        public static class EOSManager_IsAllowedOnline_Patch { public static void Prefix(ref bool canOnline) { try { if (ElysiumModMenuGUI.bypassAgeRestrictions) canOnline = true; } catch { } } }
+        public static class EOSManager_IsAllowedOnline_Patch { public static void Prefix(ref bool canOnline) { try { if (ElysiumModMenuGUI.bypassAgeRestrictions) canOnline = true; } catch (global::System.Exception __elysiumCaught49) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught49); } } }
 
 [HarmonyPatch(typeof(InnerNetClient), "JoinGame")]
         public static class InnerNetClient_JoinGame_AccountReady_Patch
@@ -483,7 +483,7 @@ namespace ElysiumModMenu
                     if (AmongUs.Data.DataManager.Player == null || AmongUs.Data.DataManager.Player.Account == null) return;
                     AmongUs.Data.DataManager.Player.Account.LoginStatus = (EOSManager.AccountLoginStatus)1;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught50) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught50); }
             }
         }
 
@@ -554,7 +554,7 @@ namespace ElysiumModMenu
                     couldUse = true;
                     __result = distance;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught51) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught51); }
             }
         }
 
@@ -585,7 +585,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught52) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught52); }
 
             return false;
         }
@@ -615,7 +615,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     if (!ElysiumModMenuGUI.noMapCooldowns) return;
                     TrySetCooldownMember(__instance, 0f);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught53) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught53); }
             }
         }
 
@@ -643,7 +643,7 @@ private static bool TrySetCooldownMember(object target, float value)
 
                     ElysiumModMenuGUI.TryOpenModdedMeeting(PlayerControl.LocalPlayer, target.Data);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught54) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught54); }
             }
         }
 
@@ -662,7 +662,7 @@ private static bool TrySetCooldownMember(object target, float value)
                         player.killTimer = 10f;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught55) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught55); }
             }
         }
 
@@ -678,7 +678,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     if (__instance.ForceKillTimerContinue || __instance.IsKillTimerEnabled)
                         __instance.killTimer = Mathf.Max(0f, __instance.killTimer - Time.fixedDeltaTime);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught56) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught56); }
             }
         }
 
@@ -694,7 +694,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     if (__instance != PlayerControl.LocalPlayer) return;
                     time = 0f;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught57) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught57); }
             }
         }
 
@@ -762,7 +762,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     if (!ElysiumModMenuGUI.killAnyone || ElysiumModMenuGUI.killReach) return;
                     __result = ElysiumModMenuGUI.FindClosestKillTarget(__instance, ElysiumModMenuGUI.GetVanillaKillDistance());
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught58) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught58); }
             }
         }
 
@@ -780,7 +780,7 @@ private static bool TrySetCooldownMember(object target, float value)
 
                     __result = ElysiumModMenuGUI.FindClosestKillTarget(__instance, ElysiumModMenuGUI.GetVanillaKillDistance());
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught59) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught59); }
             }
         }
 
@@ -797,7 +797,7 @@ private static bool TrySetCooldownMember(object target, float value)
 
                     __result = ElysiumModMenuGUI.IsElysiumValidKillTarget(target);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught60) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught60); }
             }
         }
 
@@ -850,7 +850,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     if (local == null || local.Data == null) return;
                     local.RpcProtectPlayer(target, target.Data.DefaultOutfit.ColorId);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught61) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught61); }
             }
         }
 
@@ -889,7 +889,7 @@ private static bool TrySetCooldownMember(object target, float value)
 [HarmonyPatch(typeof(ImpostorRole), "IsValidTarget")]
         public static class ImpostorKillAnyonePatch
         {
-            public static void Postfix(NetworkedPlayerInfo target, ref bool __result) { try { if (ElysiumModMenuGUI.killAnyone) __result = ElysiumModMenuGUI.IsElysiumValidKillTarget(target); } catch { } }
+            public static void Postfix(NetworkedPlayerInfo target, ref bool __result) { try { if (ElysiumModMenuGUI.killAnyone) __result = ElysiumModMenuGUI.IsElysiumValidKillTarget(target); } catch (global::System.Exception __elysiumCaught62) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught62); } }
         }
 
 private void teleportToPlayer(PlayerControl t)
@@ -934,7 +934,7 @@ private void teleportToPlayer(PlayerControl t)
             public static bool Prefix(DoorBreakerGame __instance)
             {
                 if (!ElysiumModMenuGUI.autoOpenDoors) return true;
-                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch { }
+                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch (global::System.Exception __elysiumCaught63) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught63); }
                 __instance.MyDoor.SetDoorway(true); __instance.Close();
                 return false;
             }
@@ -946,7 +946,7 @@ private void teleportToPlayer(PlayerControl t)
             public static bool Prefix(DoorCardSwipeGame __instance)
             {
                 if (!ElysiumModMenuGUI.autoOpenDoors) return true;
-                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch { }
+                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch (global::System.Exception __elysiumCaught64) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught64); }
                 __instance.MyDoor.SetDoorway(true); __instance.Close();
                 return false;
             }
@@ -958,9 +958,7 @@ private void teleportToPlayer(PlayerControl t)
             public static bool Prefix(MushroomDoorSabotageMinigame __instance) { if (ElysiumModMenuGUI.autoOpenDoors) { __instance.FixDoorAndCloseMinigame(); return false; } return true; }
         }
 
-        // No Task Mode is implemented by setting the host's task counts to zero.
-        // Never suppress SetTasks itself: clients must accept the authoritative
-        // server task list or the round-start synchronization remains incomplete.
+        // No Task Mode zeros host task counts; SetTasks must still reach clients.
         public static class NoTaskMode_Patch { public static bool Prefix(PlayerControl __instance) { return true; } }
 
 [HarmonyPatch]
@@ -991,7 +989,7 @@ private void teleportToPlayer(PlayerControl t)
                     if (!sabotageConsoleIds.Contains(__instance.ConsoleId))
                         __instance.AllowImpostor = false;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught65) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught65); }
             }
 
             public static void Postfix(global::Console __instance, NetworkedPlayerInfo pc, ref bool canUse, ref bool couldUse, ref float __result)
@@ -1014,7 +1012,7 @@ private void teleportToPlayer(PlayerControl t)
                     if (couldUse)
                         __result = Mathf.Min(__result, ElysiumModMenuGUI.GetConsoleUsableDistance(__instance));
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught66) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught66); }
             }
         }
 
@@ -1038,7 +1036,7 @@ private void teleportToPlayer(PlayerControl t)
                     if (__instance is global::Console console && ElysiumModMenuGUI.ShouldBlockUnsafeConsoleUse(console))
                         return false;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught67) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught67); }
 
                 return true;
             }
@@ -1057,7 +1055,7 @@ private void teleportToPlayer(PlayerControl t)
                         (op == VentilationSystem.Operation.Enter || op == VentilationSystem.Operation.Exit || op == VentilationSystem.Operation.Move))
                         return false;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught68) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught68); }
 
                 return true;
             }
@@ -1086,7 +1084,7 @@ private void teleportToPlayer(PlayerControl t)
                         !PlayerControl.LocalPlayer.Data.IsDead)
                         ElysiumModMenuGUI.SetImmortalityVentState(true);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught69) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught69); }
             }
         }
 
@@ -1100,7 +1098,7 @@ private void teleportToPlayer(PlayerControl t)
                     if (!ElysiumModMenuGUI.roleBuffImmortality || target != PlayerControl.LocalPlayer || __instance == null || __instance.Data == null) return;
                     ShowNotification($"<color=#66CCFF>[IMMORTALITY]</color> {__instance.Data.PlayerName} tried to kill you.");
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught70) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught70); }
             }
         }
 }

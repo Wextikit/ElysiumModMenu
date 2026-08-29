@@ -380,7 +380,7 @@ private static void CaptureGameDataEnvelope(MessageReader reader, byte tag, Send
 						}
 						finally { dataCopy?.Recycle(); }
 					}
-					catch { }
+					catch (global::System.Exception __elysiumCaught603) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught603); }
 					if (activeInboundHasNetIdOverflow) break;
 				}
 
@@ -450,7 +450,7 @@ private static void CaptureGameDataEnvelope(MessageReader reader, byte tag, Send
 						}
 						finally { spawnCopy?.Recycle(); }
 					}
-					catch { }
+					catch (global::System.Exception __elysiumCaught604) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught604); }
 				}
 
 				if (part.Tag == 2 && TryReadRpcEnvelope(part, out uint netId, out byte callId))
@@ -504,9 +504,7 @@ private static void CaptureGameDataEnvelope(MessageReader reader, byte tag, Send
 			{
 				reader.Position = originalPosition;
 			}
-			catch
-			{
-			}
+			catch (global::System.Exception __elysiumCaught605) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught605); }
 		}
 	}
 
@@ -548,9 +546,7 @@ private static void CaptureJoinEnvelope(MessageReader reader)
 				SetActiveInboundSender(joinedClientId);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught606) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught606); }
 		finally
 		{
 			copy?.Recycle();
@@ -558,9 +554,7 @@ private static void CaptureJoinEnvelope(MessageReader reader)
 			{
 				reader.Position = originalPosition;
 			}
-			catch
-			{
-			}
+			catch (global::System.Exception __elysiumCaught607) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught607); }
 		}
 	}
 
@@ -674,7 +668,7 @@ private static int FindClientIdByNetId(uint netId)
 					if (IsKnownRemoteClient(ownerId))
 						return ownerId;
 				}
-				catch { }
+				catch (global::System.Exception __elysiumCaught608) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught608); }
 			}
 			return -1;
 		}
@@ -755,9 +749,7 @@ internal static int ResolveCurrentRpcSenderClientId(InnerNetObject netObject, by
 				}
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught609) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught609); }
 
 		return ResolveRpcSenderClientId(senderClientId, false, default);
 	}
@@ -910,9 +902,7 @@ internal static bool CheckRpc(PlayerControl player, int callId, MessageReader re
 				{
 					reader.Position = originalPosition;
 				}
-				catch
-				{
-				}
+				catch (global::System.Exception __elysiumCaught610) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught610); }
 			}
 		}
 	}
@@ -1151,9 +1141,7 @@ private static void LogClientSuccessDetails(ClientData client)
 				rawPlatformName = SafeString(client.PlatformData.PlatformName);
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught611) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught611); }
 
 		string levelText = "-";
 		try
@@ -1167,9 +1155,7 @@ private static void LogClientSuccessDetails(ClientData client)
 				levelText = characterLevel.ToString();
 			}
 		}
-		catch
-		{
-		}
+		catch (global::System.Exception __elysiumCaught612) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught612); }
 
 		GuardPlugin.Logger?.LogInfo((object)$"NetGuard client info: id={client.Id}, player='{TrimJoinLog(ReadClientName(client, client.PlayerName), 64)}', platformTag={platformTag}, platform='{TrimJoinLog(platform, 48)}', rawPlatformName='{TrimJoinLog(rawPlatformName, 64)}', level={levelText}, friendCode='{TrimJoinLog(SafeString(client.FriendCode), 64)}', productUserId='{TrimJoinLog(SafeString(client.ProductUserId), 128)}'");
 	}

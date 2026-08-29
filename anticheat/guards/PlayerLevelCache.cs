@@ -61,7 +61,7 @@ internal static class PlayerLevelCache
 	private static readonly Dictionary<int, uint> byClient = new Dictionary<int, uint>();
 	internal static void Remember(PlayerControl player, uint level)
 	{
-		try { if (player != null) byClient[player.OwnerId] = level; } catch { }
+		try { if (player != null) byClient[player.OwnerId] = level; } catch (global::System.Exception __elysiumCaught640) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught640); }
 	}
 	internal static bool TryGetDisplayLevel(int clientId, out uint level)
 	{

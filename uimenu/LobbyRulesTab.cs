@@ -208,7 +208,7 @@ private void DrawHnsSettingsTab()
 private void LoadLobbySettingsFromGame(bool force)
         {
             int gid = 0;
-            try { if (AmongUsClient.Instance != null) gid = AmongUsClient.Instance.GameId; } catch { }
+            try { if (AmongUsClient.Instance != null) gid = AmongUsClient.Instance.GameId; } catch (global::System.Exception __elysiumCaught503) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught503); }
             if (!force && lobbySettingsDirty) return;
             if (!force && !string.IsNullOrEmpty(lobbySetEditKey)) return;
             if (!force && lobbySettingsLoaded && lobbySettingsGameId == gid && Time.unscaledTime < nextLobbySettingsReadAt) return;

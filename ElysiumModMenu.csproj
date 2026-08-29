@@ -31,6 +31,20 @@
 		<EmbeddedResource Include="resources\radar_player_visor.png" LogicalName="ElysiumModMenu.radar_player_visor.png" />
 		<EmbeddedResource Include="resources\radar_cross.png" LogicalName="ElysiumModMenu.radar_cross.png" />
 		<EmbeddedResource Include="resources\radar_dead_body.png" LogicalName="ElysiumModMenu.radar_dead_body.png" />
+		<EmbeddedResource Include="resources\replay_kill.png" LogicalName="ElysiumModMenu.replay_kill.png" />
+		<EmbeddedResource Include="resources\replay_report.png" LogicalName="ElysiumModMenu.replay_report.png" />
+		<EmbeddedResource Include="resources\replay_task.png" LogicalName="ElysiumModMenu.replay_task.png" />
+		<EmbeddedResource Include="resources\replay_vent_in.png" LogicalName="ElysiumModMenu.replay_vent_in.png" />
+		<EmbeddedResource Include="resources\replay_vent_out.png" LogicalName="ElysiumModMenu.replay_vent_out.png" />
+		<EmbeddedResource Include="resources\sicko_player.png" LogicalName="ElysiumModMenu.sicko_player.png" />
+		<EmbeddedResource Include="resources\sicko_player_visor.png" LogicalName="ElysiumModMenu.sicko_player_visor.png" />
+		<EmbeddedResource Include="resources\sicko_cross.png" LogicalName="ElysiumModMenu.sicko_cross.png" />
+		<EmbeddedResource Include="resources\sicko_dead_body.png" LogicalName="ElysiumModMenu.sicko_dead_body.png" />
+		<EmbeddedResource Include="resources\sicko_kill.png" LogicalName="ElysiumModMenu.sicko_kill.png" />
+		<EmbeddedResource Include="resources\sicko_report.png" LogicalName="ElysiumModMenu.sicko_report.png" />
+		<EmbeddedResource Include="resources\sicko_task.png" LogicalName="ElysiumModMenu.sicko_task.png" />
+		<EmbeddedResource Include="resources\sicko_vent_in.png" LogicalName="ElysiumModMenu.sicko_vent_in.png" />
+		<EmbeddedResource Include="resources\sicko_vent_out.png" LogicalName="ElysiumModMenu.sicko_vent_out.png" />
 		<EmbeddedResource Include="resources\dark_chat_quick.png" LogicalName="ElysiumModMenu.dark_chat_quick.png" />
 		<EmbeddedResource Include="resources\dark_chat_report.png" LogicalName="ElysiumModMenu.dark_chat_report.png" />
 		<EmbeddedResource Include="resources\dark_chat_keyboard.png" LogicalName="ElysiumModMenu.dark_chat_keyboard.png" />

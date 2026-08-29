@@ -355,6 +355,6 @@ public static class ChatController_Update_Patch
         {
             DarkChatTheme.Tick(__instance);
         }
-        catch { }
+        catch (global::System.Exception __elysiumCaught203) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught203); }
     }
 }

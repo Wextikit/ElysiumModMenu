@@ -91,7 +91,7 @@ private void TryKillAuraTick()
                 killAuraTimer = 0f;
                 localPlayer.CmdCheckMurder(nearestTarget);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught32) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught32); }
         }
 
 private void TryHostAutoKillRandomTick()
@@ -200,7 +200,7 @@ private static PlayerControl FindHostAutoKillTarget(PlayerControl localPlayer)
                     if (pc.PlayerId == hostAutoKillTargetId) return pc;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught33) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught33); }
             return null;
         }
 

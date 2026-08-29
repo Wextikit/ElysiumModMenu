@@ -124,7 +124,7 @@ private void DrawChatSettingsContent()
             GUILayout.Space(2);
             enableExtendedChat = DrawToggle(enableExtendedChat, L("Extended Chat (120 chars)", "Длинный чат (120 симв.)"), 280);
             GUILayout.Space(2);
-            enableFastChat = DrawToggle(enableFastChat, L("Fast Chat (3.1 to 2.1", "Быстрый чат (c 3.1 до 2.1)"), 280);
+            enableFastChat = DrawToggle(enableFastChat, L("Fast Chat (3.1 to 2.1)", "Быстрый чат (с 3.1 до 2.1)"), 280);
             GUILayout.Space(2);
             chatNoCooldown = DrawToggle(chatNoCooldown, L("Chat No CD (0.1s)", "Чат без КД (0.1с)"), 280);
             GUILayout.Space(2);
@@ -247,7 +247,9 @@ private void DrawChatSettingsContent()
 
             GUILayout.BeginHorizontal(GUILayout.Height(24));
             GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Height(22), GUILayout.Width(122));
+            float previousSpamDelay = customChatSpamDelay;
             customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.Width(300));
+            if (Mathf.Abs(previousSpamDelay - customChatSpamDelay) > 0.001f) settingsDirty = true;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -430,7 +432,7 @@ private void InsertSymbolIntoChatInputs(string symbol)
                 if (textArea != null && (textArea.text?.Length ?? 0) + symbol.Length <= 120)
                     textArea.text = (textArea.text ?? string.Empty) + symbol;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught468) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught468); }
         }
 
 public static void AddPortableChatLog(PlayerControl sourcePlayer, string chatText)
@@ -476,7 +478,7 @@ public static void AddPortableChatLog(PlayerControl sourcePlayer, string chatTex
 
                 portableChatLogVersion++;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught469) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught469); }
         }
 
 private static string CleanPortableChatText(string value, int maxLength)
@@ -547,7 +549,7 @@ private static void TrySpellCheckNotify(string text)
                     ShowNotification($"<color=#FFCC66>[SPELL]</color> Check words: {joined}");
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught470) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught470); }
         }
     }
 }

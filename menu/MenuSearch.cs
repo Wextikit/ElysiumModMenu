@@ -36,7 +36,7 @@ namespace ElysiumModMenu
             new MenuSearchEntry("Self", "self player speed outfits spoof name friend code", 1),
             new MenuSearchEntry("Visuals", "visual esp radar replay tracers roles ghosts", 2, 0),
             new MenuSearchEntry("ESP Boxes", "esp boxes player boxes", 2, 0),
-            new MenuSearchEntry("Task Arrows", "task tasks arrows стрелки таски", 2, 0),
+            new MenuSearchEntry("Task Tracers", "task tasks tracers arrows трассеры стрелки таски", 2, 0),
             new MenuSearchEntry("Radar", "radar map bodies ghosts", 2, 0),
             new MenuSearchEntry("Players", "players target player kill telekill report", 3, 0),
             new MenuSearchEntry("Player Tasks", "flood change delete clear tasks", 3, 0),
@@ -96,7 +96,8 @@ namespace ElysiumModMenu
 
         private void DrawMenuSearchInput(float width)
         {
-            Rect rect = GUILayoutUtility.GetRect(width, 22f, GUILayout.Width(width), GUILayout.Height(22f));
+            const float searchHeight = 26f;
+            Rect rect = GUILayoutUtility.GetRect(width, searchHeight, GUILayout.Width(width), GUILayout.Height(searchHeight));
             Event e = Event.current;
 
             if (e != null && e.type == EventType.MouseDown)
@@ -139,11 +140,12 @@ namespace ElysiumModMenu
 
             EnsureMenuSearchStyles();
             GUI.Box(rect, GUIContent.none, inputBlockStyle);
+            Rect textRect = new Rect(rect.x + 8f, rect.y, Mathf.Max(0f, rect.width - 16f), rect.height);
             string text = menuSearchQuery ?? string.Empty;
             if (text.Length == 0 && !menuSearchInputFocused)
-                GUI.Label(rect, "Search menu...", menuSearchHintStyle);
+                GUI.Label(textRect, "Search menu...", menuSearchHintStyle);
             else
-                GUI.Label(rect, menuSearchInputFocused && Time.unscaledTime % 1f < 0.5f ? text + "|" : text, menuSearchTextStyle);
+                GUI.Label(textRect, menuSearchInputFocused && Time.unscaledTime % 1f < 0.5f ? text + "|" : text, menuSearchTextStyle);
         }
 
         private void EnsureMenuSearchStyles()
@@ -153,23 +155,23 @@ namespace ElysiumModMenu
 
             menuSearchHintSource = menuDescStyle;
             menuSearchTextSource = toggleLabelStyle;
-            menuSearchHintStyle = new GUIStyle(menuDescStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(8, 6, 0, 0) };
-            menuSearchTextStyle = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(8, 6, 0, 0) };
+            menuSearchHintStyle = new GUIStyle(menuDescStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(0, 0, 0, 0), fontSize = 11 };
+            menuSearchTextStyle = new GUIStyle(toggleLabelStyle) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, wordWrap = false, padding = CreateRectOffset(0, 0, 0, 0), fontSize = 11 };
         }
 
         private void DrawMenuSearchBar(float width)
         {
             bool hasQuery = !string.IsNullOrEmpty(menuSearchQuery);
-            float inputWidth = Mathf.Max(0f, width - (hasQuery ? 24f : 0f));
+            float inputWidth = Mathf.Max(0f, width - (hasQuery ? 28f : 0f));
 
-            GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(22f));
+            GUILayout.BeginHorizontal(GUILayout.Width(width), GUILayout.Height(26f));
             try
             {
                 DrawMenuSearchInput(inputWidth);
                 if (hasQuery)
                 {
                     GUILayout.Space(2f);
-                    if (GUILayout.Button("×", btnStyle, GUILayout.Width(22f), GUILayout.Height(22f)))
+                    if (GUILayout.Button("×", btnStyle, GUILayout.Width(26f), GUILayout.Height(26f)))
                     {
                         menuSearchQuery = string.Empty;
                         menuSearchInputFocused = false;

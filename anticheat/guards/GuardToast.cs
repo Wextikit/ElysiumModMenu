@@ -60,7 +60,7 @@ internal static class GuardToast
 {
 	internal static void Show(string title, string detail, float duration)
 	{
-		try { ElysiumModMenu.ElysiumModMenuGUI.ShowNotification("[" + title + "] " + detail); } catch { }
+		try { ElysiumModMenu.ElysiumModMenuGUI.ShowNotification("[" + title + "] " + detail); } catch (global::System.Exception __elysiumCaught638) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught638); }
 	}
 }
 }

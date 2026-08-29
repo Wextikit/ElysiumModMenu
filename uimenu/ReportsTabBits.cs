@@ -87,6 +87,7 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
             LoadBanList();
             LoadBotBanList();
             ClearSpamErrorLogOnStartup();
+            ShowModCompatibilityWarnings();
 
 
             try
@@ -108,7 +109,7 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
                 UnityEngine.PlayerPrefs.SetInt("Elysium_GameStarts", starts);
                 UnityEngine.PlayerPrefs.Save();
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught533) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught533); }
         }
 
         public void OnApplicationQuit()
@@ -149,13 +150,11 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
                 foreach (string file in System.IO.Directory.GetFiles(root, "SpamErrorLog*.txt", System.IO.SearchOption.AllDirectories))
                 {
                     try { System.IO.File.Delete(file); }
-                    catch { }
+                    catch (global::System.Exception __elysiumCaught534) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught534); }
                 }
 
             }
-            catch
-            {
-            }
+            catch (global::System.Exception __elysiumCaught535) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught535); }
         }
 
         private static string lastKnownRoomCode = string.Empty;
@@ -184,7 +183,7 @@ public static string GetCurrentRoomCodeForStatus()
                         return lastKnownRoomCode;
                     }
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught536) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught536); }
 
                 return string.IsNullOrWhiteSpace(lastKnownRoomCode) ? "No room" : lastKnownRoomCode;
             }
@@ -223,7 +222,7 @@ private bool CanRunHostBind(string actionName)
             {
                 if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost) return true;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught537) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught537); }
 
             ShowNotification($"<color=#FF0000>[BIND]</color> {actionName}: host only");
             return false;

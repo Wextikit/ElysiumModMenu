@@ -174,7 +174,7 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["GLITCH ROOM SCOUT"] = "ПОИСК ГЛИТЧ-КОМНАТ",
             ["Overflow Protection"] = "Защита от переполнения",
             ["ESP Boxes"] = "ESP-рамки",
-            ["ESP Shimmer"] = "Перелив ESP",
+            ["Rainbow ESP"] = "Радужный ESP",
             ["Vote Kicks ESP"] = "ESP vote-kick",
             ["Show Radar"] = "Показывать радар",
             ["Realistic Mode"] = "Реалистичный режим",
@@ -184,6 +184,8 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["Right Click TP"] = "ТП по ПКМ",
             ["Hide In Meeting"] = "Скрывать на митинге",
             ["Lock Position"] = "Зафиксировать позицию",
+            ["Border"] = "Обводка",
+            ["Console"] = "Консоль",
             ["Show Replay"] = "Показывать повтор",
             ["Only Last Seconds"] = "Только последние секунды",
             ["Disable Map Safe Mode"] = "Отключить safe mode карты",
@@ -267,7 +269,7 @@ private static string FixMenuRussianText(string text)
                 byte[] bytes = Encoding.GetEncoding(1251).GetBytes(text);
                 return new UTF8Encoding(false, true).GetString(bytes);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught358) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught358); }
             return text;
         }
 
@@ -338,6 +340,18 @@ public static KeyCode bindSetAllGhostImp = KeyCode.None;
 
 public static KeyCode bindReviveAll = KeyCode.None;
 
+public static KeyCode bindToggleRadar = KeyCode.None;
+
+public static KeyCode bindToggleReplay = KeyCode.None;
+
+public static KeyCode bindToggleReplayConsole = KeyCode.None;
+
+public static KeyCode bindToggleRadarIcons = KeyCode.None;
+
+public static KeyCode bindToggleReplayIcons = KeyCode.None;
+
+public static KeyCode bindToggleAlwaysChat = KeyCode.None;
+
 public static readonly HashSet<byte> VanillaRpcIds = new HashSet<byte>
         {
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -398,6 +412,18 @@ public static bool isWaitBindSetAllGhost = false;
 public static bool isWaitBindSetAllGhostImp = false;
 
 public static bool isWaitBindReviveAll = false;
+
+public static bool isWaitBindToggleRadar = false;
+
+public static bool isWaitBindToggleReplay = false;
+
+public static bool isWaitBindToggleReplayConsole = false;
+
+public static bool isWaitBindToggleRadarIcons = false;
+
+public static bool isWaitBindToggleReplayIcons = false;
+
+public static bool isWaitBindToggleAlwaysChat = false;
 
 public static bool SpoofMenuEnabled = false;
 
@@ -675,9 +701,9 @@ public static bool IsMenuInputActive()
                    customSpoofRpcInputFocused || !string.IsNullOrEmpty(lobbySetEditKey);
         }
 
-private const float defaultMenuWidth = 750f;
+private const float defaultMenuWidth = 860f;
 
-private const float defaultMenuHeight = 480f;
+private const float defaultMenuHeight = 560f;
 
 private const float defaultMenuScale = 1f;
 
@@ -746,7 +772,9 @@ private string[] menuColorNames = {
             "Plasma Rose", "Emerald Ice", "Void Flame", "Lime Punch", "Blueberry Pop", "Solar Mint",
             "Ruby Neon", "Galaxy Peach",
             "Emerald Blush", "Orchid Night", "Crimson Tide", "Honey Plum", "Arctic Rose",
-            "Forest Gold", "Cobalt Peach", "Velvet Mint", "Solar Ink", "Cherry Cream", "Moss Aurora"
+            "Forest Gold", "Cobalt Peach", "Velvet Mint", "Solar Ink", "Cherry Cream", "Moss Aurora",
+            "Moonlight", "Synthwave", "Peach Mint", "Glacier Fire", "Violet Gold", "Candy Storm",
+            "Dragonfruit", "Northern Lights", "Copper Teal", "Sakura Night", "Acid Purple", "Iceberry"
         };
 
 private Color[] menuColors = {
@@ -771,7 +799,10 @@ private Color[] menuColors = {
             new Color32(236, 72, 153, 255), new Color32(16, 185, 129, 255), new Color32(17, 24, 39, 255), new Color32(190, 242, 100, 255),
             new Color32(96, 165, 250, 255), new Color32(251, 191, 36, 255), new Color32(220, 38, 38, 255), new Color32(99, 102, 241, 255),
             new Color32(20, 83, 67, 255), new Color32(49, 35, 83, 255), new Color32(135, 25, 50, 255), new Color32(190, 132, 54, 255), new Color32(75, 169, 190, 255),
-            new Color32(40, 103, 68, 255), new Color32(45, 92, 190, 255), new Color32(124, 47, 111, 255), new Color32(242, 181, 48, 255), new Color32(196, 49, 76, 255), new Color32(83, 135, 87, 255)
+            new Color32(40, 103, 68, 255), new Color32(45, 92, 190, 255), new Color32(124, 47, 111, 255), new Color32(242, 181, 48, 255), new Color32(196, 49, 76, 255), new Color32(83, 135, 87, 255),
+            new Color32(64, 91, 181, 255), new Color32(219, 39, 119, 255), new Color32(251, 146, 60, 255), new Color32(56, 189, 248, 255),
+            new Color32(126, 34, 206, 255), new Color32(244, 63, 94, 255), new Color32(225, 29, 72, 255), new Color32(16, 185, 129, 255),
+            new Color32(180, 83, 9, 255), new Color32(190, 24, 93, 255), new Color32(132, 204, 22, 255), new Color32(59, 130, 246, 255)
         };
 
 private Color[] menuPairColors = {
@@ -784,7 +815,10 @@ private Color[] menuPairColors = {
             new Color32(217, 70, 239, 255), new Color32(45, 212, 191, 255), new Color32(34, 211, 238, 255), new Color32(251, 146, 60, 255),
             new Color32(216, 112, 145, 255), new Color32(191, 100, 185, 255), new Color32(52, 136, 160, 255), new Color32(100, 56, 116, 255),
             new Color32(246, 154, 183, 255), new Color32(228, 181, 68, 255), new Color32(247, 164, 115, 255), new Color32(116, 206, 171, 255),
-            new Color32(42, 52, 83, 255), new Color32(249, 213, 187, 255), new Color32(151, 215, 185, 255)
+            new Color32(42, 52, 83, 255), new Color32(249, 213, 187, 255), new Color32(151, 215, 185, 255),
+            new Color32(165, 180, 252, 255), new Color32(34, 211, 238, 255), new Color32(110, 231, 183, 255), new Color32(249, 115, 22, 255),
+            new Color32(250, 204, 21, 255), new Color32(192, 132, 252, 255), new Color32(45, 212, 191, 255), new Color32(125, 211, 252, 255),
+            new Color32(45, 212, 191, 255), new Color32(251, 207, 232, 255), new Color32(168, 85, 247, 255), new Color32(103, 232, 249, 255)
         };
 
 public static float autoChatEveryoneDelay = 2.5f;
@@ -854,7 +888,7 @@ public static bool FlippedSkeld
                     AmongUsClient.Instance.ShipPrefabs[0] = temp;
                     isSkeldFlipped = value;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught359) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught359); }
             }
         }
 
@@ -915,7 +949,7 @@ public static bool FlippedSkeld
                         {
                             foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                             {
-                                try { if (pc != null) pc.RpcSendChat(msg); } catch { }
+                                try { if (pc != null) pc.RpcSendChat(msg); } catch (global::System.Exception __elysiumCaught360) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught360); }
                             }
                         }
                         __instance.freeChatField.textArea.SetText(string.Empty, string.Empty);
@@ -974,7 +1008,7 @@ public static bool FlippedSkeld
                     ((Connection)((InnerNetClient)AmongUsClient.Instance).connection).Send(wr);
                     wr.Recycle();
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught361) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught361); }
             }
         }
 

@@ -31,7 +31,7 @@ namespace ElysiumModMenu
                     return "Left the local ejection screen.";
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught156) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught156); }
 
             return "No meeting or ejection screen is active.";
         }
@@ -48,16 +48,16 @@ namespace ElysiumModMenu
                     hud.StartCoroutine(hud.CoFadeFullScreen(Color.black, Color.clear, 0.2f, false));
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught157) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught157); }
 
-            try { ControllerManager.Instance?.CloseAndResetAll(); } catch { }
+            try { ControllerManager.Instance?.CloseAndResetAll(); } catch (global::System.Exception __elysiumCaught158) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught158); }
 
             try
             {
                 FollowerCamera follower = Camera.main?.GetComponent<FollowerCamera>();
                 if (follower != null) follower.Locked = false;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught159) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught159); }
         }
     }
 
@@ -168,7 +168,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught160) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught160); }
 
             return logicOptionsIndex;
         }
@@ -208,8 +208,8 @@ namespace ElysiumModMenu
             catch { return false; }
             finally
             {
-                try { body?.Recycle(); } catch { }
-                try { packet?.Recycle(); } catch { }
+                try { body?.Recycle(); } catch (global::System.Exception __elysiumCaught161) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught161); }
+                try { packet?.Recycle(); } catch (global::System.Exception __elysiumCaught162) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught162); }
             }
         }
     }
@@ -251,10 +251,10 @@ namespace ElysiumModMenu
                 Vent nearest = FindNearestVent(local.GetTruePosition());
                 if (nearest == null) return;
 
-                try { local.NetTransform?.RpcSnapTo(nearest.transform.position); } catch { }
-                try { local.MyPhysics.RpcEnterVent(nearest.Id); } catch { }
+                try { local.NetTransform?.RpcSnapTo(nearest.transform.position); } catch (global::System.Exception __elysiumCaught163) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught163); }
+                try { local.MyPhysics.RpcEnterVent(nearest.Id); } catch (global::System.Exception __elysiumCaught164) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught164); }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught165) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught165); }
         }
 
         private static Vent FindNearestVent(Vector2 position)
@@ -279,7 +279,7 @@ namespace ElysiumModMenu
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught166) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught166); }
 
             return nearest;
         }
@@ -328,7 +328,7 @@ namespace ElysiumModMenu
                     if (ElysiumModMenuGUI.SendImpTrapPlayerToVent(player, ventId)) pulled++;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught167) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught167); }
 
             if (pulled > 0)
             {
@@ -416,7 +416,7 @@ namespace ElysiumModMenu
                 if (anticheatLive && network.GameState != InnerNetClient.GameStates.Started)
                     return;
 
-                try { reporter.RemainingEmergencies = 999999; } catch { }
+                try { reporter.RemainingEmergencies = 999999; } catch (global::System.Exception __elysiumCaught168) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught168); }
 
                 if (!network.AmHost)
                 {
@@ -428,7 +428,7 @@ namespace ElysiumModMenu
                 reporter.RpcStartMeeting(null);
                 HudManager.Instance?.OpenMeetingRoom(reporter);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught169) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught169); }
         }
     }
 
@@ -491,7 +491,7 @@ namespace ElysiumModMenu
                     if (task != null) local.RpcCompleteTask(task.Id);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught170) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught170); }
         }
     }
 
@@ -512,7 +512,7 @@ namespace ElysiumModMenu
                     if (task != null && !task.IsComplete) count++;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught171) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught171); }
             return count;
         }
 
@@ -556,7 +556,7 @@ namespace ElysiumModMenu
                     return;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught172) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught172); }
         }
     }
 }

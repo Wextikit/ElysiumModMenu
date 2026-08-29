@@ -52,7 +52,7 @@ private void DrawChatSettingsCompact(float columnWidth)
             GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
             for (int i = 0; i < selfChatSubTabs.Length; i++)
             {
-                if (GUILayout.Button(selfChatSubTabs[i], currentSelfChatSubTab == i ? compactActiveSubTabStyle : compactSubTabStyle, GUILayout.Height(18)))
+                if (GUILayout.Button(selfChatSubTabs[i], currentSelfChatSubTab == i ? compactActiveSubTabStyle : compactSubTabStyle, GUILayout.Height(24)))
                     SetMultiTab("selfChat", ref currentSelfChatSubTab, i, selfChatSubTabs.Length, false);
                 if (i < selfChatSubTabs.Length - 1) GUILayout.Space(4);
             }
@@ -99,11 +99,11 @@ private void DrawChatSettingsCompact(float columnWidth)
                 DrawMenuSectionHeader("SEND");
                 GUILayout.Space(2);
 
-                Rect chatInputRect = GUILayoutUtility.GetRect(10f, 24f, GUILayout.ExpandWidth(true), GUILayout.Height(24));
+                Rect chatInputRect = GUILayoutUtility.GetRect(10f, 28f, GUILayout.ExpandWidth(true), GUILayout.Height(28));
                 GUI.Box(chatInputRect, string.Empty, compactChatFieldStyle);
 
                 string drawText = string.IsNullOrEmpty(customChatMessage)
-                    ? L("Type a message...", "Р’РІРµРґРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ...")
+                    ? L("Type a message...", "Введите сообщение...")
                     : customChatMessage;
                 if (customChatInputFocused && (Time.unscaledTime % 1f) < 0.5f) drawText += "|";
 
@@ -149,11 +149,11 @@ private void DrawChatSettingsCompact(float columnWidth)
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(L("Send", "РћС‚РїСЂР°РІРёС‚СЊ"), btnStyle, GUILayout.Height(22)))
+                if (GUILayout.Button(L("Send", "Отправить"), btnStyle, GUILayout.Height(26)))
                     TrySendCustomChatMessage(customChatMessage);
                 GUILayout.Space(5);
-                string spamBtnText = customChatSpamEnabled ? L("Spam ON", "РЎРїР°Рј Р’РљР›") : L("Spam OFF", "РЎРїР°Рј Р’Р«РљР›");
-                if (GUILayout.Button(spamBtnText, customChatSpamEnabled ? activeTabStyle : btnStyle, GUILayout.Height(22)))
+                string spamBtnText = customChatSpamEnabled ? L("Spam ON", "Спам ВКЛ") : L("Spam OFF", "Спам ВЫКЛ");
+                if (GUILayout.Button(spamBtnText, customChatSpamEnabled ? activeTabStyle : btnStyle, GUILayout.Height(26)))
                 {
                     customChatSpamEnabled = !customChatSpamEnabled;
                     settingsDirty = true;
@@ -162,13 +162,15 @@ private void DrawChatSettingsCompact(float columnWidth)
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{L("Delay:", "Р—Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(82), GUILayout.Height(17));
+                GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(92), GUILayout.Height(20));
+                float previousSpamDelay = customChatSpamDelay;
                 customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
+                if (Mathf.Abs(previousSpamDelay - customChatSpamDelay) > 0.001f) settingsDirty = true;
                 GUILayout.EndHorizontal();
 
                 GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button("sendQUICK CHAT1", quickChatTileStyle, GUILayout.Width(toggleWidth), GUILayout.Height(24)))
+                if (GUILayout.Button(L("QUICK CHAT", "БЫСТРЫЙ ЧАТ"), quickChatTileStyle, GUILayout.Width(toggleWidth), GUILayout.Height(28)))
                     SendQuickChatPhrase();
 
                 GUILayout.EndVertical();
@@ -187,7 +189,7 @@ private void DrawChatSettingsCompact(float columnWidth)
                     local.Write((byte)3); local.Write((ushort)78); local.Write((byte)1); local.Write((byte)2); local.Write((ushort)1716);
                     AmongUsClient.Instance.FinishRpcImmediately(local);
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught539) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught539); }
             }
 
             void DrawChatColorBlock()
@@ -341,7 +343,7 @@ private void DrawGhostChatColorControl(float width)
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "РџСЂРёРјРµСЂ С†РІРµС‚Р° С‡Р°С‚Р° РїСЂРёР·СЂР°РєРѕРІ")), richClipLabelStyle11, GUILayout.Width(width), GUILayout.Height(16f));
+            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "Пример цвета чата призраков")), richClipLabelStyle11, GUILayout.Width(width), GUILayout.Height(16f));
         }
     }
 }

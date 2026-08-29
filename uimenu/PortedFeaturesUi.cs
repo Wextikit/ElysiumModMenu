@@ -31,7 +31,7 @@ namespace ElysiumModMenu
                     bool selected = selectedAntiCheatPlayerId == player.PlayerId;
 
                     GUI.contentColor = Color.white;
-                    try { GUI.contentColor = Palette.PlayerColors[player.Data.DefaultOutfit.ColorId]; } catch { }
+                    try { GUI.contentColor = Palette.PlayerColors[player.Data.DefaultOutfit.ColorId]; } catch (global::System.Exception __elysiumCaught532) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught532); }
                     if (GUILayout.Button(player.Data.PlayerName ?? "Unknown", selected ? activeTabStyle : btnStyle, GUILayout.Height(28)))
                         selectedAntiCheatPlayerId = player.PlayerId;
                     GUI.contentColor = Color.white;

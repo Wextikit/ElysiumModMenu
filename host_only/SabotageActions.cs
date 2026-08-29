@@ -53,7 +53,7 @@ private void OpenSabotageMap()
                     Mode = MapOptions.Modes.Sabotage
                 });
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught311) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught311); }
         }
 
 private void DrawCustomRpcValidationInfo()
@@ -66,19 +66,19 @@ private void DrawCustomRpcValidationInfo()
             if (!int.TryParse(filtered, out int rpcId))
             {
                 statusStyle.normal.textColor = new Color(1f, 0.35f, 0.35f, 1f);
-                GUILayout.Label(L("Enter RPC ID.", "Р’РІРµРґРёС‚Рµ ID RPC."), statusStyle, GUILayout.Height(18f));
+                GUILayout.Label(L("Enter RPC ID.", "Введите ID RPC."), statusStyle, GUILayout.Height(18f));
                 return;
             }
 
             if (VanillaRpcIds.Contains((byte)rpcId))
             {
                 statusStyle.normal.textColor = new Color(1f, 0.35f, 0.35f, 1f);
-                GUILayout.Label(L($"RPC {rpcId} is vanilla. It will not be sent.", $"RPC {rpcId} РІР°РЅРёР»СЊРЅС‹Р№. РћРЅ РЅРµ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅ."), statusStyle, GUILayout.Height(18f));
+                GUILayout.Label(L($"RPC {rpcId} is vanilla. It will not be sent.", $"RPC {rpcId} ванильный. Он не будет отправлен."), statusStyle, GUILayout.Height(18f));
                 return;
             }
 
             statusStyle.normal.textColor = new Color(0.35f, 0.95f, 0.55f, 1f);
-            GUILayout.Label(L($"RPC {rpcId} is custom. Sending is allowed.", $"RPC {rpcId} РєР°СЃС‚РѕРјРЅС‹Р№. РћС‚РїСЂР°РІРєР° СЂР°Р·СЂРµС€РµРЅР°."), statusStyle, GUILayout.Height(18f));
+            GUILayout.Label(L($"RPC {rpcId} is custom. Sending is allowed.", $"RPC {rpcId} кастомный. Отправка разрешена."), statusStyle, GUILayout.Height(18f));
         }
 
 private bool DrawCustomRpcInputButton(float width)
@@ -149,7 +149,7 @@ private void DrawDoorTargetRow(SystemTypes room, float rowContentWidth)
                         if (door != null && door.Room == room) cnt++;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught312) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught312); }
 
             GUIStyle doorNameStyle = new GUIStyle(toggleLabelStyle)
             {
@@ -197,7 +197,7 @@ private void callMeetingPublic()
                 PlayerControl.LocalPlayer.CmdReportDeadBody(null);
                 ShowNotification("<color=#00FF00>[MEETING]</color> Meeting called.");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught313) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught313); }
         }
 
 private void TriggerAllSabotages(bool notify = true)
@@ -217,7 +217,7 @@ private void TriggerAllSabotages(bool notify = true)
 
                 if (notify) ShowNotification("<color=#FF0000>[SABOTAGE]</color> All systems sabotaged!");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught314) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught314); }
         }
 
 private void FixAllSabotages(bool notify = true)
@@ -242,14 +242,14 @@ private void FixAllSabotages(bool notify = true)
                         if (door != null)
                         {
                             door.SetDoorway(true);
-                            try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(door.Id | 64)); } catch { }
+                            try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(door.Id | 64)); } catch (global::System.Exception __elysiumCaught315) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught315); }
                         }
                     }
                 }
-                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, 0); } catch { }
+                try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, 0); } catch (global::System.Exception __elysiumCaught316) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught316); }
                 if (notify) ShowNotification("<color=#00FF00>[SABOTAGE]</color> All sabotages and doors fixed!");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught317) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught317); }
         }
 
 private void TickAutoRepairSabotage()
@@ -283,16 +283,16 @@ private void SabotageDoors()
                     if (door != null)
                     {
                         rooms.Add(door.Room);
-                        try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id); } catch { }
+                        try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id); } catch (global::System.Exception __elysiumCaught318) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught318); }
                     }
                 }
                 foreach (var room in rooms)
                 {
-                    try { ShipStatus.Instance.RpcCloseDoorsOfType(room); } catch { }
+                    try { ShipStatus.Instance.RpcCloseDoorsOfType(room); } catch (global::System.Exception __elysiumCaught319) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught319); }
                 }
                 ShowNotification("<color=#FF0000>[DOORS]</color> Close signal sent!");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught320) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught320); }
         }
 
 private void CloseDoorsOfType(SystemTypes room)
@@ -308,7 +308,7 @@ private void CloseDoorsOfType(SystemTypes room)
                 }
                 ShowNotification($"<color=#FF6A42>[DOORS]</color> {room}: close sent");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught321) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught321); }
         }
 
 private void LockDoorsOfType(SystemTypes room)
@@ -327,7 +327,7 @@ private void LockDoorsOfType(SystemTypes room)
                 ShipStatus.Instance.RpcCloseDoorsOfType(room);
                 ShowNotification($"<color=#FFB840>[DOORS]</color> {room}: locked");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught322) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught322); }
         }
 
 private void OpenDoorsOfType(SystemTypes room)
@@ -345,7 +345,7 @@ private void OpenDoorsOfType(SystemTypes room)
                 }
                 ShowNotification($"<color=#59DB92>[DOORS]</color> {room}: opened");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught323) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught323); }
         }
 
 private void LockAllDoors()
@@ -368,7 +368,7 @@ private void LockAllDoors()
 
                 ShowNotification("<color=#FFB840>[DOORS]</color> All doors locked!");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught324) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught324); }
         }
 
 private void OpenAllDoors()
@@ -381,19 +381,19 @@ private void OpenAllDoors()
                     if (door != null)
                     {
                         door.SetDoorway(true);
-                        try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(door.Id | 64)); } catch { }
+                        try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(door.Id | 64)); } catch (global::System.Exception __elysiumCaught325) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught325); }
                     }
                 }
                 ShowNotification("<color=#00FF00>[DOORS]</color> All doors opened!");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught326) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught326); }
         }
 
-private void ToggleReactor(bool state) { if (ShipStatus.Instance == null) return; byte flag = (byte)(state ? 128 : 16); try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Reactor, flag); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Laboratory, flag); if (state) ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)128); else { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)16); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)17); } } catch { } }
+private void ToggleReactor(bool state) { if (ShipStatus.Instance == null) return; byte flag = (byte)(state ? 128 : 16); try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Reactor, flag); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Laboratory, flag); if (state) ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)128); else { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)16); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.HeliSabotage, (byte)17); } } catch (global::System.Exception __elysiumCaught327) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught327); } }
 
-private void ToggleO2(bool state) { if (ShipStatus.Instance == null) return; try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.LifeSupp, (byte)(state ? 128 : 16)); } catch { } }
+private void ToggleO2(bool state) { if (ShipStatus.Instance == null) return; try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.LifeSupp, (byte)(state ? 128 : 16)); } catch (global::System.Exception __elysiumCaught328) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught328); } }
 
-private void ToggleComms(bool state) { if (ShipStatus.Instance == null) return; try { if (state) ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)128); else { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)16); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)17); } } catch { } }
+private void ToggleComms(bool state) { if (ShipStatus.Instance == null) return; try { if (state) ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)128); else { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)16); ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Comms, (byte)17); } } catch (global::System.Exception __elysiumCaught329) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught329); } }
 
 private void ToggleLights(bool state)
         {
@@ -425,7 +425,7 @@ private void ToggleLights(bool state)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught330) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught330); }
         }
 
 private void ToggleUnfixableLights(bool state)
@@ -448,7 +448,7 @@ private void ToggleUnfixableLights(bool state)
                 unfixableLightsApplied = state;
                 ShowNotification(state ? "<color=#C080FF>[LIGHTS]</color> Unfixable lights ON" : "<color=#59DB92>[LIGHTS]</color> Unfixable lights OFF");
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught331) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught331); }
         }
 
 private void UpdateUnfixableLightsState()
@@ -472,8 +472,15 @@ private void ApplyVentCheatsTick()
                     return;
                 }
 
-                if (unlockVents && !local.Data.IsDead && local.Data.Role != null && !local.Data.Role.CanVent && HudManager.Instance != null && HudManager.Instance.ImpostorVentButton != null)
-                    HudManager.Instance.ImpostorVentButton.gameObject.SetActive(true);
+                // FreePlay can skip the HUD refresh after a role change.
+                // Recheck the vent button for real vent roles and Unlock Vents.
+                if (HudManager.Instance != null && HudManager.Instance.ImpostorVentButton != null)
+                {
+                    bool roleCanVent = local.Data.Role != null && local.Data.Role.CanVent;
+                    bool shouldShowVent = !local.Data.IsDead && ShipStatus.Instance != null && (roleCanVent || unlockVents);
+                    if (HudManager.Instance.ImpostorVentButton.gameObject.activeSelf != shouldShowVent)
+                        HudManager.Instance.ImpostorVentButton.gameObject.SetActive(shouldShowVent);
+                }
 
                 if (walkInVents && local.inVent)
                 {
@@ -481,7 +488,7 @@ private void ApplyVentCheatsTick()
                     local.moveable = true;
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught332) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught332); }
         }
 
 private static void SetImmortalityVentState(bool enter)
@@ -495,7 +502,7 @@ private static void SetImmortalityVentState(bool enter)
                 VentilationSystem.Update(enter ? VentilationSystem.Operation.Enter : VentilationSystem.Operation.Exit, ImmortalityCustomVentId);
                 immortalityVentStateApplied = enter;
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught333) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught333); }
         }
 
 private static void TickRoleBuffImmortality()
@@ -522,7 +529,7 @@ private static void TickRoleBuffImmortality()
                 if (!immortalityVentStateApplied)
                     SetImmortalityVentState(true);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught334) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught334); }
         }
 
 private static void DisableRoleBuffImmortality()
@@ -532,9 +539,9 @@ private static void DisableRoleBuffImmortality()
                 if (immortalityVentStateApplied)
                     SetImmortalityVentState(false);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught335) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught335); }
         }
 
-private void SabotageMushroom() { if (ShipStatus.Instance == null) return; try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, (byte)1); } catch { } }
+private void SabotageMushroom() { if (ShipStatus.Instance == null) return; try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, (byte)1); } catch (global::System.Exception __elysiumCaught336) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught336); } }
     }
 }

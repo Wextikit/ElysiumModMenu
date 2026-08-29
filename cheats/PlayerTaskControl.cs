@@ -63,9 +63,7 @@ private static void FloodPlayerWithTasks(PlayerControl target)
                 target.Data.RpcSetTasks(taskIds);
                 ShowNotification($"<color=#00FF00>[TASKS]</color> {target.Data.PlayerName} received flood tasks.");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught139) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught139); }
         }
 
         private static void ChangePlayerTasks(PlayerControl target)
@@ -94,9 +92,7 @@ private static void FloodPlayerWithTasks(PlayerControl target)
                 ApplyTaskIdsToPlayer(target, taskIds.ToArray());
                 ShowNotification($"<color=#00FF00>[TASKS]</color> {target.Data.PlayerName} tasks changed.");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught140) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught140); }
         }
 
 private static void AddSelectedPlayerToBanList(PlayerControl target)
@@ -157,7 +153,7 @@ private static void SendFriendInviteToPlayer(PlayerControl target)
             try
             {
                 FriendsListManager mgr = null;
-                try { mgr = FriendsListManager.Instance; } catch { }
+                try { mgr = FriendsListManager.Instance; } catch (global::System.Exception __elysiumCaught142) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught142); }
                 if (mgr == null) mgr = UnityEngine.Object.FindObjectOfType<FriendsListManager>();
 
                 if (mgr == null)
@@ -206,9 +202,7 @@ private static void DeletePlayerTasks(PlayerControl target)
 
                 ShowNotification($"<color=#00FF00>[TASKS]</color> Deleted {removed} task(s) for {target.Data.PlayerName}.");
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception __elysiumCaught141) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught141); }
         }
 
 private static void ApplyTaskIdsToPlayer(PlayerControl target, byte[] taskIds)
@@ -220,18 +214,18 @@ private static void ApplyTaskIdsToPlayer(PlayerControl target, byte[] taskIds)
 
             if (safeTaskIds.Length == 0)
             {
-                try { target.Data.Tasks?.Clear(); } catch { }
-                try { target.ClearTasks(); } catch { }
+                try { target.Data.Tasks?.Clear(); } catch (global::System.Exception __elysiumCaught143) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught143); }
+                try { target.ClearTasks(); } catch (global::System.Exception __elysiumCaught144) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught144); }
             }
 
-            try { GameData.Instance?.RecomputeTaskCounts(); } catch { }
-            try { target.Data.SetDirtyBit(uint.MaxValue); } catch { }
+            try { GameData.Instance?.RecomputeTaskCounts(); } catch (global::System.Exception __elysiumCaught145) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught145); }
+            try { target.Data.SetDirtyBit(uint.MaxValue); } catch (global::System.Exception __elysiumCaught146) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught146); }
             try
             {
                 var netObj = GameData.Instance?.GetComponent<InnerNetObject>();
                 if (netObj != null) netObj.SetDirtyBit(uint.MaxValue);
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught147) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught147); }
         }
 
 private static int CountPlayerTasks(PlayerControl target)
@@ -247,7 +241,7 @@ private static int CountPlayerTasks(PlayerControl target)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught148) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught148); }
 
             return count;
         }
@@ -268,7 +262,7 @@ private static List<byte> BuildRandomAssignableTaskIds(PlayerControl target)
                     shortCount = Mathf.Clamp(GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.NumShortTasks), 0, 12);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught149) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught149); }
 
             int currentCount = CountPlayerTasks(target);
             if (commonCount + longCount + shortCount <= 0)
@@ -285,7 +279,7 @@ private static List<byte> BuildRandomAssignableTaskIds(PlayerControl target)
                     AddRandomTaskTemplates(result, ShipStatus.Instance.ShortTasks, shortCount, currentTaskIds);
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught150) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught150); }
 
             if (result.Count == 0)
             {
@@ -329,7 +323,7 @@ private static void AddRandomTaskTemplates(List<byte> output, Il2CppReferenceArr
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught151) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught151); }
 
             ShuffleByteList(preferredPool);
             ShuffleByteList(reusedPool);
@@ -363,7 +357,7 @@ private static HashSet<byte> GetCurrentPlayerTaskIds(PlayerControl target)
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught152) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught152); }
 
             return ids;
         }
@@ -385,7 +379,7 @@ private static bool TryReadTaskInfoId(object taskInfo, out byte taskId)
                     if (property != null && TryConvertTaskIdValue(property.GetValue(taskInfo, null), out taskId))
                         return true;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught153) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught153); }
 
                 try
                 {
@@ -393,7 +387,7 @@ private static bool TryReadTaskInfoId(object taskInfo, out byte taskId)
                     if (field != null && TryConvertTaskIdValue(field.GetValue(taskInfo), out taskId))
                         return true;
                 }
-                catch { }
+                catch (global::System.Exception __elysiumCaught154) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught154); }
             }
 
             return false;
@@ -455,7 +449,7 @@ private static List<byte> GetLiveTaskTypeIds()
                     }
                 }
             }
-            catch { }
+            catch (global::System.Exception __elysiumCaught155) { global::ElysiumModMenu.ElysiumErrorLog.Capture(__elysiumCaught155); }
 
             return available;
         }
